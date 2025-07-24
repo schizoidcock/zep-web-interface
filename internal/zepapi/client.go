@@ -112,9 +112,9 @@ type UsersResponse struct {
 	Total int    `json:"total"`
 }
 
-// API methods for Zep v1.0.2
+// API methods for Zep v1.0.2 (uses v2 API endpoints)
 func (c *Client) GetSessions() ([]Session, error) {
-	resp, err := c.get("/api/v1/sessions")
+	resp, err := c.get("/api/v2/sessions")
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (c *Client) GetSessions() ([]Session, error) {
 }
 
 func (c *Client) GetSession(sessionID string) (*Session, error) {
-	resp, err := c.get("/api/v1/sessions/" + sessionID)
+	resp, err := c.get("/api/v2/sessions/" + sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (c *Client) GetSession(sessionID string) (*Session, error) {
 }
 
 func (c *Client) GetUsers() ([]User, error) {
-	resp, err := c.get("/api/v1/users")
+	resp, err := c.get("/api/v2/users")
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (c *Client) GetUsers() ([]User, error) {
 }
 
 func (c *Client) GetUser(userID string) (*User, error) {
-	resp, err := c.get("/api/v1/users/" + userID)
+	resp, err := c.get("/api/v2/users/" + userID)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (c *Client) GetUser(userID string) (*User, error) {
 }
 
 func (c *Client) GetUserSessions(userID string) ([]Session, error) {
-	resp, err := c.get("/api/v1/users/" + userID + "/sessions")
+	resp, err := c.get("/api/v2/users/" + userID + "/sessions")
 	if err != nil {
 		return nil, err
 	}
