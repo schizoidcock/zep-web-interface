@@ -30,12 +30,12 @@ func loadTemplates() (*template.Template, error) {
 	// Load all templates with functions
 	tmpl := template.New("").Funcs(funcMap)
 
-	// Parse template files in correct order (like v0.27)
+	// Parse template files in correct order (pages first, then layout)
 	patterns := []string{
-		"web/templates/components/layout/*.html",
+		"web/templates/pages/*.html",
 		"web/templates/components/content/*.html",
 		"web/templates/components/*.html",
-		"web/templates/pages/*.html",
+		"web/templates/components/layout/*.html",
 	}
 
 	for _, pattern := range patterns {

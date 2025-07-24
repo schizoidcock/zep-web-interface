@@ -34,7 +34,11 @@
 <!-- End Sidebar -->
 <!-- Content -->
 <div id="page-content" class="w-full pt-10 px-4 sm:px-6 md:px-8 lg:pl-72">
-{{template "Content" .}}
+{{if eq .Page "dashboard"}}{{template "DashboardContent" .}}{{end}}
+{{if eq .Page "users"}}{{template "UsersContent" .}}{{end}}
+{{if eq .Page "sessions"}}{{template "SessionsContent" .}}{{end}}
+{{if eq .Page "settings"}}{{template "SettingsContent" .}}{{end}}
+{{if not .Page}}{{template "Content" .}}{{end}}
 </div>
 <!-- End Content -->
 <!-- ========== END MAIN CONTENT ========== -->

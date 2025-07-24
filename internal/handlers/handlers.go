@@ -51,6 +51,7 @@ type MenuItem struct {
 type PageData struct {
 	Title       string        `json:"title"`
 	SubTitle    string        `json:"subtitle"`
+	Page        string        `json:"page"`
 	Path        string        `json:"path"`
 	BreadCrumbs []BreadCrumb  `json:"breadcrumbs"`
 	Data        *TableData    `json:"data"`
@@ -184,6 +185,7 @@ func (h *Handlers) SessionList(w http.ResponseWriter, r *http.Request) {
 	pageData := &PageData{
 		Title:    "Sessions",
 		SubTitle: "View and manage sessions",
+		Page:     "sessions",
 		Path:     r.URL.Path,
 		BreadCrumbs: []BreadCrumb{
 			{
@@ -280,6 +282,7 @@ func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 	pageData := &PageData{
 		Title:    "Users",
 		SubTitle: "View and manage users",
+		Page:     "users",
 		Path:     r.URL.Path,
 		BreadCrumbs: []BreadCrumb{
 			{
@@ -367,6 +370,7 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 	pageData := &PageData{
 		Title:    "Settings",
 		SubTitle: "Server configuration and settings",
+		Page:     "settings",
 		Path:     r.URL.Path,
 		BreadCrumbs: []BreadCrumb{
 			{
@@ -384,6 +388,7 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
 		"Title":      pageData.Title,
 		"SubTitle":   pageData.SubTitle,
+		"Page":       pageData.Page,
 		"Path":       pageData.Path,
 		"BreadCrumbs": pageData.BreadCrumbs,
 		"MenuItems":  pageData.MenuItems,
