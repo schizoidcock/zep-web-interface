@@ -138,6 +138,64 @@ func loadTemplates() (*template.Template, error) {
 			}
 			return s[:length] + "..."
 		},
+		"dict": func(values ...interface{}) map[string]interface{} {
+			if len(values)%2 != 0 {
+				return nil
+			}
+			dict := make(map[string]interface{})
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil
+				}
+				dict[key] = values[i+1]
+			}
+			return dict
+		},
+		"initial": func(s string) string {
+			if len(s) == 0 {
+				return ""
+			}
+			return string(s[0])
+		},
+		"empty": func(s interface{}) bool {
+			if s == nil {
+				return true
+			}
+			str, ok := s.(string)
+			return ok && str == ""
+		},
+		"ternary": func(condition bool, trueVal, falseVal interface{}) interface{} {
+			if condition {
+				return trueVal
+			}
+			return falseVal
+		},
+		"contains": func(substr, str string) bool {
+			return strings.Contains(str, substr)
+		},
+		"split": func(sep, str string) []string {
+			return strings.Split(str, sep)
+		},
+		"print": func(args ...interface{}) string {
+			return fmt.Sprint(args...)
+		},
+		"last": func(slice interface{}) interface{} {
+			// Handle slice types
+			switch s := slice.(type) {
+			case []string:
+				if len(s) == 0 {
+					return ""
+				}
+				return s[len(s)-1]
+			case []interface{}:
+				if len(s) == 0 {
+					return nil
+				}
+				return s[len(s)-1]
+			}
+			return nil
+		},
 	})
 
 	// Parse template files
