@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -51,11 +52,8 @@ func New(cfg *config.Config) (*http.Server, error) {
 		MaxAge:           300,
 	}))
 
-	// Static files
-	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
-
-	// Routes
-	setupRoutes(r, h)
+	// Routes (includes static files)
+	setupRoutes(r, h, cfg)
 
 	return &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
@@ -63,7 +61,7 @@ func New(cfg *config.Config) (*http.Server, error) {
 	}, nil
 }
 
-func setupRoutes(r chi.Router, h *handlers.Handlers) {
+func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 	// Health check
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -71,8 +69,26 @@ func setupRoutes(r chi.Router, h *handlers.Handlers) {
 		w.Write([]byte(`{"status":"healthy","service":"zep-web-interface"}`))
 	})
 
+	// Determine base path for routes
+	basePath := "/"
+	if cfg.ProxyPath != "" {
+		basePath = cfg.ProxyPath
+		// Ensure basePath starts with / and doesn't end with /
+		if !strings.HasPrefix(basePath, "/") {
+			basePath = "/" + basePath
+		}
+		if strings.HasSuffix(basePath, "/") && basePath != "/" {
+			basePath = strings.TrimSuffix(basePath, "/")
+		}
+	}
+
+	// Setup static files with proxy path support
+	staticPath := basePath + "/static/*"
+	r.Handle(staticPath, http.StripPrefix(basePath+"/static/", http.FileServer(http.Dir("web/static"))))
+
 	// Admin routes (matching v0.27 structure)
-	r.Route("/admin", func(r chi.Router) {
+	adminPath := basePath + "/admin"
+	r.Route(adminPath, func(r chi.Router) {
 		r.Get("/", h.Dashboard)
 		r.Get("/sessions", h.SessionList)
 		r.Get("/sessions/{sessionId}", h.SessionDetails)
@@ -83,10 +99,18 @@ func setupRoutes(r chi.Router, h *handlers.Handlers) {
 	})
 
 	// API routes for HTMX requests
-	r.Route("/api", func(r chi.Router) {
+	apiPath := basePath + "/api"
+	r.Route(apiPath, func(r chi.Router) {
 		r.Get("/sessions", h.SessionListAPI)
 		r.Get("/users", h.UserListAPI)
 	})
+	
+	// Redirect root to admin if proxy path is set
+	if cfg.ProxyPath != "" {
+		r.Get(basePath, func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, adminPath, http.StatusFound)
+		})
+	}
 }
 
 func loadTemplates() (*template.Template, error) {

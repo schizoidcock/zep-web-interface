@@ -25,29 +25,37 @@ ZEP_API_URL=http://localhost:8000    # Your Zep v1.0.2 server URL
 ZEP_API_KEY=your-api-key             # Your Zep API key
 
 # Optional - Server Configuration
-HOST=::                             # Web interface host (default: :: for IPv6)
+HOST=0.0.0.0                        # Web interface host (default: 0.0.0.0)
 PORT=8080                           # Web interface port (default: 8080)
 TLS_ENABLED=false                   # Enable HTTPS (default: false)
 
 # Optional - Proxy Configuration  
 PROXY_URL=http://proxy:8080         # HTTP proxy URL for API requests (optional)
+PROXY_PATH=/admin                   # Base path for web interface (default: none)
 TRUST_PROXY=true                    # Trust proxy headers (default: true, for Railway/Heroku)
 CORS_ORIGINS=*                      # Comma-separated allowed origins (default: *)
 
 # Example for Railway deployment:
 ZEP_API_URL=${{services.zep-server.url}}
 ZEP_API_KEY=your-production-key
-HOST=::
+HOST=0.0.0.0
 PORT=${{PORT}}
+PROXY_PATH=/admin
 TRUST_PROXY=true
 CORS_ORIGINS=https://your-domain.com
 
 # Example for local development:
-ZEP_API_URL=http://[::1]:8000       # IPv6 localhost
+ZEP_API_URL=http://localhost:8000
 ZEP_API_KEY=your-dev-key
-HOST=::1
+HOST=localhost
 PORT=8080
 TRUST_PROXY=false
+
+# Example for proxy deployment:
+ZEP_API_URL=http://zep-server:8000
+ZEP_API_KEY=your-api-key
+PROXY_PATH=/admin                    # Access via https://your-domain.com/admin
+TRUST_PROXY=true
 ```
 
 ## Running
@@ -63,7 +71,23 @@ go build -o zep-web-interface
 ./zep-web-interface
 ```
 
-The web interface will be available at http://localhost:8080/admin
+The web interface will be available at:
+- http://localhost:8080/admin (default)
+- http://localhost:8080/your-proxy-path/admin (if PROXY_PATH is set)
+
+## Proxy Path Configuration
+
+When deploying behind a reverse proxy or load balancer, you can configure a base path:
+
+```bash
+PROXY_PATH=/admin
+```
+
+This makes the web interface accessible at `/admin/admin`, `/admin/sessions`, etc., allowing you to serve multiple services from the same domain:
+
+- `https://your-domain.com/admin/` - Zep Web Interface
+- `https://your-domain.com/api/` - Your main API
+- `https://your-domain.com/docs/` - Documentation
 
 ## API Endpoints
 

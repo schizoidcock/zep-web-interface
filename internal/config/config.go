@@ -17,11 +17,12 @@ type Config struct {
 	TLSEnabled   bool
 	CORSOrigins  []string
 	TrustProxy   bool
+	ProxyPath    string
 }
 
 func Load() *Config {
 	cfg := &Config{
-		Host:         getEnv("HOST", "::"),
+		Host:         getEnv("HOST", "0.0.0.0"),
 		Port:         getEnvInt("PORT", 8080),
 		ZepAPIURL:    getEnv("ZEP_API_URL", ""),
 		ZepAPIKey:    getEnv("ZEP_API_KEY", ""),
@@ -29,6 +30,7 @@ func Load() *Config {
 		TLSEnabled:   getEnvBool("TLS_ENABLED", false),
 		CORSOrigins:  getEnvSlice("CORS_ORIGINS", []string{"*"}),
 		TrustProxy:   getEnvBool("TRUST_PROXY", true),
+		ProxyPath:    getEnv("PROXY_PATH", ""),
 	}
 	
 	// Validate required configuration
