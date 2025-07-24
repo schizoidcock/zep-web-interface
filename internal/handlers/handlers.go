@@ -118,9 +118,17 @@ func (h *Handlers) Dashboard(w http.ResponseWriter, r *http.Request) {
 		"MenuItems": MenuItems,
 	}
 	
-	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Check if this is an HTMX request, if so render only the content
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "DashboardContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -193,9 +201,17 @@ func (h *Handlers) SessionList(w http.ResponseWriter, r *http.Request) {
 		MenuItems: MenuItems,
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Check if this is an HTMX request, if so render only the content
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "SessionsContent", pageData); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -250,9 +266,17 @@ func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	
-	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Check if this is an HTMX request, if so render only the content
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "SessionDetailsContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -319,9 +343,17 @@ func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 		MenuItems: MenuItems,
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Check if this is an HTMX request, if so render only the content
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "UsersContent", pageData); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -356,9 +388,17 @@ func (h *Handlers) UserDetails(w http.ResponseWriter, r *http.Request) {
 		"Slug": userID, // Add slug for Alpine.js functionality
 	}
 	
-	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Check if this is an HTMX request, if so render only the content
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "UserDetailsContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -471,9 +511,17 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	
-	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Check if this is an HTMX request, if so render only the content
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "SettingsContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 

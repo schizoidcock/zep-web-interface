@@ -34,10 +34,10 @@
                             </p>
                             <!-- Metadata -->
                             <div class="pl-6 text-xs max-h-44 overflow-y-auto">
-                                {{ if .Data.Session.Metadata }}
-                                    {{ ToJSON .Data.Session.Metadata }}
+                                {{ if .Data.Session.Summary }}
+                                    {{ ToJSON .Data.Session.Summary }}
                                 {{ else }}
-                                    <p class="text-sm">No metadata</p>
+                                    <p class="text-sm">No summary</p>
                                 {{ end }}
                             </div>
                             <!-- End Metadata -->
