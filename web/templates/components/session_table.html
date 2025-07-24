@@ -99,8 +99,8 @@
 
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             {{ $path := .Path }}
-                            {{ range $session := .Data.Rows }}
-                                {{ template "SessionTableRow" dict "Path" $path "Session" $session }}
+                            {{ range $sessionRow := .Data.Rows }}
+                                {{ template "SessionTableRow" dict "Path" $path "Session" $sessionRow.Session }}
                             {{ end }}
                         </tbody>
 

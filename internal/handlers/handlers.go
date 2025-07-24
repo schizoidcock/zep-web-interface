@@ -3,6 +3,7 @@ package handlers
 import (
 	"html/template"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/getzep/zep-web-interface/internal/zepapi"
@@ -11,6 +12,62 @@ import (
 type Handlers struct {
 	apiClient *zepapi.Client
 	templates *template.Template
+}
+
+// Data structures matching Zep v0.27 template expectations
+type Column struct {
+	Name       string `json:"name"`
+	Sortable   bool   `json:"sortable"`
+	OrderByKey string `json:"order_by_key"`
+}
+
+type TableData struct {
+	TableID     string        `json:"table_id"`
+	Columns     []Column      `json:"columns"`
+	Rows        interface{}   `json:"rows"`
+	TotalCount  int           `json:"total_count"`
+	RowCount    int           `json:"row_count"`
+	CurrentPage int           `json:"current_page"`
+	PageSize    int           `json:"page_size"`
+	PageCount   int           `json:"page_count"`
+	OrderBy     string        `json:"order_by"`
+	Asc         bool          `json:"asc"`
+}
+
+type BreadCrumb struct {
+	Title string `json:"title"`
+	Path  string `json:"path"`
+}
+
+type PageData struct {
+	Title       string        `json:"title"`
+	SubTitle    string        `json:"subtitle"`
+	Path        string        `json:"path"`
+	BreadCrumbs []BreadCrumb  `json:"breadcrumbs"`
+	Data        *TableData    `json:"data"`
+}
+
+// SessionRow represents a session with timestamp formatting
+type SessionRow struct {
+	Session *zepapi.Session `json:"session"`
+}
+
+var SessionTableColumns = []Column{
+	{
+		Name:       "Session",
+		Sortable:   true,
+		OrderByKey: "session_id",
+	},
+	{
+		Name:       "User",
+		Sortable:   true,
+		OrderByKey: "user_id",
+	},
+	{
+		Name:       "Created",
+		Sortable:   true,
+		OrderByKey: "created_at",
+	},
 }
 
 func New(apiClient *zepapi.Client, templates *template.Template) *Handlers {
@@ -41,13 +98,66 @@ func (h *Handlers) SessionList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := map[string]interface{}{
-		"Title":    "Sessions",
-		"Page":     "sessions",
-		"Sessions": sessions,
+	// Parse query parameters for sorting and pagination
+	currentPage := 1
+	pageSize := 10
+	orderBy := "created_at"
+	asc := false
+
+	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			currentPage = page
+		}
 	}
-	
-	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+
+	if order := r.URL.Query().Get("order"); order != "" {
+		orderBy = order
+	}
+
+	if ascStr := r.URL.Query().Get("asc"); ascStr == "true" {
+		asc = true
+	}
+
+	// Convert sessions to SessionRows for template compatibility
+	sessionRows := make([]SessionRow, len(sessions))
+	for i, session := range sessions {
+		sessionRows[i] = SessionRow{Session: &session}
+	}
+
+	// Calculate pagination
+	totalCount := len(sessions)
+	pageCount := (totalCount + pageSize - 1) / pageSize
+	rowCount := len(sessionRows)
+
+	// Create table data structure
+	tableData := &TableData{
+		TableID:     "session-table",
+		Columns:     SessionTableColumns,
+		Rows:        sessionRows,
+		TotalCount:  totalCount,
+		RowCount:    rowCount,
+		CurrentPage: currentPage,
+		PageSize:    pageSize,
+		PageCount:   pageCount,
+		OrderBy:     orderBy,
+		Asc:         asc,
+	}
+
+	// Create page data with breadcrumbs
+	pageData := &PageData{
+		Title:    "Sessions",
+		SubTitle: "View and manage sessions",
+		Path:     r.URL.Path,
+		BreadCrumbs: []BreadCrumb{
+			{
+				Title: "Sessions",
+				Path:  "/sessions",
+			},
+		},
+		Data: tableData,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -161,11 +271,58 @@ func (h *Handlers) SessionListAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := map[string]interface{}{
-		"Sessions": sessions,
+	// Parse query parameters for sorting and pagination
+	currentPage := 1
+	pageSize := 10
+	orderBy := "created_at"
+	asc := false
+
+	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			currentPage = page
+		}
+	}
+
+	if order := r.URL.Query().Get("order"); order != "" {
+		orderBy = order
+	}
+
+	if ascStr := r.URL.Query().Get("asc"); ascStr == "true" {
+		asc = true
+	}
+
+	// Convert sessions to SessionRows for template compatibility
+	sessionRows := make([]SessionRow, len(sessions))
+	for i, session := range sessions {
+		sessionRows[i] = SessionRow{Session: &session}
+	}
+
+	// Calculate pagination
+	totalCount := len(sessions)
+	pageCount := (totalCount + pageSize - 1) / pageSize
+	rowCount := len(sessionRows)
+
+	// Create table data structure
+	tableData := &TableData{
+		TableID:     "session-table",
+		Columns:     SessionTableColumns,
+		Rows:        sessionRows,
+		TotalCount:  totalCount,
+		RowCount:    rowCount,
+		CurrentPage: currentPage,
+		PageSize:    pageSize,
+		PageCount:   pageCount,
+		OrderBy:     orderBy,
+		Asc:         asc,
+	}
+
+	// Create page data for HTMX response
+	pageData := &PageData{
+		Path: r.URL.Path,
+		Data: tableData,
 	}
 	
-	if err := h.templates.ExecuteTemplate(w, "SessionTable", data); err != nil {
+	if err := h.templates.ExecuteTemplate(w, "SessionTable", pageData); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

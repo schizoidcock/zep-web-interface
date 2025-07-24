@@ -83,29 +83,22 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			basePath = strings.TrimSuffix(basePath, "/")
 		}
 
-		// Proxy path routes: /admin/admin, /admin/api, etc.
+		// Direct admin routes at proxy path (PROXY_PATH=/admin means admin routes are AT /admin, not /admin/admin)
 		r.Route(basePath, func(r chi.Router) {
-			// Redirect proxy root to admin
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				http.Redirect(w, r, basePath+"/admin", http.StatusFound)
-			})
-			
-			// Admin routes under proxy path
-			r.Route("/admin", func(r chi.Router) {
-				r.Get("/", h.Dashboard)
-				r.Get("/sessions", h.SessionList)
-				r.Get("/sessions/{sessionId}", h.SessionDetails)
-				r.Get("/users", h.UserList)
-				r.Get("/users/{userId}", h.UserDetails)
-				r.Get("/users/{userId}/sessions", h.UserSessions)
-				r.Get("/settings", h.Settings)
-			})
+			r.Get("/", h.Dashboard)
+			r.Get("/sessions", h.SessionList)
+			r.Get("/sessions/{sessionId}", h.SessionDetails)
+			r.Get("/users", h.UserList)
+			r.Get("/users/{userId}", h.UserDetails)
+			r.Get("/users/{userId}/sessions", h.UserSessions)
+			r.Get("/settings", h.Settings)
+		})
 
-			// API routes under proxy path
-			r.Route("/api", func(r chi.Router) {
-				r.Get("/sessions", h.SessionListAPI)
-				r.Get("/users", h.UserListAPI)
-			})
+		// API routes under proxy path
+		apiPath := basePath + "/api"
+		r.Route(apiPath, func(r chi.Router) {
+			r.Get("/sessions", h.SessionListAPI)
+			r.Get("/users", h.UserListAPI)
 		})
 	} else {
 		// Default routes (no proxy path)

@@ -84,12 +84,12 @@ func decodeResponse(resp *http.Response, v interface{}) error {
 
 // Data models for Zep v1.0.2 API responses
 type Session struct {
-	SessionID   string                 `json:"session_id"`
-	UserID      string                 `json:"user_id,omitempty"`
-	CreatedAt   string                 `json:"created_at"`
-	UpdatedAt   string                 `json:"updated_at"`
-	Summary     map[string]interface{} `json:"summary,omitempty"`
-	MessageCount int                   `json:"message_count,omitempty"`
+	SessionID    string                 `json:"session_id"`
+	UserID       string                 `json:"user_id,omitempty"`
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
+	Summary      map[string]interface{} `json:"summary,omitempty"`
+	MessageCount int                    `json:"message_count,omitempty"`
 }
 
 type User struct {
