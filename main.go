@@ -27,6 +27,8 @@ func main() {
 	go func() {
 		log.Printf("🌐 Zep Web Interface starting on %s:%d", cfg.Host, cfg.Port)
 		log.Printf("🔗 Zep API URL: %s", cfg.ZepAPIURL)
+		log.Printf("🔧 HOST env var: '%s'", os.Getenv("HOST"))
+		log.Printf("🔧 Actual bind address: %s:%d", cfg.Host, cfg.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed to start: %v", err)
 		}

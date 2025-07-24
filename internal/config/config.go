@@ -66,6 +66,11 @@ func (c *Config) validate() error {
 		return fmt.Errorf("HOST cannot be empty")
 	}
 	
+	// Check for problematic IPv6 addresses that need bracketing
+	if c.Host == "::" {
+		return fmt.Errorf("HOST=:: is not supported without brackets, use HOST=0.0.0.0 instead")
+	}
+	
 	// Validate proxy URL if provided
 	if c.ProxyURL != "" {
 		if _, err := url.Parse(c.ProxyURL); err != nil {

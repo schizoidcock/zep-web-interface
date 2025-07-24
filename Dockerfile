@@ -29,7 +29,7 @@ COPY --from=builder /app/web ./web
 EXPOSE 8080
 
 # Set default environment variables
-ENV HOST=::
+ENV HOST=0.0.0.0
 ENV PORT=8080
 ENV TRUST_PROXY=true
 
