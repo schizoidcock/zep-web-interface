@@ -335,6 +335,27 @@ func loadTemplates() (*template.Template, error) {
 			}
 			return fmt.Sprintf("%.1f%%", (c/t)*100)
 		},
+		"toString": func(v interface{}) string {
+			return fmt.Sprintf("%v", v)
+		},
+		"upper": func(s string) string {
+			return strings.ToUpper(s)
+		},
+		"lower": func(s string) string {
+			return strings.ToLower(s)
+		},
+		"title": func(s string) string {
+			return strings.Title(s)
+		},
+		"join": func(sep string, elems []string) string {
+			return strings.Join(elems, sep)
+		},
+		"replace": func(old, new, src string) string {
+			return strings.Replace(src, old, new, -1)
+		},
+		"trim": func(s string) string {
+			return strings.TrimSpace(s)
+		},
 	})
 
 	// Parse template files
