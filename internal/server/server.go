@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -195,6 +196,120 @@ func loadTemplates() (*template.Template, error) {
 				return s[len(s)-1]
 			}
 			return nil
+		},
+		"CommaInt": func(i interface{}) string {
+			// Format integer with comma separators
+			switch v := i.(type) {
+			case int:
+				return fmt.Sprintf("%,d", v)
+			case int64:
+				return fmt.Sprintf("%,d", v)
+			case float64:
+				return fmt.Sprintf("%,.0f", v)
+			default:
+				return fmt.Sprintf("%v", v)
+			}
+		},
+		"mod": func(a, b int) int {
+			return a % b
+		},
+		"sub": func(a, b int) int {
+			return a - b
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"mul": func(a, b int) int {
+			return a * b
+		},
+		"div": func(a, b int) int {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
+		"eq": func(a, b interface{}) bool {
+			return a == b
+		},
+		"ne": func(a, b interface{}) bool {
+			return a != b
+		},
+		"lt": func(a, b interface{}) bool {
+			switch av := a.(type) {
+			case int:
+				if bv, ok := b.(int); ok {
+					return av < bv
+				}
+			case float64:
+				if bv, ok := b.(float64); ok {
+					return av < bv
+				}
+			}
+			return false
+		},
+		"gt": func(a, b interface{}) bool {
+			switch av := a.(type) {
+			case int:
+				if bv, ok := b.(int); ok {
+					return av > bv
+				}
+			case float64:
+				if bv, ok := b.(float64); ok {
+					return av > bv
+				}
+			}
+			return false
+		},
+		"le": func(a, b interface{}) bool {
+			switch av := a.(type) {
+			case int:
+				if bv, ok := b.(int); ok {
+					return av <= bv
+				}
+			case float64:
+				if bv, ok := b.(float64); ok {
+					return av <= bv
+				}
+			}
+			return false
+		},
+		"ge": func(a, b interface{}) bool {
+			switch av := a.(type) {
+			case int:
+				if bv, ok := b.(int); ok {
+					return av >= bv
+				}
+			case float64:
+				if bv, ok := b.(float64); ok {
+					return av >= bv
+				}
+			}
+			return false
+		},
+		"int64": func(i interface{}) int64 {
+			switch v := i.(type) {
+			case int:
+				return int64(v)
+			case int64:
+				return v
+			case float64:
+				return int64(v)
+			default:
+				return 0
+			}
+		},
+		"ToJSON": func(v interface{}) string {
+			b, err := json.Marshal(v)
+			if err != nil {
+				return "{}"
+			}
+			return string(b)
+		},
+		"add1": func(i int) int {
+			return i + 1
+		},
+		"sub1": func(i int) int {
+			return i - 1
 		},
 	})
 
