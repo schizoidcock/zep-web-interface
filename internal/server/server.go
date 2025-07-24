@@ -61,6 +61,14 @@ func New(cfg *config.Config) (*http.Server, error) {
 }
 
 func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
+	// Debug: Log routing configuration
+	fmt.Printf("🔧 PROXY_PATH configuration: '%s'\n", cfg.ProxyPath)
+	if cfg.ProxyPath != "" {
+		fmt.Printf("📍 Using proxy path routing at: %s\n", cfg.ProxyPath)
+	} else {
+		fmt.Printf("📍 Using default routing at: /admin\n")
+	}
+	
 	// Health check (always at root)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -130,5 +138,11 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			r.Get("/users", h.UserListAPI)
 		})
 	}
+	
+	// Debug: Add a catch-all route to help debug 404s
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("❌ 404 Not Found: %s %s\n", r.Method, r.URL.Path)
+		http.NotFound(w, r)
+	})
 }
 
