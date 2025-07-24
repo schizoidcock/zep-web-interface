@@ -129,12 +129,9 @@ func (h *Handlers) Dashboard(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) SessionList(w http.ResponseWriter, r *http.Request) {
 	sessions, err := h.apiClient.GetSessions()
 	if err != nil {
-		fmt.Printf("❌ SessionList API error: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Printf("✅ SessionList: Got %d sessions\n", len(sessions))
 
 	// Parse query parameters for sorting and pagination
 	currentPage := 1
@@ -197,9 +194,7 @@ func (h *Handlers) SessionList(w http.ResponseWriter, r *http.Request) {
 		MenuItems: MenuItems,
 	}
 
-	fmt.Printf("✅ SessionList: Rendering template with %d rows\n", rowCount)
 	if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
-		fmt.Printf("❌ SessionList template error: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -232,12 +227,9 @@ func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 	users, err := h.apiClient.GetUsers()
 	if err != nil {
-		fmt.Printf("❌ UserList API error: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Printf("✅ UserList: Got %d users\n", len(users))
 
 	// Parse query parameters for sorting and pagination
 	currentPage := 1
@@ -294,9 +286,7 @@ func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 		MenuItems: MenuItems,
 	}
 
-	fmt.Printf("✅ UserList: Rendering template with %d rows\n", len(users))
 	if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
-		fmt.Printf("❌ UserList template error: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
