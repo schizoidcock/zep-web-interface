@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -137,12 +138,27 @@ func (c *Client) GetSessions() ([]Session, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+
+	// Read the raw response body for debugging
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	
+	log.Printf("🔍 DEBUG GetSessions - Status: %d, Response: %s", resp.StatusCode, string(body))
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
 
 	var sessions []Session
-	if err := decodeResponse(resp, &sessions); err != nil {
+	if err := json.Unmarshal(body, &sessions); err != nil {
+		log.Printf("❌ Failed to unmarshal sessions: %v", err)
 		return nil, err
 	}
 
+	log.Printf("✅ Parsed %d sessions", len(sessions))
 	return sessions, nil
 }
 
@@ -243,11 +259,27 @@ func (c *Client) GetUsers() ([]User, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+
+	// Read the raw response body for debugging
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	
+	log.Printf("🔍 DEBUG GetUsers - Status: %d, Response: %s", resp.StatusCode, string(body))
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
 
 	var users []User
-	if err := decodeResponse(resp, &users); err != nil {
+	if err := json.Unmarshal(body, &users); err != nil {
+		log.Printf("❌ Failed to unmarshal users: %v", err)
 		return nil, err
 	}
+
+	log.Printf("✅ Parsed %d users", len(users))
 
 	// TODO: Fetch session counts for each user from API if available
 	// For now, set SessionCount to 0 to prevent template errors
