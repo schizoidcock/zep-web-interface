@@ -147,18 +147,41 @@ func (c *Client) GetSession(sessionID string) (*Session, error) {
 }
 
 func (c *Client) DeleteSession(sessionID string) error {
-	resp, err := c.delete("/api/v2/sessions/" + sessionID)
-	if err != nil {
-		return err
+	// Try different endpoints for session deletion based on v0.27 and v1.0.2 patterns
+	endpoints := []string{
+		"/api/v2/sessions/" + sessionID + "/memory", // Like v0.27 memory endpoint
+		"/api/v2/sessions/" + sessionID,             // Direct session endpoint
 	}
-	defer resp.Body.Close()
 	
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+	var lastErr error
+	for _, endpoint := range endpoints {
+		resp, err := c.delete(endpoint)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		defer resp.Body.Close()
+		
+		// If successful, return
+		if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent {
+			return nil
+		}
+		
+		// If 405 Method Not Allowed, try next endpoint
+		if resp.StatusCode == http.StatusMethodNotAllowed {
+			continue
+		}
+		
+		// For other errors, return the error
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
 	}
 	
-	return nil
+	// If all endpoints failed
+	if lastErr != nil {
+		return fmt.Errorf("failed to delete session, last error: %v", lastErr)
+	}
+	return fmt.Errorf("no working endpoint found for session deletion")
 }
 
 func (c *Client) GetUsers() ([]User, error) {
