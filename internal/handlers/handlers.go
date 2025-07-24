@@ -280,6 +280,26 @@ func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// DeleteSession handles the session deletion
+func (h *Handlers) DeleteSession(w http.ResponseWriter, r *http.Request) {
+	sessionID := chi.URLParam(r, "sessionId")
+	
+	err := h.apiClient.DeleteSession(sessionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	// For HTMX requests, redirect back to sessions list
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", "/admin/sessions")
+		w.WriteHeader(http.StatusOK)
+	} else {
+		// For regular requests, redirect to sessions list
+		http.Redirect(w, r, "/admin/sessions", http.StatusFound)
+	}
+}
+
 // UserList handles the users list page
 func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 	users, err := h.apiClient.GetUsers()

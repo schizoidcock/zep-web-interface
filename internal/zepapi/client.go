@@ -71,6 +71,10 @@ func (c *Client) post(endpoint string, body interface{}) (*http.Response, error)
 	return c.request("POST", endpoint, body)
 }
 
+func (c *Client) delete(endpoint string) (*http.Response, error) {
+	return c.request("DELETE", endpoint, nil)
+}
+
 // Helper function to decode JSON response
 func decodeResponse(resp *http.Response, v interface{}) error {
 	defer resp.Body.Close()
@@ -140,6 +144,21 @@ func (c *Client) GetSession(sessionID string) (*Session, error) {
 	}
 
 	return &session, nil
+}
+
+func (c *Client) DeleteSession(sessionID string) error {
+	resp, err := c.delete("/api/v2/sessions/" + sessionID)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
+	
+	return nil
 }
 
 func (c *Client) GetUsers() ([]User, error) {
