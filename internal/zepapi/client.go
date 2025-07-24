@@ -56,10 +56,8 @@ func (c *Client) request(method, endpoint string, body interface{}) (*http.Respo
 
 	req.Header.Set("Content-Type", "application/json")
 	if c.apiKey != "" {
-		// Try multiple authentication header formats for Zep compatibility
-		req.Header.Set("Authorization", "Bearer "+c.apiKey)
-		req.Header.Set("X-API-Key", c.apiKey)
-		req.Header.Set("Api-Key", c.apiKey)
+		// Zep server expects "Api-Key" prefix, not "Bearer"
+		req.Header.Set("Authorization", "Api-Key "+c.apiKey)
 	}
 
 	return c.httpClient.Do(req)
