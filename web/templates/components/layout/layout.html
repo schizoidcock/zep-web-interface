@@ -38,6 +38,9 @@
 {{if eq .Page "users"}}{{template "UsersContent" .}}{{end}}
 {{if eq .Page "sessions"}}{{template "SessionsContent" .}}{{end}}
 {{if eq .Page "settings"}}{{template "SettingsContent" .}}{{end}}
+{{if eq .Page "user_details"}}{{template "UserDetailsContent" .}}{{end}}
+{{if eq .Page "session_details"}}{{template "SessionDetailsContent" .}}{{end}}
+{{if eq .Page "user_sessions"}}{{template "UserSessionsContent" .}}{{end}}
 {{if not .Page}}{{template "Content" .}}{{end}}
 </div>
 <!-- End Content -->

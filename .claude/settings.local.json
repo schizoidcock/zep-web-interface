@@ -22,7 +22,9 @@
       "Bash(then echo \"Missing Content: $file\")",
       "Bash(fi)",
       "Bash(done)",
-      "WebFetch(domain:zep-server-production.up.railway.app)"
+      "WebFetch(domain:zep-server-production.up.railway.app)",
+      "Bash(go run:*)",
+      "Bash(git reset:*)"
     ],
     "deny": []
   }

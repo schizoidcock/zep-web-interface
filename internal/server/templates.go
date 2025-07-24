@@ -36,6 +36,13 @@ func loadTemplates() (*template.Template, error) {
 		// Convert to JSON for template use - placeholder
 		return template.JS("{}")
 	}
+	funcMap["Percent"] = func(part, total float64) float64 {
+		// Calculate percentage - placeholder
+		if total == 0 {
+			return 0
+		}
+		return (part / total) * 100
+	}
 	
 	// Load all templates with functions
 	tmpl := template.New("").Funcs(funcMap)
