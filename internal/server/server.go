@@ -311,6 +311,30 @@ func loadTemplates() (*template.Template, error) {
 		"sub1": func(i int) int {
 			return i - 1
 		},
+		"Percent": func(current, total interface{}) string {
+			// Convert to float64 for calculation
+			var c, t float64
+			switch v := current.(type) {
+			case int:
+				c = float64(v)
+			case float64:
+				c = v
+			default:
+				return "0%"
+			}
+			switch v := total.(type) {
+			case int:
+				t = float64(v)
+			case float64:
+				t = v
+			default:
+				return "0%"
+			}
+			if t == 0 {
+				return "0%"
+			}
+			return fmt.Sprintf("%.1f%%", (c/t)*100)
+		},
 	})
 
 	// Parse template files
