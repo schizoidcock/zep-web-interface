@@ -75,6 +75,10 @@ func (c *Client) delete(endpoint string) (*http.Response, error) {
 	return c.request("DELETE", endpoint, nil)
 }
 
+func (c *Client) patch(endpoint string, body interface{}) (*http.Response, error) {
+	return c.request("PATCH", endpoint, body)
+}
+
 // Helper function to decode JSON response
 func decodeResponse(resp *http.Response, v interface{}) error {
 	defer resp.Body.Close()
@@ -283,4 +287,35 @@ func (c *Client) GetUserSessions(userID string) ([]Session, error) {
 	}
 
 	return sessions, nil
+}
+
+// UpdateUser updates user information (firstName, lastName, email, metadata)
+func (c *Client) UpdateUser(userID string, updateReq map[string]interface{}) (*User, error) {
+	resp, err := c.patch("/api/v2/users/"+userID, updateReq)
+	if err != nil {
+		return nil, err
+	}
+
+	var user User
+	if err := decodeResponse(resp, &user); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// DeleteUser deletes a user
+func (c *Client) DeleteUser(userID string) error {
+	resp, err := c.delete("/api/v2/users/" + userID)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }

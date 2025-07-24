@@ -422,16 +422,44 @@ func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UserDetails(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
 	
+	// Fetch user details
 	user, err := h.apiClient.GetUser(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Fetch user sessions for the embedded session table
+	sessions, err := h.apiClient.GetUserSessions(userID)
+	if err != nil {
+		// If sessions fail, continue with empty sessions (user details still viewable)
+		sessions = []zepapi.Session{}
+	}
+
+	// Convert sessions to SessionRows for template compatibility
+	sessionRows := make([]SessionRow, len(sessions))
+	for i, session := range sessions {
+		sessionRows[i] = SessionRow{Session: &session}
+	}
+
+	// Create table data for sessions
+	sessionTableData := &TableData{
+		TableID:     "user-session-table",
+		Columns:     SessionTableColumns,
+		Rows:        sessionRows,
+		TotalCount:  len(sessions),
+		RowCount:    len(sessionRows),
+		CurrentPage: 1,
+		PageSize:    10,
+		PageCount:   1,
+		OrderBy:     "created_at",
+		Asc:         false,
+	}
+
 	// Create page data with breadcrumbs and proper data structure
 	data := map[string]interface{}{
 		"Title": "User Details",
-		"SubTitle": "View and manage user information",
+		"SubTitle": "View and manage user information - " + userID,
 		"Page": "user_details",
 		"Path": r.URL.Path,
 		"BreadCrumbs": []BreadCrumb{
@@ -444,7 +472,8 @@ func (h *Handlers) UserDetails(w http.ResponseWriter, r *http.Request) {
 				Path:  r.URL.Path,
 			},
 		},
-		"Data": user, // User data directly as Data for the template to access .Data.FirstName, etc.
+		"Data": sessionTableData, // Session table data for embedded sessions
+		"User": user, // User data separately for form access
 		"MenuItems": MenuItems,
 		"Slug": userID, // Add slug for Alpine.js functionality
 	}
@@ -521,6 +550,70 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+// UpdateUser handles user detail form submissions
+func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userId")
+	
+	// Parse form data
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+		return
+	}
+	
+	// Extract form fields
+	updateReq := map[string]interface{}{
+		"user_id": userID,
+	}
+	
+	if firstName := r.FormValue("first_name"); firstName != "" {
+		updateReq["first_name"] = firstName
+	}
+	
+	if lastName := r.FormValue("last_name"); lastName != "" {
+		updateReq["last_name"] = lastName
+	}
+	
+	if email := r.FormValue("email"); email != "" {
+		updateReq["email"] = email
+	}
+	
+	// Update user via API
+	_, err := h.apiClient.UpdateUser(userID, updateReq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	// For HTMX requests, redirect to refresh the page
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", r.URL.Path)
+		w.WriteHeader(http.StatusOK)
+	} else {
+		// For regular requests, redirect to user details page
+		http.Redirect(w, r, r.URL.Path, http.StatusFound)
+	}
+}
+
+// DeleteUser handles user deletion
+func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userId")
+	
+	err := h.apiClient.DeleteUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	// For HTMX requests, redirect back to users list
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", "/admin/users")
+		w.WriteHeader(http.StatusOK)
+	} else {
+		// For regular requests, redirect to users list
+		http.Redirect(w, r, "/admin/users", http.StatusFound)
 	}
 }
 
