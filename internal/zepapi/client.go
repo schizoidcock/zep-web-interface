@@ -120,12 +120,12 @@ func (c *Client) GetSessions() ([]Session, error) {
 		return nil, err
 	}
 
-	var sessionsResp SessionsResponse
-	if err := decodeResponse(resp, &sessionsResp); err != nil {
+	var sessions []Session
+	if err := decodeResponse(resp, &sessions); err != nil {
 		return nil, err
 	}
 
-	return sessionsResp.Sessions, nil
+	return sessions, nil
 }
 
 func (c *Client) GetSession(sessionID string) (*Session, error) {
@@ -148,18 +148,18 @@ func (c *Client) GetUsers() ([]User, error) {
 		return nil, err
 	}
 
-	var usersResp UsersResponse
-	if err := decodeResponse(resp, &usersResp); err != nil {
+	var users []User
+	if err := decodeResponse(resp, &users); err != nil {
 		return nil, err
 	}
 
 	// TODO: Fetch session counts for each user from API if available
 	// For now, set SessionCount to 0 to prevent template errors
-	for i := range usersResp.Users {
-		usersResp.Users[i].SessionCount = 0
+	for i := range users {
+		users[i].SessionCount = 0
 	}
 
-	return usersResp.Users, nil
+	return users, nil
 }
 
 func (c *Client) GetUser(userID string) (*User, error) {
@@ -185,10 +185,10 @@ func (c *Client) GetUserSessions(userID string) ([]Session, error) {
 		return nil, err
 	}
 
-	var sessionsResp SessionsResponse
-	if err := decodeResponse(resp, &sessionsResp); err != nil {
+	var sessions []Session
+	if err := decodeResponse(resp, &sessions); err != nil {
 		return nil, err
 	}
 
-	return sessionsResp.Sessions, nil
+	return sessions, nil
 }

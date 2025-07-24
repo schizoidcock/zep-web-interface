@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(cp:*)",
+      "Bash(diff:*)",
+      "Bash(true)",
+      "Bash(go build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(grep:*)",
+      "Bash(go mod edit:*)",
+      "Bash(go mod:*)",
+      "Bash(sed:*)",
+      "Bash(go get:*)",
+      "Bash(rm:*)",
+      "Bash(git rm:*)",
+      "Bash(for file in web/templates/pages/*.html)",
+      "Bash(do if ! grep -q \"define.*Content\" \"$file\")",
+      "Bash(then echo \"Missing Content: $file\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "WebFetch(domain:zep-server-production.up.railway.app)"
+    ],
+    "deny": []
+  }
+}

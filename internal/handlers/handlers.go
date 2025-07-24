@@ -337,10 +337,48 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 
 // Settings handles the settings page
 func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
+	// Create mock config HTML for now - TODO: fetch from Zep API if available
+	configHTML := `
+	<div class="mb-4">
+		<h3 class="text-lg font-semibold text-gray-800">Zep Server Configuration</h3>
+		<p class="text-gray-600 mt-2">Configuration details would appear here when available from the API.</p>
+	</div>
+	<div class="bg-gray-50 p-4 rounded border">
+		<code class="text-sm">
+		API URL: Connected<br/>
+		Authentication: Active<br/>
+		Version: v1.0.2<br/>
+		</code>
+	</div>
+	`
+
+	// Create page data with breadcrumbs
+	pageData := &PageData{
+		Title:    "Settings",
+		SubTitle: "Server configuration and settings",
+		Path:     r.URL.Path,
+		BreadCrumbs: []BreadCrumb{
+			{
+				Title: "Settings",
+				Path:  "/settings",
+			},
+		},
+		Data: &TableData{
+			// Use a custom field for ConfigHTML
+		},
+		MenuItems: MenuItems,
+	}
+	
+	// Add ConfigHTML to the data map
 	data := map[string]interface{}{
-		"Title":     "Settings",
-		"Page":      "settings",
-		"MenuItems": MenuItems,
+		"Title":      pageData.Title,
+		"SubTitle":   pageData.SubTitle,
+		"Path":       pageData.Path,
+		"BreadCrumbs": pageData.BreadCrumbs,
+		"MenuItems":  pageData.MenuItems,
+		"Data": map[string]interface{}{
+			"ConfigHTML": template.HTML(configHTML),
+		},
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
