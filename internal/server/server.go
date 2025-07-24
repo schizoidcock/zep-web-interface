@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -70,8 +71,15 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 		w.Write([]byte(`{"status":"healthy","service":"zep-web-interface"}`))
 	})
 
-	// Static files (always at /static)
-	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
+	// Static files - serve at both root and proxy path locations
+	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir("web/static")))
+	r.Handle("/static/*", staticHandler)
+	
+	// Also serve static files under proxy path if configured
+	if cfg.ProxyPath != "" {
+		proxyStaticPath := strings.TrimSuffix(cfg.ProxyPath, "/") + "/static/*"
+		r.Handle(proxyStaticPath, http.StripPrefix(strings.TrimSuffix(cfg.ProxyPath, "/")+"/static/", http.FileServer(http.Dir("web/static"))))
+	}
 
 	// Setup routes based on proxy path configuration
 	if cfg.ProxyPath != "" {
@@ -355,6 +363,24 @@ func loadTemplates() (*template.Template, error) {
 		},
 		"trim": func(s string) string {
 			return strings.TrimSpace(s)
+		},
+		"safeLen": func(v interface{}) int {
+			if v == nil {
+				return 0
+			}
+			switch slice := v.(type) {
+			case []interface{}:
+				return len(slice)
+			case []string:
+				return len(slice)
+			default:
+				// Use reflection as fallback
+				val := reflect.ValueOf(v)
+				if val.Kind() == reflect.Slice || val.Kind() == reflect.Array {
+					return val.Len()
+				}
+				return 0
+			}
 		},
 	})
 

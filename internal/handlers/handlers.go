@@ -70,6 +70,29 @@ var SessionTableColumns = []Column{
 	},
 }
 
+var UserTableColumns = []Column{
+	{
+		Name:       "User ID",
+		Sortable:   true,
+		OrderByKey: "user_id",
+	},
+	{
+		Name:       "Email",
+		Sortable:   true,
+		OrderByKey: "email",
+	},
+	{
+		Name:       "Sessions",
+		Sortable:   true,
+		OrderByKey: "session_count",
+	},
+	{
+		Name:       "Created",
+		Sortable:   true,
+		OrderByKey: "created_at",
+	},
+}
+
 func New(apiClient *zepapi.Client, templates *template.Template) *Handlers {
 	return &Handlers{
 		apiClient: apiClient,
@@ -193,13 +216,60 @@ func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := map[string]interface{}{
-		"Title": "Users",
-		"Page":  "users",
-		"Users": users,
+	// Parse query parameters for sorting and pagination
+	currentPage := 1
+	pageSize := 10
+	orderBy := "created_at"
+	asc := false
+
+	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			currentPage = page
+		}
 	}
-	
-	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+
+	if order := r.URL.Query().Get("order"); order != "" {
+		orderBy = order
+	}
+
+	if ascStr := r.URL.Query().Get("asc"); ascStr == "true" {
+		asc = true
+	}
+
+	// Calculate pagination
+	totalCount := len(users)
+	pageCount := (totalCount + pageSize - 1) / pageSize
+	rowCount := len(users)
+
+	// Create table data structure
+	tableData := &TableData{
+		TableID:     "user-table",
+		Columns:     UserTableColumns,
+		Rows:        users, // Users slice directly
+		TotalCount:  totalCount,
+		RowCount:    rowCount,
+		CurrentPage: currentPage,
+		PageSize:    pageSize,
+		PageCount:   pageCount,
+		OrderBy:     orderBy,
+		Asc:         asc,
+	}
+
+	// Create page data with breadcrumbs
+	pageData := &PageData{
+		Title:    "Users",
+		SubTitle: "View and manage users",
+		Path:     r.URL.Path,
+		BreadCrumbs: []BreadCrumb{
+			{
+				Title: "Users",
+				Path:  "/users",
+			},
+		},
+		Data: tableData,
+	}
+
+	if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -335,11 +405,52 @@ func (h *Handlers) UserListAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := map[string]interface{}{
-		"Users": users,
+	// Parse query parameters for sorting and pagination
+	currentPage := 1
+	pageSize := 10
+	orderBy := "created_at"
+	asc := false
+
+	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			currentPage = page
+		}
+	}
+
+	if order := r.URL.Query().Get("order"); order != "" {
+		orderBy = order
+	}
+
+	if ascStr := r.URL.Query().Get("asc"); ascStr == "true" {
+		asc = true
+	}
+
+	// Calculate pagination
+	totalCount := len(users)
+	pageCount := (totalCount + pageSize - 1) / pageSize
+	rowCount := len(users)
+
+	// Create table data structure
+	tableData := &TableData{
+		TableID:     "user-table",
+		Columns:     UserTableColumns,
+		Rows:        users, // Users slice directly
+		TotalCount:  totalCount,
+		RowCount:    rowCount,
+		CurrentPage: currentPage,
+		PageSize:    pageSize,
+		PageCount:   pageCount,
+		OrderBy:     orderBy,
+		Asc:         asc,
+	}
+
+	// Create page data for HTMX response
+	pageData := &PageData{
+		Path: r.URL.Path,
+		Data: tableData,
 	}
 	
-	if err := h.templates.ExecuteTemplate(w, "UserTable", data); err != nil {
+	if err := h.templates.ExecuteTemplate(w, "UserTable", pageData); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
