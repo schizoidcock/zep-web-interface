@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"html/template"
 	"reflect"
 	"time"
@@ -25,6 +26,15 @@ func loadTemplates() (*template.Template, error) {
 			return v.Len()
 		}
 		return 0
+	}
+	// Add missing functions from templates
+	funcMap["CommaInt"] = func(i int) string {
+		// Simple comma formatting for integers - placeholder
+		return fmt.Sprintf("%d", i)
+	}
+	funcMap["ToJSON"] = func(v interface{}) template.JS {
+		// Convert to JSON for template use - placeholder
+		return template.JS("{}")
 	}
 	
 	// Load all templates with functions
