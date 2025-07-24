@@ -62,53 +62,73 @@ func New(cfg *config.Config) (*http.Server, error) {
 }
 
 func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
-	// Health check
+	// Health check (always at root)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"healthy","service":"zep-web-interface"}`))
 	})
 
-	// Determine base path for routes
-	basePath := "/"
+	// Static files (always at /static)
+	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
+
+	// Setup routes based on proxy path configuration
 	if cfg.ProxyPath != "" {
-		basePath = cfg.ProxyPath
-		// Ensure basePath starts with / and doesn't end with /
+		// Normalize proxy path
+		basePath := cfg.ProxyPath
 		if !strings.HasPrefix(basePath, "/") {
 			basePath = "/" + basePath
 		}
 		if strings.HasSuffix(basePath, "/") && basePath != "/" {
 			basePath = strings.TrimSuffix(basePath, "/")
 		}
-	}
 
-	// Setup static files with proxy path support
-	staticPath := basePath + "/static/*"
-	r.Handle(staticPath, http.StripPrefix(basePath+"/static/", http.FileServer(http.Dir("web/static"))))
+		// Proxy path routes: /admin/admin, /admin/api, etc.
+		r.Route(basePath, func(r chi.Router) {
+			// Redirect proxy root to admin
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				http.Redirect(w, r, basePath+"/admin", http.StatusFound)
+			})
+			
+			// Admin routes under proxy path
+			r.Route("/admin", func(r chi.Router) {
+				r.Get("/", h.Dashboard)
+				r.Get("/sessions", h.SessionList)
+				r.Get("/sessions/{sessionId}", h.SessionDetails)
+				r.Get("/users", h.UserList)
+				r.Get("/users/{userId}", h.UserDetails)
+				r.Get("/users/{userId}/sessions", h.UserSessions)
+				r.Get("/settings", h.Settings)
+			})
 
-	// Admin routes (matching v0.27 structure)
-	adminPath := basePath + "/admin"
-	r.Route(adminPath, func(r chi.Router) {
-		r.Get("/", h.Dashboard)
-		r.Get("/sessions", h.SessionList)
-		r.Get("/sessions/{sessionId}", h.SessionDetails)
-		r.Get("/users", h.UserList)
-		r.Get("/users/{userId}", h.UserDetails)
-		r.Get("/users/{userId}/sessions", h.UserSessions)
-		r.Get("/settings", h.Settings)
-	})
+			// API routes under proxy path
+			r.Route("/api", func(r chi.Router) {
+				r.Get("/sessions", h.SessionListAPI)
+				r.Get("/users", h.UserListAPI)
+			})
+		})
+	} else {
+		// Default routes (no proxy path)
+		// Redirect root to admin
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/admin", http.StatusFound)
+		})
 
-	// API routes for HTMX requests
-	apiPath := basePath + "/api"
-	r.Route(apiPath, func(r chi.Router) {
-		r.Get("/sessions", h.SessionListAPI)
-		r.Get("/users", h.UserListAPI)
-	})
-	
-	// Redirect root to admin if proxy path is set
-	if cfg.ProxyPath != "" {
-		r.Get(basePath, func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, adminPath, http.StatusFound)
+		// Admin routes at root level
+		r.Route("/admin", func(r chi.Router) {
+			r.Get("/", h.Dashboard)
+			r.Get("/sessions", h.SessionList)
+			r.Get("/sessions/{sessionId}", h.SessionDetails)
+			r.Get("/users", h.UserList)
+			r.Get("/users/{userId}", h.UserDetails)
+			r.Get("/users/{userId}/sessions", h.UserSessions)
+			r.Get("/settings", h.Settings)
+		})
+
+		// API routes at root level
+		r.Route("/api", func(r chi.Router) {
+			r.Get("/sessions", h.SessionListAPI)
+			r.Get("/users", h.UserListAPI)
 		})
 	}
 }
