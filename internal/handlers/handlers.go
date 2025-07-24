@@ -163,8 +163,8 @@ func (h *Handlers) SessionList(w http.ResponseWriter, r *http.Request) {
 
 	// Convert sessions to SessionRows for template compatibility
 	sessionRows := make([]SessionRow, len(sessions))
-	for i, session := range sessions {
-		sessionRows[i] = SessionRow{Session: &session}
+	for i := range sessions {
+		sessionRows[i] = SessionRow{Session: &sessions[i]}
 	}
 
 	// Calculate pagination
@@ -438,8 +438,8 @@ func (h *Handlers) UserDetails(w http.ResponseWriter, r *http.Request) {
 
 	// Convert sessions to SessionRows for template compatibility
 	sessionRows := make([]SessionRow, len(sessions))
-	for i, session := range sessions {
-		sessionRows[i] = SessionRow{Session: &session}
+	for i := range sessions {
+		sessionRows[i] = SessionRow{Session: &sessions[i]}
 	}
 
 	// Create table data for sessions
@@ -504,8 +504,8 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 
 	// Convert sessions to SessionRows for template compatibility
 	sessionRows := make([]SessionRow, len(sessions))
-	for i, session := range sessions {
-		sessionRows[i] = SessionRow{Session: &session}
+	for i := range sessions {
+		sessionRows[i] = SessionRow{Session: &sessions[i]}
 	}
 
 	// Create table data structure like SessionList handler
@@ -755,8 +755,8 @@ func (h *Handlers) SessionListAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Convert sessions to SessionRows for template compatibility
 	sessionRows := make([]SessionRow, len(sessions))
-	for i, session := range sessions {
-		sessionRows[i] = SessionRow{Session: &session}
+	for i := range sessions {
+		sessionRows[i] = SessionRow{Session: &sessions[i]}
 	}
 
 	// Calculate pagination

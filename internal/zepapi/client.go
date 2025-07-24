@@ -255,7 +255,8 @@ func (c *Client) GetMessageList(sessionID string, page, pageSize int) ([]Message
 }
 
 func (c *Client) GetUsers() ([]User, error) {
-	resp, err := c.get("/api/v2/users")
+	// Add query parameters for pagination (based on v1.0.2 source analysis)
+	resp, err := c.get("/api/v2/users?limit=100&cursor=0")
 	if err != nil {
 		return nil, err
 	}
