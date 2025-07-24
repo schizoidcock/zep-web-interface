@@ -219,16 +219,40 @@ func (h *Handlers) SessionList(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 	sessionID := chi.URLParam(r, "sessionId")
 	
+	// Parse query parameters for message pagination
+	currentPage := 1
+	pageSize := 10
+	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			currentPage = page
+		}
+	}
+	
+	// Fetch session details
 	session, err := h.apiClient.GetSession(sessionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Fetch message list for this session
+	messages, totalMessages, err := h.apiClient.GetMessageList(sessionID, currentPage, pageSize)
+	if err != nil {
+		// If messages fail, continue with empty messages (session still viewable)
+		messages = []zepapi.Message{}
+		totalMessages = 0
+	}
+
+	// Calculate pagination
+	pageCount := (totalMessages + pageSize - 1) / pageSize
+	if pageCount == 0 {
+		pageCount = 1
+	}
+
 	// Create page data with breadcrumbs like other handlers
 	pageData := &PageData{
 		Title:    "Session Details",
-		SubTitle: "View session information and chat history",
+		SubTitle: "View session information and chat history - " + sessionID,
 		Page:     "session_details",
 		Path:     r.URL.Path,
 		BreadCrumbs: []BreadCrumb{
@@ -242,12 +266,17 @@ func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 		Data: &TableData{
-			// Store session in a custom field
+			TableID:     "chat-history",
+			TotalCount:  totalMessages,
+			RowCount:    len(messages),
+			CurrentPage: currentPage,
+			PageSize:    pageSize,
+			PageCount:   pageCount,
 		},
 		MenuItems: MenuItems,
 	}
 
-	// Add session and empty messages data for template access
+	// Add session and messages data for template access
 	data := map[string]interface{}{
 		"Title":      pageData.Title,
 		"SubTitle":   pageData.SubTitle,
@@ -256,13 +285,13 @@ func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 		"BreadCrumbs": pageData.BreadCrumbs,
 		"MenuItems":  pageData.MenuItems,
 		"Data": map[string]interface{}{
-			"Session": session,
-			"Messages": []interface{}{}, // Empty messages array to prevent ChatHistory errors
-			"TableID": "chat-history",
-			"TotalCount": 0,
-			"CurrentPage": 1,
-			"PageCount": 1,
-			"PageSize": 10,
+			"Session":     session,
+			"Messages":    messages,
+			"TableID":     "chat-history",
+			"TotalCount":  totalMessages,
+			"CurrentPage": currentPage,
+			"PageCount":   pageCount,
+			"PageSize":    pageSize,
 		},
 	}
 	

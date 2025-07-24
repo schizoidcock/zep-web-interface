@@ -107,6 +107,16 @@ type User struct {
 	SessionCount int       `json:"session_count,omitempty"`
 }
 
+type Message struct {
+	UUID       string                 `json:"uuid,omitempty"`
+	CreatedAt  time.Time              `json:"created_at"`
+	UpdatedAt  time.Time              `json:"updated_at,omitempty"`
+	Role       string                 `json:"role"`
+	Content    string                 `json:"content"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+	TokenCount int                    `json:"token_count,omitempty"`
+}
+
 type SessionsResponse struct {
 	Sessions []Session `json:"sessions"`
 	Total    int       `json:"total"`
@@ -182,6 +192,46 @@ func (c *Client) DeleteSession(sessionID string) error {
 		return fmt.Errorf("failed to delete session, last error: %v", lastErr)
 	}
 	return fmt.Errorf("no working endpoint found for session deletion")
+}
+
+func (c *Client) GetMessageList(sessionID string, page, pageSize int) ([]Message, int, error) {
+	// Build URL with pagination parameters
+	endpoint := fmt.Sprintf("/api/v2/sessions/%s/messages?page=%d&page_size=%d", sessionID, page, pageSize)
+	
+	resp, err := c.get(endpoint)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, 0, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Try to decode as paginated response first
+	var paginatedResp struct {
+		Messages []Message `json:"messages"`
+		Total    int       `json:"total"`
+	}
+	
+	// Reset response body for reading
+	if err := json.NewDecoder(resp.Body).Decode(&paginatedResp); err != nil {
+		// If paginated response fails, try direct array
+		resp, err = c.get(endpoint)
+		if err != nil {
+			return nil, 0, err
+		}
+		defer resp.Body.Close()
+		
+		var messages []Message
+		if err := json.NewDecoder(resp.Body).Decode(&messages); err != nil {
+			return nil, 0, err
+		}
+		return messages, len(messages), nil
+	}
+	
+	return paginatedResp.Messages, paginatedResp.Total, nil
 }
 
 func (c *Client) GetUsers() ([]User, error) {

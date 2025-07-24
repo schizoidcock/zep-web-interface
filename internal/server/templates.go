@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"reflect"
@@ -33,8 +34,15 @@ func loadTemplates() (*template.Template, error) {
 		return fmt.Sprintf("%d", i)
 	}
 	funcMap["ToJSON"] = func(v interface{}) template.JS {
-		// Convert to JSON for template use - placeholder
-		return template.JS("{}")
+		// Convert to JSON for template use
+		if v == nil {
+			return template.JS("{}")
+		}
+		jsonBytes, err := json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			return template.JS("{}")
+		}
+		return template.JS(string(jsonBytes))
 	}
 	funcMap["Percent"] = func(part, total float64) float64 {
 		// Calculate percentage - placeholder
