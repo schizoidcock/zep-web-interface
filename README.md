@@ -24,9 +24,30 @@ Set these environment variables:
 ZEP_API_URL=http://localhost:8000    # Your Zep v1.0.2 server URL
 ZEP_API_KEY=your-api-key             # Your Zep API key
 
-# Optional
-HOST=localhost                       # Web interface host (default: localhost)
+# Optional - Server Configuration
+HOST=::                             # Web interface host (default: :: for IPv6)
 PORT=8080                           # Web interface port (default: 8080)
+TLS_ENABLED=false                   # Enable HTTPS (default: false)
+
+# Optional - Proxy Configuration  
+PROXY_URL=http://proxy:8080         # HTTP proxy URL for API requests (optional)
+TRUST_PROXY=true                    # Trust proxy headers (default: true, for Railway/Heroku)
+CORS_ORIGINS=*                      # Comma-separated allowed origins (default: *)
+
+# Example for Railway deployment:
+ZEP_API_URL=${{services.zep-server.url}}
+ZEP_API_KEY=your-production-key
+HOST=::
+PORT=${{PORT}}
+TRUST_PROXY=true
+CORS_ORIGINS=https://your-domain.com
+
+# Example for local development:
+ZEP_API_URL=http://[::1]:8000       # IPv6 localhost
+ZEP_API_KEY=your-dev-key
+HOST=::1
+PORT=8080
+TRUST_PROXY=false
 ```
 
 ## Running

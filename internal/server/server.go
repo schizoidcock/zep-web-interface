@@ -16,8 +16,8 @@ import (
 )
 
 func New(cfg *config.Config) (*http.Server, error) {
-	// Create Zep API client
-	apiClient := zepapi.NewClient(cfg.ZepAPIURL, cfg.ZepAPIKey)
+	// Create Zep API client with proxy support
+	apiClient := zepapi.NewClient(cfg.ZepAPIURL, cfg.ZepAPIKey, cfg.ProxyURL)
 
 	// Load templates
 	templates, err := loadTemplates()
@@ -36,11 +36,16 @@ func New(cfg *config.Config) (*http.Server, error) {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 	
-	// CORS
+	// Trust proxy headers if enabled (for Railway, Heroku, etc.)
+	if cfg.TrustProxy {
+		r.Use(middleware.RealIP)
+	}
+	
+	// CORS with configurable origins
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   cfg.CORSOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Forwarded-For", "X-Real-IP"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
