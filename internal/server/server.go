@@ -142,7 +142,23 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 	// Debug: Add a catch-all route to help debug 404s
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("❌ 404 Not Found: %s %s\n", r.Method, r.URL.Path)
-		http.NotFound(w, r)
+		
+		// Render proper 404 page using NotFoundContent template
+		data := map[string]interface{}{
+			"Title": "Page Not Found",
+		}
+		
+		// Try to load templates and render 404 page
+		templates, err := loadTemplates()
+		if err != nil {
+			http.Error(w, "Page not found", http.StatusNotFound)
+			return
+		}
+		
+		w.WriteHeader(http.StatusNotFound)
+		if err := templates.ExecuteTemplate(w, "NotFoundContent", data); err != nil {
+			http.Error(w, "Page not found", http.StatusNotFound)
+		}
 	})
 }
 
