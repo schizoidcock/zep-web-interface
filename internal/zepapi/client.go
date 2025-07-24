@@ -93,12 +93,13 @@ type Session struct {
 }
 
 type User struct {
-	UserID    string `json:"user_id"`
-	Email     string `json:"email,omitempty"`
-	FirstName string `json:"first_name,omitempty"`
-	LastName  string `json:"last_name,omitempty"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	UserID       string    `json:"user_id"`
+	Email        string    `json:"email,omitempty"`
+	FirstName    string    `json:"first_name,omitempty"`
+	LastName     string    `json:"last_name,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	SessionCount int       `json:"session_count,omitempty"`
 }
 
 type SessionsResponse struct {
@@ -151,6 +152,12 @@ func (c *Client) GetUsers() ([]User, error) {
 		return nil, err
 	}
 
+	// TODO: Fetch session counts for each user from API if available
+	// For now, set SessionCount to 0 to prevent template errors
+	for i := range usersResp.Users {
+		usersResp.Users[i].SessionCount = 0
+	}
+
 	return usersResp.Users, nil
 }
 
@@ -164,6 +171,9 @@ func (c *Client) GetUser(userID string) (*User, error) {
 	if err := decodeResponse(resp, &user); err != nil {
 		return nil, err
 	}
+
+	// TODO: Fetch session count for this user from API if available
+	user.SessionCount = 0
 
 	return &user, nil
 }
