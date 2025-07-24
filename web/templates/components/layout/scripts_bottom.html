@@ -1,3 +1,24 @@
 {{define "ScriptsBottom"}}
-<script type="module" src="/static/preline/preline.js"></script>
+<script>
+// Prevent Alpine.js $nextTick redefinition error
+window.addEventListener('error', (e) => {
+    if (e.message.includes('Cannot redefine property: $nextTick')) {
+        e.preventDefault();
+        console.warn('Alpine.js $nextTick redefinition prevented');
+        return false;
+    }
+});
+
+// Load Preline after Alpine.js is ready to prevent conflicts
+document.addEventListener('alpine:init', () => {
+    try {
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = '/static/preline/preline.js';
+        document.head.appendChild(script);
+    } catch (error) {
+        console.warn('Preline.js loading error:', error);
+    }
+});
+</script>
 {{end}}
