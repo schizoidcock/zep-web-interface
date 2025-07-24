@@ -209,11 +209,45 @@ func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create page data with breadcrumbs like other handlers
+	pageData := &PageData{
+		Title:    "Session Details",
+		SubTitle: "View session information and chat history",
+		Page:     "session_details",
+		Path:     r.URL.Path,
+		BreadCrumbs: []BreadCrumb{
+			{
+				Title: "Sessions",
+				Path:  "/sessions",
+			},
+			{
+				Title: "Session Details",
+				Path:  r.URL.Path,
+			},
+		},
+		Data: &TableData{
+			// Store session in a custom field
+		},
+		MenuItems: MenuItems,
+	}
+
+	// Add session and empty messages data for template access
 	data := map[string]interface{}{
-		"Title":     "Session Details",
-		"Page":      "session_details",
-		"Session":   session,
-		"MenuItems": MenuItems,
+		"Title":      pageData.Title,
+		"SubTitle":   pageData.SubTitle,
+		"Page":       pageData.Page,
+		"Path":       pageData.Path,
+		"BreadCrumbs": pageData.BreadCrumbs,
+		"MenuItems":  pageData.MenuItems,
+		"Data": map[string]interface{}{
+			"Session": session,
+			"Messages": []interface{}{}, // Empty messages array to prevent ChatHistory errors
+			"TableID": "chat-history",
+			"TotalCount": 0,
+			"CurrentPage": 1,
+			"PageCount": 1,
+			"PageSize": 10,
+		},
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
@@ -301,11 +335,25 @@ func (h *Handlers) UserDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create page data with breadcrumbs and proper data structure
 	data := map[string]interface{}{
-		"Title":     "User Details",
-		"Page":      "user_details",
-		"User":      user,
+		"Title": "User Details",
+		"SubTitle": "View and manage user information",
+		"Page": "user_details",
+		"Path": r.URL.Path,
+		"BreadCrumbs": []BreadCrumb{
+			{
+				Title: "Users",
+				Path:  "/users",
+			},
+			{
+				Title: "User Details",
+				Path:  r.URL.Path,
+			},
+		},
+		"Data": user, // User data directly as Data for the template to access .Data.FirstName, etc.
 		"MenuItems": MenuItems,
+		"Slug": userID, // Add slug for Alpine.js functionality
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
@@ -324,12 +372,49 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Convert sessions to SessionRows for template compatibility
+	sessionRows := make([]SessionRow, len(sessions))
+	for i, session := range sessions {
+		sessionRows[i] = SessionRow{Session: &session}
+	}
+
+	// Create table data structure like SessionList handler
+	tableData := &TableData{
+		TableID:     "user-session-table",
+		Columns:     SessionTableColumns,
+		Rows:        sessionRows,
+		TotalCount:  len(sessions),
+		RowCount:    len(sessionRows),
+		CurrentPage: 1,
+		PageSize:    10,
+		PageCount:   1,
+		OrderBy:     "created_at",
+		Asc:         false,
+	}
+
+	// Create page data with breadcrumbs
 	data := map[string]interface{}{
-		"Title":     "User Sessions",
-		"Page":      "user_sessions",
-		"UserID":    userID,
-		"Sessions":  sessions,
+		"Title": "User Sessions",
+		"SubTitle": "Sessions for user " + userID,
+		"Page": "user_sessions",
+		"Path": r.URL.Path,
+		"BreadCrumbs": []BreadCrumb{
+			{
+				Title: "Users",
+				Path:  "/users",
+			},
+			{
+				Title: "User Details",
+				Path:  "/users/" + userID,
+			},
+			{
+				Title: "Sessions",
+				Path:  r.URL.Path,
+			},
+		},
+		"Data": tableData,
 		"MenuItems": MenuItems,
+		"UserID": userID,
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
