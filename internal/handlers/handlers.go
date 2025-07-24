@@ -39,12 +39,21 @@ type BreadCrumb struct {
 	Path  string `json:"path"`
 }
 
+type MenuItem struct {
+	Name      string        `json:"name"`
+	Path      string        `json:"path"`
+	External  bool          `json:"external"`
+	Icon      template.HTML `json:"icon"`
+	ContentID string        `json:"content_id"`
+}
+
 type PageData struct {
 	Title       string        `json:"title"`
 	SubTitle    string        `json:"subtitle"`
 	Path        string        `json:"path"`
 	BreadCrumbs []BreadCrumb  `json:"breadcrumbs"`
 	Data        *TableData    `json:"data"`
+	MenuItems   []MenuItem    `json:"menu_items"`
 }
 
 // SessionRow represents a session with timestamp formatting
@@ -103,8 +112,9 @@ func New(apiClient *zepapi.Client, templates *template.Template) *Handlers {
 // Dashboard handles the main dashboard page
 func (h *Handlers) Dashboard(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
-		"Title": "Dashboard",
-		"Page":  "dashboard",
+		"Title":     "Dashboard",
+		"Page":      "dashboard",
+		"MenuItems": MenuItems,
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
@@ -177,7 +187,8 @@ func (h *Handlers) SessionList(w http.ResponseWriter, r *http.Request) {
 				Path:  "/sessions",
 			},
 		},
-		Data: tableData,
+		Data:      tableData,
+		MenuItems: MenuItems,
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
@@ -197,9 +208,10 @@ func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title":   "Session Details",
-		"Page":    "session_details",
-		"Session": session,
+		"Title":     "Session Details",
+		"Page":      "session_details",
+		"Session":   session,
+		"MenuItems": MenuItems,
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
@@ -266,7 +278,8 @@ func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 				Path:  "/users",
 			},
 		},
-		Data: tableData,
+		Data:      tableData,
+		MenuItems: MenuItems,
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "Layout", pageData); err != nil {
@@ -286,9 +299,10 @@ func (h *Handlers) UserDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title": "User Details",
-		"Page":  "user_details",
-		"User":  user,
+		"Title":     "User Details",
+		"Page":      "user_details",
+		"User":      user,
+		"MenuItems": MenuItems,
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
@@ -308,10 +322,11 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title":    "User Sessions",
-		"Page":     "user_sessions",
-		"UserID":   userID,
-		"Sessions": sessions,
+		"Title":     "User Sessions",
+		"Page":      "user_sessions",
+		"UserID":    userID,
+		"Sessions":  sessions,
+		"MenuItems": MenuItems,
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
@@ -323,8 +338,9 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 // Settings handles the settings page
 func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
-		"Title": "Settings",
-		"Page":  "settings",
+		"Title":     "Settings",
+		"Page":      "settings",
+		"MenuItems": MenuItems,
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
@@ -388,8 +404,9 @@ func (h *Handlers) SessionListAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Create page data for HTMX response
 	pageData := &PageData{
-		Path: r.URL.Path,
-		Data: tableData,
+		Path:      r.URL.Path,
+		Data:      tableData,
+		MenuItems: MenuItems,
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "SessionTable", pageData); err != nil {
@@ -446,8 +463,9 @@ func (h *Handlers) UserListAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Create page data for HTMX response
 	pageData := &PageData{
-		Path: r.URL.Path,
-		Data: tableData,
+		Path:      r.URL.Path,
+		Data:      tableData,
+		MenuItems: MenuItems,
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "UserTable", pageData); err != nil {
