@@ -357,6 +357,17 @@ func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 		asc = true
 	}
 
+	// Fetch session count for each user (like v0.27)
+	for i := range users {
+		sessions, err := h.apiClient.GetUserSessions(users[i].UserID)
+		if err != nil {
+			// If session fetch fails, set count to 0
+			users[i].SessionCount = 0
+		} else {
+			users[i].SessionCount = len(sessions)
+		}
+	}
+
 	// Calculate pagination
 	totalCount := len(users)
 	pageCount := (totalCount + pageSize - 1) / pageSize
