@@ -15,6 +15,7 @@ import (
 type Handlers struct {
 	apiClient *zepapi.Client
 	templates *template.Template
+	basePath  string
 }
 
 // Data structures matching Zep v0.27 template expectations
@@ -106,10 +107,14 @@ var UserTableColumns = []Column{
 	},
 }
 
-func New(apiClient *zepapi.Client, templates *template.Template) *Handlers {
+func New(apiClient *zepapi.Client, templates *template.Template, basePath string) *Handlers {
+	if basePath == "" {
+		basePath = "/admin"
+	}
 	return &Handlers{
 		apiClient: apiClient,
 		templates: templates,
+		basePath:  basePath,
 	}
 }
 
@@ -130,7 +135,7 @@ func (h *Handlers) Dashboard(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
 		"Title":     "Dashboard",
 		"Page":      "dashboard",
-		"MenuItems": MenuItems,
+		"MenuItems": GetMenuItems(h.basePath),
 	}
 	
 	// Check if this is an HTMX request, if so render only the content
@@ -209,11 +214,11 @@ func (h *Handlers) SessionList(w http.ResponseWriter, r *http.Request) {
 		BreadCrumbs: []BreadCrumb{
 			{
 				Title: "Sessions",
-				Path:  "/sessions",
+				Path:  h.basePath + "/sessions",
 			},
 		},
 		Data:      tableData,
-		MenuItems: MenuItems,
+		MenuItems: GetMenuItems(h.basePath),
 	}
 
 	// Check if this is an HTMX request, if so render only the content
@@ -273,7 +278,7 @@ func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 		BreadCrumbs: []BreadCrumb{
 			{
 				Title: "Sessions",
-				Path:  "/sessions",
+				Path:  h.basePath + "/sessions",
 			},
 			{
 				Title: "Session Details",
@@ -288,7 +293,7 @@ func (h *Handlers) SessionDetails(w http.ResponseWriter, r *http.Request) {
 			PageSize:    pageSize,
 			PageCount:   pageCount,
 		},
-		MenuItems: MenuItems,
+		MenuItems: GetMenuItems(h.basePath),
 	}
 
 	// Add session and messages data for template access
@@ -336,11 +341,11 @@ func (h *Handlers) DeleteSession(w http.ResponseWriter, r *http.Request) {
 	
 	// For HTMX requests, redirect back to sessions list
 	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", "/admin/sessions")
+		w.Header().Set("HX-Redirect", h.basePath+"/sessions")
 		w.WriteHeader(http.StatusOK)
 	} else {
 		// For regular requests, redirect to sessions list
-		http.Redirect(w, r, "/admin/sessions", http.StatusFound)
+		http.Redirect(w, r, h.basePath+"/sessions", http.StatusFound)
 	}
 }
 
@@ -415,11 +420,11 @@ func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 		BreadCrumbs: []BreadCrumb{
 			{
 				Title: "Users",
-				Path:  "/users",
+				Path:  h.basePath + "/users",
 			},
 		},
 		Data:      tableData,
-		MenuItems: MenuItems,
+		MenuItems: GetMenuItems(h.basePath),
 	}
 
 	// Check if this is an HTMX request, if so render only the content
@@ -483,7 +488,7 @@ func (h *Handlers) UserDetails(w http.ResponseWriter, r *http.Request) {
 		"BreadCrumbs": []BreadCrumb{
 			{
 				Title: "Users",
-				Path:  "/users",
+				Path:  h.basePath + "/users",
 			},
 			{
 				Title: "User Details",
@@ -492,7 +497,7 @@ func (h *Handlers) UserDetails(w http.ResponseWriter, r *http.Request) {
 		},
 		"Data": sessionTableData, // Session table data for embedded sessions
 		"User": user, // User data separately for form access
-		"MenuItems": MenuItems,
+		"MenuItems": GetMenuItems(h.basePath),
 		"Slug": userID, // Add slug for Alpine.js functionality
 	}
 	
@@ -549,11 +554,11 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 		"BreadCrumbs": []BreadCrumb{
 			{
 				Title: "Users",
-				Path:  "/users",
+				Path:  h.basePath + "/users",
 			},
 			{
 				Title: "User Details",
-				Path:  "/users/" + userID,
+				Path:  h.basePath + "/users/" + userID,
 			},
 			{
 				Title: "Sessions",
@@ -561,7 +566,7 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 		"Data": tableData,
-		"MenuItems": MenuItems,
+		"MenuItems": GetMenuItems(h.basePath),
 		"UserID": userID,
 	}
 	
@@ -627,11 +632,11 @@ func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	
 	// For HTMX requests, redirect back to users list
 	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", "/admin/users")
+		w.Header().Set("HX-Redirect", h.basePath+"/users")
 		w.WriteHeader(http.StatusOK)
 	} else {
 		// For regular requests, redirect to users list
-		http.Redirect(w, r, "/admin/users", http.StatusFound)
+		http.Redirect(w, r, h.basePath+"/users", http.StatusFound)
 	}
 }
 
@@ -646,14 +651,14 @@ func (h *Handlers) CreateUserForm(w http.ResponseWriter, r *http.Request) {
 		"BreadCrumbs": []BreadCrumb{
 			{
 				Title: "Users",
-				Path:  "/admin/users",
+				Path:  h.basePath + "/users",
 			},
 			{
 				Title: "Create User",
 				Path:  r.URL.Path,
 			},
 		},
-		"MenuItems": MenuItems,
+		"MenuItems": GetMenuItems(h.basePath),
 	}
 	
 	// Check if this is an HTMX request
@@ -702,7 +707,7 @@ func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 	log.Printf("✅ Successfully created user: %s", userID)
 	
 	// Redirect to users list
-	http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
+	http.Redirect(w, r, h.basePath+"/users", http.StatusSeeOther)
 }
 
 // TestAuth handles API authentication testing
@@ -853,10 +858,10 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 		"BreadCrumbs": []BreadCrumb{
 			{
 				Title: "Settings",
-				Path:  "/settings",
+				Path:  h.basePath + "/settings",
 			},
 		},
-		"MenuItems": MenuItems,
+		"MenuItems": GetMenuItems(h.basePath),
 		"Data": map[string]interface{}{
 			"ConfigHTML": template.HTML(configHTML),
 		},
@@ -933,7 +938,7 @@ func (h *Handlers) SessionListAPI(w http.ResponseWriter, r *http.Request) {
 	pageData := &PageData{
 		Path:      r.URL.Path,
 		Data:      tableData,
-		MenuItems: MenuItems,
+		MenuItems: GetMenuItems(h.basePath),
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "SessionTable", pageData); err != nil {
@@ -992,7 +997,7 @@ func (h *Handlers) UserListAPI(w http.ResponseWriter, r *http.Request) {
 	pageData := &PageData{
 		Path:      r.URL.Path,
 		Data:      tableData,
-		MenuItems: MenuItems,
+		MenuItems: GetMenuItems(h.basePath),
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "UserTable", pageData); err != nil {

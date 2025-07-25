@@ -11,12 +11,30 @@ import (
 )
 
 func loadTemplates() (*template.Template, error) {
+	return loadTemplatesWithConfig("")
+}
+
+func loadTemplatesWithConfig(proxyPath string) (*template.Template, error) {
 	// Create base template function map from sprig (like v0.27)
 	funcMap := sprig.FuncMap()
 	
 	// Add custom functions like v0.27
 	funcMap["formatTime"] = func(t time.Time) string {
 		return t.Format("2006-01-02 15:04:05")
+	}
+	
+	// Add path helper function for proxy path support
+	funcMap["adminPath"] = func(path string) string {
+		// Use provided proxy path or default to /admin
+		basePath := proxyPath
+		if basePath == "" {
+			basePath = "/admin"
+		}
+		// Ensure no double slashes
+		if path == "" {
+			return basePath
+		}
+		return basePath + path
 	}
 	funcMap["safeLen"] = func(slice interface{}) int {
 		if slice == nil {

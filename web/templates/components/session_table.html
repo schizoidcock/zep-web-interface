@@ -27,14 +27,7 @@
 {{ define "SessionTableRow" }}
 <tr hx-boost="true" hx-push-url="true" hx-target="#page-content">
     {{ $basePath := (split "?" .Path)._0 }}
-    {{ $sessionPath := "" }}
-    {{ if contains "/users/" $basePath }}
-        <!-- If we're on a user page, link to admin sessions -->
-        {{ $sessionPath = "/admin/sessions" }}
-    {{ else }}
-        <!-- If we're already on sessions page, stay in sessions -->
-        {{ $sessionPath = "/admin/sessions" }}
-    {{ end }}
+    {{ $sessionPath := adminPath "/sessions" }}
     <!-- Checkbox -->
     <!-- <td class="h-px w-px whitespace-nowrap">
         <div class="pl-6 py-3">

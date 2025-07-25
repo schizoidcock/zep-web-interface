@@ -19,14 +19,18 @@ func New(cfg *config.Config) (*http.Server, error) {
 	// Create Zep API client with proxy support
 	apiClient := zepapi.NewClient(cfg.ZepAPIURL, cfg.ZepAPIKey, cfg.ProxyURL)
 
-	// Load templates
-	templates, err := loadTemplates()
+	// Load templates with proxy path support
+	templates, err := loadTemplatesWithConfig(cfg.ProxyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load templates: %w", err)
 	}
 
-	// Create handlers
-	h := handlers.New(apiClient, templates)
+	// Create handlers with base path
+	basePath := cfg.ProxyPath
+	if basePath == "" {
+		basePath = "/admin"
+	}
+	h := handlers.New(apiClient, templates, basePath)
 
 	// Setup router
 	r := chi.NewRouter()
