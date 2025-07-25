@@ -27,7 +27,14 @@
 {{ define "SessionTableRow" }}
 <tr hx-boost="true" hx-push-url="true" hx-target="#page-content">
     {{ $basePath := (split "?" .Path)._0 }}
-    {{ $path := contains "/users/" $basePath | ternary "/sessions" $basePath }}
+    {{ $sessionPath := "" }}
+    {{ if contains "/users/" $basePath }}
+        <!-- If we're on a user page, link to admin sessions -->
+        {{ $sessionPath = "/admin/sessions" }}
+    {{ else }}
+        <!-- If we're already on sessions page, stay in sessions -->
+        {{ $sessionPath = "/admin/sessions" }}
+    {{ end }}
     <!-- Checkbox -->
     <!-- <td class="h-px w-px whitespace-nowrap">
         <div class="pl-6 py-3">
@@ -45,7 +52,7 @@
         <div class="pl-6 lg:pl-6 xl:pl-6 pr-6 py-3">
             <div class="flex items-center gap-x-3">
                 <div class="grow">
-                    <a href="{{ $path }}/{{ .Session.SessionID }}">
+                    <a href="{{ $sessionPath }}/{{ .Session.SessionID }}">
                         <span class="block text-sm font-semibold text-gray-800 dark:text-gray-200">{{ .Session.SessionID
                             }}</span>
                     </a>
@@ -71,7 +78,7 @@
     <td class="h-px w-px whitespace-nowrap">
         <div class="px-6 py-1.5">
             <a class="inline-flex items-center gap-x-1.5 text-sm text-blue-600 decoration-2 hover:underline font-medium dark:text-gray-200"
-                href="{{ $path }}/{{ .Session.SessionID }}">
+                href="{{ $sessionPath }}/{{ .Session.SessionID }}">
                 View
             </a>
         </div>
