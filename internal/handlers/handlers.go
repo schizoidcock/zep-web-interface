@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -633,6 +634,84 @@ func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		// For regular requests, redirect to users list
 		http.Redirect(w, r, "/admin/users", http.StatusFound)
 	}
+}
+
+// CreateUserForm handles displaying the create user form
+func (h *Handlers) CreateUserForm(w http.ResponseWriter, r *http.Request) {
+	// Create page data for create user form
+	data := map[string]interface{}{
+		"Title":    "Create User",
+		"SubTitle": "Add a new user to the system",
+		"Page":     "create_user",
+		"Path":     r.URL.Path,
+		"BreadCrumbs": []BreadCrumb{
+			{
+				Title: "Users",
+				Path:  "/admin/users",
+			},
+			{
+				Title: "Create User",
+				Path:  r.URL.Path,
+			},
+		},
+		"MenuItems": MenuItems,
+	}
+	
+	// Check if this is an HTMX request
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "CreateUserContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+// CreateUser handles creating a new user
+func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
+
+	userID := r.FormValue("user_id")
+	if userID == "" {
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
+
+	// Create user via API
+	createReq := map[string]interface{}{
+		"user_id":    userID,
+		"email":      r.FormValue("email"),
+		"first_name": r.FormValue("first_name"),
+		"last_name":  r.FormValue("last_name"),
+		"metadata":   map[string]interface{}{},
+	}
+
+	resp, err := h.apiClient.post("/api/v2/users", createReq)
+	if err != nil {
+		log.Printf("❌ Create user error: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to create user: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("❌ Create user API error %d: %s", resp.StatusCode, string(body))
+		http.Error(w, fmt.Sprintf("API error %d: %s", resp.StatusCode, string(body)), http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("✅ Successfully created user: %s", userID)
+	
+	// Redirect to users list
+	http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
 }
 
 // TestAuth handles API authentication testing
