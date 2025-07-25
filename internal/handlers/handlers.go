@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
 	"os"
