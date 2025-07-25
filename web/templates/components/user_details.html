@@ -51,7 +51,7 @@
                 <div class="sm:col-span-9">
                     <div id="metadata"
                         class="py-2 px-3 w-full shadow-sm text-xs rounded-lg bg-gray-50 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400">
-                        No metadata available
+                        {{ if .User.Metadata }}{{ ToJSON .User.Metadata }}{{ else }}No metadata available{{ end }}
                     </div>
                 </div>
                 <!-- End Col -->
