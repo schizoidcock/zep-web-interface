@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -347,9 +348,13 @@ func (h *Handlers) DeleteSession(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 	users, err := h.apiClient.GetUsers()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// Log the specific error for debugging
+		log.Printf("❌ GetUsers error: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to get users: %v", err), http.StatusInternalServerError)
 		return
 	}
+	
+	log.Printf("✅ Successfully fetched %d users", len(users))
 
 	// Parse query parameters for sorting and pagination
 	currentPage := 1
@@ -628,6 +633,19 @@ func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		// For regular requests, redirect to users list
 		http.Redirect(w, r, "/admin/users", http.StatusFound)
 	}
+}
+
+// TestAuth handles API authentication testing
+func (h *Handlers) TestAuth(w http.ResponseWriter, r *http.Request) {
+	users, err := h.apiClient.GetUsers()
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"status": "error", "message": "%s"}`, err.Error())
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "success", "user_count": %d, "message": "Authentication working"}`, len(users))
 }
 
 // Settings handles the settings page

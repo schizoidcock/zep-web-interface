@@ -75,6 +75,9 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"healthy","service":"zep-web-interface"}`))
 	})
+	
+	// Auth test endpoint
+	r.Get("/auth-test", h.TestAuth)
 
 	// Static files - serve at both root and proxy path locations
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir("web/static")))
