@@ -224,8 +224,15 @@ func (c *Client) GetMessageList(sessionID string, page, pageSize int) ([]Message
 	}
 	defer resp.Body.Close()
 
+	// Read the raw response body for debugging
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to read response body: %w", err)
+	}
+	
+	log.Printf("🔍 DEBUG GetMessageList - Session: %s, Status: %d, Response: %s", sessionID, resp.StatusCode, string(body))
+
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
 		return nil, 0, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
 	}
 
@@ -235,60 +242,74 @@ func (c *Client) GetMessageList(sessionID string, page, pageSize int) ([]Message
 		Total    int       `json:"total"`
 	}
 	
-	// Reset response body for reading
-	if err := json.NewDecoder(resp.Body).Decode(&paginatedResp); err != nil {
-		// If paginated response fails, try direct array
-		resp, err = c.get(endpoint)
-		if err != nil {
-			return nil, 0, err
-		}
-		defer resp.Body.Close()
-		
-		var messages []Message
-		if err := json.NewDecoder(resp.Body).Decode(&messages); err != nil {
-			return nil, 0, err
-		}
-		return messages, len(messages), nil
+	if err := json.Unmarshal(body, &paginatedResp); err == nil && len(paginatedResp.Messages) > 0 {
+		log.Printf("✅ Parsed %d messages from paginated response", len(paginatedResp.Messages))
+		return paginatedResp.Messages, paginatedResp.Total, nil
+	}
+
+	// If paginated response fails, try direct array
+	var messages []Message
+	if err := json.Unmarshal(body, &messages); err != nil {
+		log.Printf("❌ Failed to unmarshal messages: %v", err)
+		return nil, 0, err
 	}
 	
-	return paginatedResp.Messages, paginatedResp.Total, nil
+	log.Printf("✅ Parsed %d messages from direct array", len(messages))
+	return messages, len(messages), nil
 }
 
 func (c *Client) GetUsers() ([]User, error) {
-	// Add query parameters for pagination (based on v1.0.2 source analysis)
-	resp, err := c.get("/api/v2/users?limit=100&cursor=0")
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Read the raw response body for debugging
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+	// Try the ordered users endpoint first, then fallback to simple endpoint
+	endpoints := []string{
+		"/api/v2/users-ordered?pageNumber=1&pageSize=100",
+		"/api/v2/users?limit=100&cursor=0",
+		"/api/v2/users",
 	}
 	
-	log.Printf("🔍 DEBUG GetUsers - Status: %d, Response: %s", resp.StatusCode, string(body))
+	var lastErr error
+	for _, endpoint := range endpoints {
+		resp, err := c.get(endpoint)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		defer resp.Body.Close()
 
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+		// Read the raw response body for debugging
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to read response body: %w", err)
+			continue
+		}
+		
+		log.Printf("🔍 DEBUG GetUsers - Endpoint: %s, Status: %d, Response: %s", endpoint, resp.StatusCode, string(body))
+
+		if resp.StatusCode >= 400 {
+			lastErr = fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+			continue
+		}
+
+		// Try to parse as ordered response first
+		var orderedResp struct {
+			Users []User `json:"users"`
+			Total int    `json:"total"`
+		}
+		if err := json.Unmarshal(body, &orderedResp); err == nil && len(orderedResp.Users) > 0 {
+			log.Printf("✅ Parsed %d users from ordered response", len(orderedResp.Users))
+			return orderedResp.Users, nil
+		}
+
+		// Try to parse as simple array
+		var users []User
+		if err := json.Unmarshal(body, &users); err == nil {
+			log.Printf("✅ Parsed %d users from simple array", len(users))
+			return users, nil
+		}
+
+		lastErr = fmt.Errorf("failed to parse response as users array or ordered response")
 	}
-
-	var users []User
-	if err := json.Unmarshal(body, &users); err != nil {
-		log.Printf("❌ Failed to unmarshal users: %v", err)
-		return nil, err
-	}
-
-	log.Printf("✅ Parsed %d users", len(users))
-
-	// TODO: Fetch session counts for each user from API if available
-	// For now, set SessionCount to 0 to prevent template errors
-	for i := range users {
-		users[i].SessionCount = 0
-	}
-
-	return users, nil
+	
+	return nil, fmt.Errorf("all user endpoints failed, last error: %v", lastErr)
 }
 
 func (c *Client) GetUser(userID string) (*User, error) {
