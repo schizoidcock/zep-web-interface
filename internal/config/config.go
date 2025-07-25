@@ -33,6 +33,14 @@ func Load() *Config {
 		ProxyPath:    getEnv("PROXY_PATH", ""),
 	}
 	
+	// Debug logging for API key (show first/last 8 chars for security)
+	if len(cfg.ZepAPIKey) >= 16 {
+		fmt.Printf("🔑 Using API key: %s...%s (length: %d)\n", 
+			cfg.ZepAPIKey[:8], cfg.ZepAPIKey[len(cfg.ZepAPIKey)-8:], len(cfg.ZepAPIKey))
+	} else {
+		fmt.Printf("🔑 API key length: %d\n", len(cfg.ZepAPIKey))
+	}
+	
 	// Validate required configuration
 	if err := cfg.validate(); err != nil {
 		panic(fmt.Sprintf("Configuration validation failed: %v", err))
