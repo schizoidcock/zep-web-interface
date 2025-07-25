@@ -693,18 +693,10 @@ func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 		"metadata":   map[string]interface{}{},
 	}
 
-	resp, err := h.apiClient.post("/api/v2/users", createReq)
+	_, err := h.apiClient.CreateUser(createReq)
 	if err != nil {
 		log.Printf("❌ Create user error: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to create user: %v", err), http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(resp.Body)
-		log.Printf("❌ Create user API error %d: %s", resp.StatusCode, string(body))
-		http.Error(w, fmt.Sprintf("API error %d: %s", resp.StatusCode, string(body)), http.StatusInternalServerError)
 		return
 	}
 

@@ -388,6 +388,27 @@ func (c *Client) DeleteUser(userID string) error {
 	return nil
 }
 
+// CreateUser creates a new user
+func (c *Client) CreateUser(createReq map[string]interface{}) (*User, error) {
+	resp, err := c.post("/api/v2/users", createReq)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
+
+	var user User
+	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &user, nil
+}
+
 // GetSystemStats retrieves system statistics for the settings page
 func (c *Client) GetSystemStats() (map[string]interface{}, error) {
 	stats := make(map[string]interface{})
