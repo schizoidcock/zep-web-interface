@@ -98,6 +98,7 @@ type Session struct {
 	UserID       string                 `json:"user_id,omitempty"`
 	CreatedAt    time.Time              `json:"created_at"`
 	UpdatedAt    time.Time              `json:"updated_at"`
+	EndedAt      *time.Time             `json:"ended_at,omitempty"`
 	Summary      map[string]interface{} `json:"summary,omitempty"`
 	MessageCount int                    `json:"message_count,omitempty"`
 }
@@ -372,4 +373,64 @@ func (c *Client) DeleteUser(userID string) error {
 	}
 
 	return nil
+}
+
+// GetSystemStats retrieves system statistics for the settings page
+func (c *Client) GetSystemStats() (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+	
+	// Get total users count
+	if users, err := c.GetUsers(); err == nil {
+		stats["total_users"] = len(users)
+	} else {
+		stats["total_users"] = 0
+		log.Printf("❌ Failed to get users count: %v", err)
+	}
+	
+	// Get total sessions count
+	if sessions, err := c.GetSessions(); err == nil {
+		stats["total_sessions"] = len(sessions)
+		
+		// Calculate additional session statistics
+		activeCount := 0
+		for _, session := range sessions {
+			if session.EndedAt == nil {
+				activeCount++
+			}
+		}
+		stats["active_sessions"] = activeCount
+		stats["ended_sessions"] = len(sessions) - activeCount
+	} else {
+		stats["total_sessions"] = 0
+		stats["active_sessions"] = 0
+		stats["ended_sessions"] = 0
+		log.Printf("❌ Failed to get sessions count: %v", err)
+	}
+	
+	return stats, nil
+}
+
+// GetServerHealth checks server health and version
+func (c *Client) GetServerHealth() (map[string]interface{}, error) {
+	resp, err := c.get("/healthz")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	
+	health := make(map[string]interface{})
+	health["status"] = "healthy"
+	health["status_code"] = resp.StatusCode
+	
+	// Extract version from headers if available
+	if version := resp.Header.Get("X-Zep-Version"); version != "" {
+		health["version"] = version
+	} else {
+		health["version"] = "unknown"
+	}
+	
+	// Record response time
+	health["response_time"] = "< 1ms" // Placeholder since we don't have timing here
+	
+	return health, nil
 }

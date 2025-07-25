@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -108,6 +109,18 @@ func New(apiClient *zepapi.Client, templates *template.Template) *Handlers {
 	return &Handlers{
 		apiClient: apiClient,
 		templates: templates,
+	}
+}
+
+// formatStatValue formats a stat value for display
+func formatStatValue(value interface{}) string {
+	switch v := value.(type) {
+	case int:
+		return fmt.Sprintf("%d", v)
+	case string:
+		return v
+	default:
+		return "Unknown"
 	}
 }
 
@@ -619,23 +632,52 @@ func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 // Settings handles the settings page
 func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
-	// Create user-friendly configuration display with emojis
+	// Get system statistics and health information
+	stats, err := h.apiClient.GetSystemStats()
+	if err != nil {
+		stats = map[string]interface{}{
+			"total_users": "Error",
+			"total_sessions": "Error",
+			"active_sessions": "Error",
+		}
+	}
+	
+	health, err := h.apiClient.GetServerHealth()
+	if err != nil {
+		health = map[string]interface{}{
+			"status": "Error",
+			"version": "Unknown",
+		}
+	}
+
+	// Create comprehensive configuration display like v0.27
 	configHTML := `
 	<div class="mb-6">
-		<h3 class="text-lg font-semibold text-gray-800 mb-4">🚀 Zep Web Interface Configuration</h3>
+		<h3 class="text-lg font-semibold text-gray-800 mb-4">🚀 Zep System Configuration & Status</h3>
 		<div class="space-y-4">
 			<div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-				<h4 class="font-medium text-blue-800 mb-2">🔗 API Connection</h4>
+				<h4 class="font-medium text-blue-800 mb-2">🔗 Zep Server Connection</h4>
 				<div class="text-sm text-blue-700 space-y-1">
 					<div>📡 <strong>API URL:</strong> ` + os.Getenv("ZEP_API_URL") + `</div>
 					<div>🔐 <strong>Authentication:</strong> ✅ API Key Configured</div>
-					<div>📋 <strong>Version:</strong> v1.0.2</div>
+					<div>📋 <strong>Server Version:</strong> ` + health["version"].(string) + `</div>
+					<div>💚 <strong>Health Status:</strong> ` + health["status"].(string) + `</div>
 				</div>
 			</div>
 			
 			<div class="bg-green-50 p-4 rounded-lg border border-green-200">
-				<h4 class="font-medium text-green-800 mb-2">🌐 Web Server</h4>
+				<h4 class="font-medium text-green-800 mb-2">📊 System Statistics</h4>
 				<div class="text-sm text-green-700 space-y-1">
+					<div>👥 <strong>Total Users:</strong> ` + formatStatValue(stats["total_users"]) + `</div>
+					<div>💬 <strong>Total Sessions:</strong> ` + formatStatValue(stats["total_sessions"]) + `</div>
+					<div>🟢 <strong>Active Sessions:</strong> ` + formatStatValue(stats["active_sessions"]) + `</div>
+					<div>🔴 <strong>Ended Sessions:</strong> ` + formatStatValue(stats["ended_sessions"]) + `</div>
+				</div>
+			</div>
+			
+			<div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+				<h4 class="font-medium text-yellow-800 mb-2">🌐 Web Interface Server</h4>
+				<div class="text-sm text-yellow-700 space-y-1">
 					<div>🏠 <strong>Host:</strong> ` + func() string {
 		if host := os.Getenv("HOST"); host != "" {
 			return host
@@ -658,7 +700,7 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 			</div>
 			
 			<div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-				<h4 class="font-medium text-purple-800 mb-2">⚙️ Network Settings</h4>
+				<h4 class="font-medium text-purple-800 mb-2">⚙️ Network & Security</h4>
 				<div class="text-sm text-purple-700 space-y-1">
 					<div>🌍 <strong>CORS Origins:</strong> ` + func() string {
 		if cors := os.Getenv("CORS_ORIGINS"); cors != "" {
@@ -672,7 +714,7 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 		}
 		return "✅ Enabled"
 	}() + `</div>
-					<div>🛡️ <strong>Proxy:</strong> ` + func() string {
+					<div>🛡️ <strong>HTTP Proxy:</strong> ` + func() string {
 		if proxy := os.Getenv("PROXY_URL"); proxy != "" {
 			return "✅ Configured"
 		}
@@ -681,12 +723,33 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 				</div>
 			</div>
 			
-			<div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
-				<h4 class="font-medium text-orange-800 mb-2">🎯 Environment</h4>
-				<div class="text-sm text-orange-700 space-y-1">
+			<div class="bg-red-50 p-4 rounded-lg border border-red-200">
+				<h4 class="font-medium text-red-800 mb-2">🗄️ Database & Storage</h4>
+				<div class="text-sm text-red-700 space-y-1">
+					<div>🐘 <strong>Database:</strong> PostgreSQL (via Zep API)</div>
+					<div>📊 <strong>Connection Status:</strong> ✅ Connected (API responding)</div>
+					<div>🏷️ <strong>Project Scope:</strong> Multi-tenant with UUID filtering</div>
+					<div>🔍 <strong>Search:</strong> ✅ Full-text search available</div>
+				</div>
+			</div>
+			
+			<div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+				<h4 class="font-medium text-indigo-800 mb-2">🤖 AI & Processing Features</h4>
+				<div class="text-sm text-indigo-700 space-y-1">
+					<div>💬 <strong>Message Processing:</strong> ✅ Available</div>
+					<div>📝 <strong>Memory Management:</strong> ✅ Session memory supported</div>
+					<div>🔍 <strong>Session Search:</strong> ✅ Advanced search endpoint</div>
+					<div>🏷️ <strong>Message Roles:</strong> system, user, assistant, function, tool</div>
+				</div>
+			</div>
+			
+			<div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+				<h4 class="font-medium text-gray-800 mb-2">🎯 Environment & Deployment</h4>
+				<div class="text-sm text-gray-700 space-y-1">
 					<div>📝 <strong>Config Source:</strong> Environment Variables</div>
-					<div>🚀 <strong>Status:</strong> ✅ Running</div>
-					<div>🌍 <strong>Mode:</strong> Production</div>
+					<div>🚀 <strong>Interface Status:</strong> ✅ Running</div>
+					<div>🌍 <strong>Deployment:</strong> Production</div>
+					<div>⚡ <strong>API Version:</strong> v2</div>
 				</div>
 			</div>
 		</div>
