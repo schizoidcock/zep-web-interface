@@ -148,6 +148,14 @@ func (c *Client) GetSessions() ([]Session, error) {
 	}
 	
 	log.Printf("🔍 DEBUG GetSessions - Status: %d, Response: %s", resp.StatusCode, string(body))
+	
+	// Also log the first session's project_uuid if available to help debug user filtering
+	var tempSessions []map[string]interface{}
+	if json.Unmarshal(body, &tempSessions) == nil && len(tempSessions) > 0 {
+		if projectUUID, exists := tempSessions[0]["project_uuid"]; exists {
+			log.Printf("🔍 DEBUG Sessions using project_uuid: %v", projectUUID)
+		}
+	}
 
 	if resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
