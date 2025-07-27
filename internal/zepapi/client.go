@@ -449,7 +449,7 @@ func (c *Client) DeleteUserGraphData(userID string) error {
 	}
 	
 	for _, baseURL := range graphServiceURLs {
-		// Try to delete the user's graph database by calling the group deletion endpoint
+		// Step 1: Try to delete the user's graph database by calling the group deletion endpoint
 		// The user ID should be the group ID in the graph service
 		groupDeleteURL := fmt.Sprintf("%s/group/%s", baseURL, userID)
 		
@@ -470,6 +470,32 @@ func (c *Client) DeleteUserGraphData(userID string) error {
 		
 		if resp.StatusCode == 200 || resp.StatusCode == 404 {
 			log.Printf("✅ Successfully cleaned up graph data for user %s via %s", userID, baseURL)
+			
+			// Step 2: Now try to delete the entire database for this user
+			databaseDeleteURL := fmt.Sprintf("%s/database/%s", baseURL, userID)
+			
+			dbReq, err := http.NewRequest("DELETE", databaseDeleteURL, nil)
+			if err != nil {
+				log.Printf("⚠️ Failed to create database deletion request for user %s: %v", userID, err)
+				return nil // Data cleanup succeeded, database deletion is secondary
+			}
+			
+			dbReq.Header.Set("Content-Type", "application/json")
+			
+			dbResp, err := client.Do(dbReq)
+			if err != nil {
+				log.Printf("⚠️ Database deletion request failed for user %s: %v", userID, err)
+				return nil // Data cleanup succeeded, database deletion is secondary
+			}
+			defer dbResp.Body.Close()
+			
+			if dbResp.StatusCode == 200 || dbResp.StatusCode == 404 {
+				log.Printf("✅ Successfully deleted database for user %s via %s", userID, baseURL)
+			} else {
+				dbBody, _ := io.ReadAll(dbResp.Body)
+				log.Printf("⚠️ Database deletion returned %d for user %s: %s", dbResp.StatusCode, userID, string(dbBody))
+			}
+			
 			return nil
 		}
 		
