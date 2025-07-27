@@ -624,11 +624,17 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
 	
-	err := h.apiClient.DeleteUser(userID)
+	log.Printf("🗑️ Starting user deletion for: %s", userID)
+	
+	// Use comprehensive deletion that includes session and graph cleanup
+	err := h.apiClient.DeleteUserWithCleanup(userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("❌ User deletion failed for %s: %v", userID, err)
+		http.Error(w, fmt.Sprintf("Failed to delete user: %v", err), http.StatusInternalServerError)
 		return
 	}
+	
+	log.Printf("✅ Successfully deleted user: %s", userID)
 	
 	// For HTMX requests, redirect back to users list
 	if r.Header.Get("HX-Request") == "true" {

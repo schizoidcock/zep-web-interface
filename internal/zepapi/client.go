@@ -388,6 +388,99 @@ func (c *Client) DeleteUser(userID string) error {
 	return nil
 }
 
+// DeleteUserWithCleanup deletes a user and performs comprehensive cleanup
+func (c *Client) DeleteUserWithCleanup(userID string) error {
+	log.Printf("🧹 Starting comprehensive user deletion for: %s", userID)
+	
+	// Step 1: Get all sessions for this user first
+	sessions, err := c.GetUserSessions(userID)
+	if err != nil {
+		log.Printf("⚠️ Could not get sessions for user %s (continuing): %v", userID, err)
+		// Continue anyway, the sessions might not exist
+	} else {
+		log.Printf("📋 Found %d sessions for user %s", len(sessions), userID)
+	}
+	
+	// Step 2: Delete each session individually (includes graph cleanup)
+	for _, session := range sessions {
+		log.Printf("🗑️ Deleting session: %s", session.SessionID)
+		err := c.DeleteSession(session.SessionID)
+		if err != nil {
+			log.Printf("⚠️ Failed to delete session %s (continuing): %v", session.SessionID, err)
+			// Continue with other sessions even if one fails
+		} else {
+			log.Printf("✅ Successfully deleted session: %s", session.SessionID)
+		}
+	}
+	
+	// Step 3: Try to cleanup graph data directly if we have a graph service
+	// This is a safety net in case session deletion didn't clean everything
+	if c.baseURL != "" {
+		log.Printf("🧠 Attempting direct graph cleanup for user: %s", userID)
+		err := c.DeleteUserGraphData(userID)
+		if err != nil {
+			log.Printf("⚠️ Direct graph cleanup failed (this is expected if no graph service): %v", err)
+			// This is not a critical error - the graph service might not be available
+		}
+	}
+	
+	// Step 4: Delete the user from Zep server
+	log.Printf("👤 Deleting user from Zep server: %s", userID)
+	err = c.DeleteUser(userID)
+	if err != nil {
+		log.Printf("❌ Failed to delete user %s from Zep server: %v", userID, err)
+		return fmt.Errorf("failed to delete user from Zep server: %w", err)
+	}
+	
+	log.Printf("✅ Successfully completed comprehensive deletion for user: %s", userID)
+	return nil
+}
+
+// DeleteUserGraphData attempts to cleanup graph data for a user (best effort)
+func (c *Client) DeleteUserGraphData(userID string) error {
+	// Try different graph service URLs that might be configured
+	graphServiceURLs := []string{
+		// Railway internal network patterns
+		"http://zep-falkordb-service.railway.internal:8003",
+		"http://zep-falkordb-service:8003",
+		// Local development patterns
+		"http://localhost:8003",
+		"http://127.0.0.1:8003",
+	}
+	
+	for _, baseURL := range graphServiceURLs {
+		// Try to delete the user's graph database by calling the group deletion endpoint
+		// The user ID should be the group ID in the graph service
+		groupDeleteURL := fmt.Sprintf("%s/group/%s", baseURL, userID)
+		
+		req, err := http.NewRequest("DELETE", groupDeleteURL, nil)
+		if err != nil {
+			continue
+		}
+		
+		req.Header.Set("Content-Type", "application/json")
+		
+		// Use a shorter timeout for graph cleanup attempts
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			continue // Try next URL
+		}
+		defer resp.Body.Close()
+		
+		if resp.StatusCode == 200 || resp.StatusCode == 404 {
+			log.Printf("✅ Successfully cleaned up graph data for user %s via %s", userID, baseURL)
+			return nil
+		}
+		
+		// Log what we got but continue trying
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("🔍 Graph cleanup attempt via %s returned %d: %s", baseURL, resp.StatusCode, string(body))
+	}
+	
+	return fmt.Errorf("no graph service responded successfully (tried %d URLs)", len(graphServiceURLs))
+}
+
 // CreateUser creates a new user
 func (c *Client) CreateUser(createReq map[string]interface{}) (*User, error) {
 	resp, err := c.post("/api/v2/users", createReq)
