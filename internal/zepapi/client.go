@@ -449,8 +449,7 @@ func (c *Client) DeleteUserGraphData(userID string) error {
 	}
 	
 	for _, baseURL := range graphServiceURLs {
-		// Step 1: Try to delete the user's graph database by calling the group deletion endpoint
-		// The user ID should be the group ID in the graph service
+		// Step 1: Clear all data from the user's database by calling group deletion
 		groupDeleteURL := fmt.Sprintf("%s/group/%s", baseURL, userID)
 		
 		req, err := http.NewRequest("DELETE", groupDeleteURL, nil)
@@ -460,18 +459,18 @@ func (c *Client) DeleteUserGraphData(userID string) error {
 		
 		req.Header.Set("Content-Type", "application/json")
 		
-		// Use a shorter timeout for graph cleanup attempts
-		client := &http.Client{Timeout: 10 * time.Second}
+		client := &http.Client{Timeout: 15 * time.Second}
 		resp, err := client.Do(req)
 		if err != nil {
 			continue // Try next URL
 		}
 		defer resp.Body.Close()
 		
+		// Check if group deletion succeeded
 		if resp.StatusCode == 200 || resp.StatusCode == 404 {
-			log.Printf("✅ Successfully cleaned up graph data for user %s via %s", userID, baseURL)
+			log.Printf("✅ Successfully cleared graph data for user %s via %s", userID, baseURL)
 			
-			// Step 2: Now try to delete the entire database for this user
+			// Step 2: Delete the entire database (should now be empty)
 			databaseDeleteURL := fmt.Sprintf("%s/database/%s", baseURL, userID)
 			
 			dbReq, err := http.NewRequest("DELETE", databaseDeleteURL, nil)
