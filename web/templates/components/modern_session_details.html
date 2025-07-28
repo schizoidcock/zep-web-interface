@@ -1,127 +1,146 @@
 {{ define "ModernSessionDetails" }}
-<div>
-  <!-- Header with Back Button -->
-  <div class="flex items-center gap-4 mb-6">
-    <a href="{{ adminPath "/users" }}" 
-       class="text-gray-400 hover:text-white"
-       hx-get="{{ adminPath "/users" }}" 
-       hx-target="#page-content">
-      ← Users
-    </a>
+<div class="py-8 space-y-4 px-8">
+  <!-- Header Section -->
+  <div class="flex flex-col space-y-2">
+    <h2 class="text-3xl font-bold tracking-tight">Session Details</h2>
+    <p class="text-muted-foreground">View session information and messages</p>
   </div>
-
-  <h1 class="text-2xl font-medium text-white mb-2">Session Details</h1>
-  <p class="text-gray-400 mb-6">View session information</p>
   
-  <!-- Session ID with Copy Button -->
-  <div class="mb-6">
-    <span class="text-sm text-gray-400">Session ID</span>
-    <div class="flex items-center gap-2 bg-gray-800 rounded px-3 py-1 mt-1 inline-flex">
-      <span class="text-sm font-mono text-white">{{ .Data.Session.SessionID }}</span>
-      <button class="text-gray-400 hover:text-white text-xs">📋 Copy</button>
-    </div>
-  </div>
-
   <!-- Session Info Card -->
-  <div class="bg-gray-900 rounded-lg p-6 mb-8">
-    <div class="grid grid-cols-2 gap-6">
+  <div class="rounded-xl border bg-card text-card-foreground shadow p-6 space-y-6">
+    <!-- Session ID Section -->
+    <div class="flex items-center justify-between mb-4">
       <div>
-        <div class="text-sm text-gray-400 mb-1">User</div>
-        <div class="text-white">
+        <p class="block text-sm font-medium mb-2">Session ID</p>
+        <div class="w-full inline-flex gap-x-2" id="clipboard-container-session_id">
+          <input type="text" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-w-md" 
+                 id="hs-clipboard-input-session_id" 
+                 readonly="" 
+                 value="{{ .Data.Session.SessionID }}">
+          <button class="justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 py-3 px-4 group inline-flex items-center gap-x-2 text-sm font-medium rounded-lg disabled:pointer-events-none" 
+                  type="button" 
+                  id="session_id">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy w-4 h-4 group-hover:rotate-6 transition">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+            </svg>
+            <span>Copy</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Information Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">User ID</label>
+        <div class="mt-2">
           {{if .Data.Session.UserID}}
             <a href="{{ adminPath "/users/" }}{{ .Data.Session.UserID }}" 
-               class="text-purple-400 hover:text-purple-300 font-mono"
+               class="text-primary hover:text-primary/80 hover:underline"
                hx-get="{{ adminPath "/users/" }}{{ .Data.Session.UserID }}" 
                hx-target="#page-content">
               {{ .Data.Session.UserID }}
             </a>
           {{else}}
-            -
+            <span class="text-muted-foreground">-</span>
           {{end}}
         </div>
       </div>
-      <div></div>
       
       <div>
-        <div class="text-sm text-gray-400 mb-1">Created</div>
-        <div class="text-white text-sm">
+        <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Created</label>
+        <p class="mt-2 text-sm text-muted-foreground">
           {{ .Data.Session.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}
-        </div>
+        </p>
       </div>
-      <div></div>
     </div>
   </div>
 
   <!-- Messages Section -->
-  <h3 class="text-xl font-medium text-white mb-4">Messages</h3>
+  <div class="flex flex-col space-y-2">
+    <h3 class="text-xl font-semibold tracking-tight">Messages</h3>
+  </div>
   
-  <div class="overflow-x-auto">
-    <table class="w-full">
-      <thead>
-        <tr class="border-b border-gray-700">
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Role</th>
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Role Type</th>
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Content</th>
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Created</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{if .Data.Messages}}
-          {{range .Data.Messages}}
-          <tr class="border-b border-gray-800 hover:bg-gray-800/50">
-            <td class="py-3 px-4 text-sm text-white">
-              {{ .Role }}
-            </td>
-            <td class="py-3 px-4">
-              {{if eq .Role "user"}}
-                <span class="text-sm text-gray-300">User</span>
-              {{else if eq .Role "assistant"}}
-                <span class="text-sm text-purple-400">Assistant</span>
-              {{else}}
-                <span class="text-sm text-gray-300">{{ .Role }}</span>
-              {{end}}
-            </td>
-            <td class="py-3 px-4 text-sm text-white max-w-lg">
-              <div class="truncate">{{ .Content }}</div>
-            </td>
-            <td class="py-3 px-4 text-sm text-gray-400">
-              {{if .CreatedAt}}{{ .CreatedAt.Format "Jan 2, 2006 3:04 PM" }}{{else}}-{{end}}
-            </td>
+  <div class="rounded-md border">
+    <div class="relative w-full overflow-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="[&_tr]:border-b">
+          <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Role</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Role Type</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Content</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Created</th>
           </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0">
+          {{if .Data.Messages}}
+            {{range .Data.Messages}}
+            <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+              <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                {{ .Role }}
+              </td>
+              <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                {{if eq .Role "user"}}
+                  <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">User</span>
+                {{else if eq .Role "assistant"}}
+                  <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">Assistant</span>
+                {{else}}
+                  <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground">{{ .Role }}</span>
+                {{end}}
+              </td>
+              <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 max-w-lg">
+                <div class="truncate font-medium">{{ .Content }}</div>
+              </td>
+              <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-muted-foreground">
+                {{if .CreatedAt}}{{ .CreatedAt.Format "Jan 2, 2006 3:04 PM" }}{{else}}-{{end}}
+              </td>
+            </tr>
+            {{end}}
+          {{else}}
+            <tr>
+              <td colspan="4" class="py-8 text-center text-muted-foreground">No messages found</td>
+            </tr>
           {{end}}
-        {{else}}
-          <tr>
-            <td colspan="4" class="py-8 text-center text-gray-400">No messages found</td>
-          </tr>
-        {{end}}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   </div>
   
   <!-- Pagination -->
-  <div class="flex items-center justify-between mt-6">
-    <button class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white">
-      ← Previous
+  <div class="flex items-center justify-between space-x-2 py-4">
+    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left h-4 w-4">
+        <path d="m15 18-6-6 6-6"></path>
+      </svg>
+      Previous
     </button>
-    <span class="text-sm text-gray-400">1</span>
-    <button class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white">
-      Next →
+    <div class="flex items-center space-x-2">
+      <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 w-8">1</button>
+    </div>
+    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3">
+      Next
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right h-4 w-4">
+        <path d="m9 18 6-6-6-6"></path>
+      </svg>
     </button>
   </div>
 
   <!-- Danger Zone -->
-  <div class="mt-12 pt-8 border-t border-gray-700">
-    <h3 class="text-xl font-medium text-white mb-4">Danger Zone</h3>
+  <div class="mt-12 pt-8 border-t">
+    <div class="flex flex-col space-y-2">
+      <h3 class="text-xl font-semibold tracking-tight text-destructive">Danger Zone</h3>
+    </div>
     
-    <div class="bg-gray-900 rounded-lg p-6">
-      <h4 class="text-sm font-medium text-white mb-2">Delete this session</h4>
-      <p class="text-sm text-gray-400 mb-4">Once deleted, it will be permanently removed and cannot be recovered.</p>
+    <div class="rounded-xl border bg-card text-card-foreground shadow p-6 mt-4">
+      <h4 class="text-sm font-medium mb-2">Delete this session</h4>
+      <p class="text-sm text-muted-foreground mb-4">Once deleted, it will be permanently removed and cannot be recovered.</p>
       
       <button type="button" 
               hx-confirm="Are you sure you want to delete this session?" 
               hx-delete="{{ .Path }}" 
               hx-target="#page-content"
-              class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
         Delete Session
       </button>
     </div>
