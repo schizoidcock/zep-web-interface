@@ -628,7 +628,11 @@ func (c *Client) GetServerHealth() (map[string]interface{}, error) {
 	defer resp.Body.Close()
 	
 	health := make(map[string]interface{})
-	health["status"] = "healthy"
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		health["status"] = "healthy"
+	} else {
+		health["status"] = "unhealthy"
+	}
 	health["status_code"] = resp.StatusCode
 	
 	// Extract version from headers if available

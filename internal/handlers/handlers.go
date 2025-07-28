@@ -797,7 +797,7 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 	health, err := h.apiClient.GetServerHealth()
 	if err != nil {
 		health = map[string]interface{}{
-			"status": "Error",
+			"status": "unhealthy",
 			"version": "Unknown",
 		}
 	}
