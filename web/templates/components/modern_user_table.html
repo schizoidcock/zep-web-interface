@@ -9,6 +9,7 @@
     <div>
       <div class="rounded-md border">
         <div class="relative w-full overflow-auto">
+          {{if .Data.Rows}}
           <table class="w-full caption-bottom text-sm">
             <thead class="[&_tr]:border-b">
               <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
@@ -46,6 +47,14 @@
               {{end}}
             </tbody>
           </table>
+          {{else}}
+          <div class="rounded-xl border bg-card shadow flex items-center justify-center h-40 text-muted-foreground text-lg">
+            No users yet—
+            <a href="https://help.getzep.com/quickstart#creating-a-user" class="text-primary hover:underline ml-1" target="_blank" rel="noopener noreferrer">
+              click here to add your first!
+            </a>
+          </div>
+          {{end}}
         </div>
       </div>
       
