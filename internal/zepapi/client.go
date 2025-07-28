@@ -620,10 +620,9 @@ func (c *Client) GetSystemStats() (map[string]interface{}, error) {
 	return stats, nil
 }
 
-// GetServerHealth checks server health by testing a simple API call
+// GetServerHealth checks server health and returns actual status
 func (c *Client) GetServerHealth() (map[string]interface{}, error) {
-	// Test actual API endpoint instead of just healthz
-	resp, err := c.get("/api/v2/users")
+	resp, err := c.get("/health")
 	if err != nil {
 		return map[string]interface{}{
 			"status":  "unhealthy",
@@ -633,23 +632,23 @@ func (c *Client) GetServerHealth() (map[string]interface{}, error) {
 	}
 	defer resp.Body.Close()
 	
-	health := make(map[string]interface{})
-	
-	// Determine health based on actual API response
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		health["status"] = "healthy"
-	} else {
-		health["status"] = "unhealthy"
+	var responseData map[string]interface{}
+	body, _ := io.ReadAll(resp.Body)
+	if err := json.Unmarshal(body, &responseData); err != nil {
+		// Fallback to HTTP status if JSON parsing fails
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			responseData = map[string]interface{}{"status": "healthy"}
+		} else {
+			responseData = map[string]interface{}{"status": "unhealthy"}
+		}
 	}
 	
-	health["status_code"] = resp.StatusCode
-	
-	// Extract version from headers if available
-	if version := resp.Header.Get("X-Zep-Version"); version != "" {
-		health["version"] = version
+	// Ensure we have a status field
+	if status, ok := responseData["status"].(string); !ok {
+		responseData["status"] = "healthy"
 	} else {
-		health["version"] = "unknown"
+		responseData["status"] = strings.ToLower(status)
 	}
 	
-	return health, nil
+	return responseData, nil
 }
