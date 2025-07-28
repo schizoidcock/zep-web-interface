@@ -1,12 +1,12 @@
 {{ define "ModernUserDetails" }}
 <div>
-  <h1 class="text-2xl font-medium text-white mb-2">{{ .Data.FirstName }} {{ .Data.LastName }}</h1>
+  <h1 class="text-2xl font-medium text-white mb-2">{{ .User.FirstName }} {{ .User.LastName }}</h1>
   
   <!-- User ID with Copy Button -->
   <div class="mb-6">
     <span class="text-sm text-gray-400">User ID</span>
     <div class="flex items-center gap-2 bg-gray-800 rounded px-3 py-1 mt-1 inline-flex">
-      <span class="text-sm font-mono text-white">{{ .Data.UserID }}</span>
+      <span class="text-sm font-mono text-white">{{ .User.UserID }}</span>
       <button class="text-gray-400 hover:text-white text-xs">📋 Copy</button>
     </div>
   </div>
@@ -14,10 +14,10 @@
   <!-- Action Buttons -->
   <div class="flex items-center gap-3 mb-8">
     <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
-      View Graph 📊
+      View Graph
     </button>
     <button class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
-      View Episodes 📝
+      View Episodes
     </button>
   </div>
 
@@ -27,11 +27,11 @@
       <label class="block text-sm font-medium text-gray-300 mb-2">Full name</label>
       <div class="grid grid-cols-2 gap-4 max-w-2xl">
         <input type="text" 
-               value="{{ .Data.FirstName }}" 
+               value="{{ .User.FirstName }}" 
                placeholder="Fernand" 
                class="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm">
         <input type="text" 
-               value="{{ .Data.LastName }}" 
+               value="{{ .User.LastName }}" 
                placeholder="Basilis" 
                class="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm">
       </div>
@@ -40,14 +40,14 @@
     <div>
       <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
       <input type="email" 
-             value="{{ .Data.Email }}" 
+             value="{{ .User.Email }}" 
              class="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm max-w-2xl w-full">
     </div>
     
     <div>
       <label class="block text-sm font-medium text-gray-300 mb-2">Created</label>
       <input type="text" 
-             value="{{if .Data.CreatedAt}}{{ .Data.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}{{end}}" 
+             value="{{if .User.CreatedAt}}{{ .User.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}{{end}}" 
              readonly 
              class="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-400 text-sm max-w-2xl w-full">
     </div>
@@ -72,19 +72,19 @@
         </tr>
       </thead>
       <tbody>
-        {{if .Data.Sessions}}
-          {{range .Data.Sessions}}
+        {{if .Data.Rows}}
+          {{range .Data.Rows}}
           <tr class="border-b border-gray-800 hover:bg-gray-800/50">
             <td class="py-3 px-4">
-              <a href="{{ adminPath "/sessions/" }}{{ .SessionID }}" 
+              <a href="{{ adminPath "/sessions/" }}{{ .Session.SessionID }}" 
                  class="text-purple-400 hover:text-purple-300 text-sm font-mono"
-                 hx-get="{{ adminPath "/sessions/" }}{{ .SessionID }}" 
+                 hx-get="{{ adminPath "/sessions/" }}{{ .Session.SessionID }}" 
                  hx-target="#page-content">
-                {{ .SessionID }}
+                {{ .Session.SessionID }}
               </a>
             </td>
             <td class="py-3 px-4 text-sm text-gray-400">
-              {{ .CreatedAt.Format "Jan 2, 2006 3:04 PM" }}
+              {{ .Session.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}
             </td>
             <td class="py-3 px-4 text-sm text-gray-400">
               -
