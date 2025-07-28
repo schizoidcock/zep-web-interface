@@ -6,31 +6,30 @@
     <p class="text-muted-foreground">View session information and messages</p>
   </div>
   
-  <!-- Session Info Card -->
-  <div class="rounded-xl border bg-card text-card-foreground shadow p-6 space-y-6">
-    <!-- Session ID Section -->
-    <div class="flex items-center justify-between mb-4">
-      <div>
-        <p class="block text-sm font-medium mb-2">Session ID</p>
-        <div class="w-full inline-flex gap-x-2" id="clipboard-container-session_id">
-          <input type="text" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-w-md" 
-                 id="hs-clipboard-input-session_id" 
-                 readonly="" 
-                 value="{{ .Data.Session.SessionID }}">
-          <button class="justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 py-3 px-4 group inline-flex items-center gap-x-2 text-sm font-medium rounded-lg disabled:pointer-events-none" 
-                  type="button" 
-                  id="session_id">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy w-4 h-4 group-hover:rotate-6 transition">
-              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
-              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
-            </svg>
-            <span>Copy</span>
-          </button>
-        </div>
+  <!-- Session ID Section -->
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <p class="block text-sm font-medium mb-2">Session ID</p>
+      <div class="w-full inline-flex gap-x-2" id="clipboard-container-session_id">
+        <input type="text" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-w-md" 
+               id="hs-clipboard-input-session_id" 
+               readonly="" 
+               value="{{ .Data.Session.SessionID }}">
+        <button class="justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 py-3 px-4 group inline-flex items-center gap-x-2 text-sm font-medium rounded-lg disabled:pointer-events-none" 
+                type="button" 
+                id="session_id">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy w-4 h-4 group-hover:rotate-6 transition">
+            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+          </svg>
+          <span>Copy</span>
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- Session Information Grid -->
+  <!-- Session Details Card -->
+  <div class="rounded-xl border bg-card text-card-foreground shadow p-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">User ID</label>
@@ -134,22 +133,22 @@
   </div>
 
   <!-- Danger Zone -->
-  <div class="mt-12 pt-8 border-t">
-    <div class="flex flex-col space-y-2">
-      <h3 class="text-xl font-semibold tracking-tight text-destructive">Danger Zone</h3>
-    </div>
-    
-    <div class="rounded-xl border bg-card text-card-foreground shadow p-6 mt-4">
-      <h4 class="text-sm font-medium mb-2">Delete this session</h4>
-      <p class="text-sm text-muted-foreground mb-4">Once deleted, it will be permanently removed and cannot be recovered.</p>
-      
-      <button type="button" 
-              hx-confirm="Are you sure you want to delete this session?" 
-              hx-delete="{{ .Path }}" 
-              hx-target="#page-content"
-              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
-        Delete Session
-      </button>
+  <div class="border-t pt-6 mt-8">
+    <h3 class="text-base font-medium text-muted-foreground mb-4">Danger Zone</h3>
+    <div class="bg-destructive/5 border border-destructive/20 rounded-md p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h4 class="font-medium">Delete this session</h4>
+          <p class="text-sm text-muted-foreground mt-1">Once deleted, it will be permanently removed and cannot be recovered.</p>
+        </div>
+        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs" 
+                type="button"
+                hx-confirm="Are you sure you want to delete this session?" 
+                hx-delete="{{ .Path }}" 
+                hx-target="#page-content">
+          Delete Session
+        </button>
+      </div>
     </div>
   </div>
 </div>
