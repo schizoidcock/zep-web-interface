@@ -883,74 +883,7 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 			}
 			return "✅ Enabled"
 		}(),
-	)"ZEP_API_URL") + `
-🔐 Authentication: ✅ API Key Configured
-📋 Server Version: ` + health["version"].(string) + `
-💚 Health Status: ` + health["status"].(string) + `
-
-📊 System Statistics
-👥 Total Users: ` + formatStatValue(stats["total_users"]) + `
-💬 Total Sessions: ` + formatStatValue(stats["total_sessions"]) + `
-🟢 Active Sessions: ` + formatStatValue(stats["active_sessions"]) + `
-🔴 Ended Sessions: ` + formatStatValue(stats["ended_sessions"]) + `
-
-🌐 Web Interface Server
-🏠 Host: ` + func() string {
-		if host := os.Getenv("HOST"); host != "" {
-			return host
-		}
-		return "::"
-	}() + `
-🚪 Port: ` + func() string {
-		if port := os.Getenv("PORT"); port != "" {
-			return port
-		}
-		return "8080"
-	}() + `
-🔒 TLS: ` + func() string {
-		if tls := os.Getenv("TLS_ENABLED"); tls == "true" {
-			return "✅ Enabled"
-		}
-		return "❌ Disabled"
-	}() + `
-
-⚙️ Network & Security
-🌍 CORS Origins: ` + func() string {
-		if cors := os.Getenv("CORS_ORIGINS"); cors != "" {
-			return cors
-		}
-		return "*"
-	}() + `
-🔄 Trust Proxy: ` + func() string {
-		if proxy := os.Getenv("TRUST_PROXY"); proxy == "false" {
-			return "❌ Disabled"
-		}
-		return "✅ Enabled"
-	}() + `
-🛡️ HTTP Proxy: ` + func() string {
-		if proxy := os.Getenv("PROXY_URL"); proxy != "" {
-			return "✅ Configured"
-		}
-		return "❌ Not configured"
-	}() + `
-
-🗄️ Database & Storage
-🐘 Database: PostgreSQL (via Zep API)
-📊 Connection Status: ✅ Connected (API responding)
-🏷️ Project Scope: Multi-tenant with UUID filtering
-🔍 Search: ✅ Full-text search available
-
-🤖 AI & Processing Features
-💬 Message Processing: ✅ Available
-📝 Memory Management: ✅ Session memory supported
-🔍 Session Search: ✅ Advanced search endpoint
-🏷️ Message Roles: system, user, assistant, function, tool
-
-🎯 Environment & Deployment
-📝 Config Source: Environment Variables
-🚀 Interface Status: ✅ Running
-🌍 Deployment: Production
-⚡ API Version: v2`
+	)
 
 	// Create page data with structured data for template
 	data := map[string]interface{}{
