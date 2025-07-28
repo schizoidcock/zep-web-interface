@@ -128,6 +128,18 @@ type Message struct {
 	TokenCount int                    `json:"token_count,omitempty"`
 }
 
+type Episode struct {
+	EpisodeID   string     `json:"uuid"`
+	Content     string     `json:"content"`
+	Source      string     `json:"source"`
+	Description string     `json:"source_description,omitempty"`
+	Status      string     `json:"status,omitempty"`
+	CreatedAt   *time.Time `json:"created_at,omitempty"`
+	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
+	Role        string     `json:"role,omitempty"`
+	Processed   bool       `json:"processed,omitempty"`
+}
+
 type SessionsResponse struct {
 	Sessions []Session `json:"sessions"`
 	Total    int       `json:"total"`
@@ -341,6 +353,36 @@ func (c *Client) GetUser(userID string) (*User, error) {
 	user.SessionCount = 0
 
 	return &user, nil
+}
+
+// GetUserEpisodes fetches episodes for a specific user from the graph API
+func (c *Client) GetUserEpisodes(userID string) ([]Episode, error) {
+	resp, err := c.get("/api/v2/graph/episodes/user/" + userID)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Read the raw response body for debugging
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	
+	log.Printf("🔍 DEBUG GetUserEpisodes - User: %s, Status: %d, Response: %s", userID, resp.StatusCode, string(body))
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
+
+	var episodes []Episode
+	if err := json.Unmarshal(body, &episodes); err != nil {
+		log.Printf("❌ Failed to unmarshal episodes: %v", err)
+		return nil, err
+	}
+
+	log.Printf("✅ Parsed %d episodes for user %s", len(episodes), userID)
+	return episodes, nil
 }
 
 func (c *Client) GetUserSessions(userID string) ([]Session, error) {

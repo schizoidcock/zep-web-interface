@@ -114,9 +114,10 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			r.Get("/users/create", h.CreateUserForm)
 			r.Post("/users/create", h.CreateUser)
 			r.Get("/users/{userId}", h.UserDetails)
-			r.Post("/users/{userId}", h.UpdateUser)
+			r.Patch("/users/{userId}", h.UpdateUser)
 			r.Delete("/users/{userId}", h.DeleteUser)
 			r.Get("/users/{userId}/sessions", h.UserSessions)
+			r.Get("/users/{userId}/episodes", h.UserEpisodes)
 			r.Get("/settings", h.Settings)
 		})
 
@@ -143,9 +144,10 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			r.Get("/users/create", h.CreateUserForm)
 			r.Post("/users/create", h.CreateUser)
 			r.Get("/users/{userId}", h.UserDetails)
-			r.Post("/users/{userId}", h.UpdateUser)
+			r.Patch("/users/{userId}", h.UpdateUser)
 			r.Delete("/users/{userId}", h.DeleteUser)
 			r.Get("/users/{userId}/sessions", h.UserSessions)
+			r.Get("/users/{userId}/episodes", h.UserEpisodes)
 			r.Get("/settings", h.Settings)
 		})
 

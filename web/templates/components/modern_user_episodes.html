@@ -1,78 +1,75 @@
+{{ define "UserEpisodesContent" }}
+{{ template "ModernUserEpisodes" . }}
+{{ end }}
+
 {{ define "ModernUserEpisodes" }}
 <div>
   <!-- Header with Back Button -->
   <div class="flex items-center gap-4 mb-6">
-    <a href="{{ adminPath "/users/" }}{{ .Data.UserID }}" 
-       class="text-gray-400 hover:text-white"
-       hx-get="{{ adminPath "/users/" }}{{ .Data.UserID }}" 
+    <a href="{{ adminPath "/users/" }}{{ .UserID }}" 
+       class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+       hx-get="{{ adminPath "/users/" }}{{ .UserID }}" 
        hx-target="#page-content">
-      ← User Episodes
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to User Details
     </a>
   </div>
 
-  <h1 class="text-2xl font-medium text-white mb-2">User Episodes</h1>
-  <p class="text-gray-400 mb-6">View episodes for this user's graph</p>
+  <div>
+    <h1 class="text-2xl font-semibold tracking-tight">User Episodes</h1>
+    <p class="text-muted-foreground">View episode data from the graph for user {{ .UserID }}</p>
+  </div>
   
-  <div class="overflow-x-auto">
-    <table class="w-full">
-      <thead>
-        <tr class="border-b border-gray-700">
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Episode ID</th>
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Content</th>
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Source</th>
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Description</th>
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Status</th>
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Created</th>
-          <th class="text-left py-3 px-4 text-sm font-medium text-gray-300">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{if .Data.Episodes}}
-          {{range .Data.Episodes}}
-          <tr class="border-b border-gray-800 hover:bg-gray-800/50">
-            <td class="py-3 px-4">
-              <span class="text-purple-400 text-sm font-mono">{{ .EpisodeID }}</span>
-            </td>
-            <td class="py-3 px-4 text-sm text-white max-w-xs truncate">
-              {{ .Content }}
-            </td>
-            <td class="py-3 px-4 text-sm text-white">
-              {{ .Source }}
-            </td>
-            <td class="py-3 px-4 text-sm text-white max-w-xs truncate">
-              {{if .Description}}{{ .Description }}{{else}}-{{end}}
-            </td>
-            <td class="py-3 px-4">
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                {{ .Status }}
-              </span>
-            </td>
-            <td class="py-3 px-4 text-sm text-gray-400">
-              {{if .CreatedAt}}{{ .CreatedAt.Format "Jan 2, 2006 3:04 PM" }}{{else}}-{{end}}
-            </td>
-            <td class="py-3 px-4">
-              <button class="text-gray-400 hover:text-white text-sm">⋮</button>
-            </td>
+  <div class="rounded-xl border bg-card text-card-foreground shadow mt-6">
+    <div class="relative w-full overflow-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="[&_tr]:border-b">
+          <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+            <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Episode ID</th>
+            <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Content</th>
+            <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Source</th>
+            <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Status</th>
+            <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Created</th>
           </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0">
+          {{if .Data.Episodes}}
+            {{range .Data.Episodes}}
+            <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+              <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
+                <span class="text-sm font-mono text-muted-foreground">{{ .EpisodeID }}</span>
+              </td>
+              <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] max-w-xs">
+                <div class="truncate text-sm">{{ .Content }}</div>
+              </td>
+              <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
+                <span class="text-sm">{{ .Source }}</span>
+              </td>
+              <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
+                {{if .Processed}}
+                  <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground">Processed</span>
+                {{else}}
+                  <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground">Pending</span>
+                {{end}}
+              </td>
+              <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
+                <span class="text-sm text-muted-foreground">
+                  {{if .CreatedAt}}{{ .CreatedAt.Format "Jan 2, 2006 3:04 PM" }}{{else}}-{{end}}
+                </span>
+              </td>
+            </tr>
+            {{end}}
+          {{else}}
+            <tr>
+              <td colspan="5" class="p-8 text-center text-muted-foreground">No episodes found for this user</td>
+            </tr>
           {{end}}
-        {{else}}
-          <tr>
-            <td colspan="7" class="py-8 text-center text-gray-400">No episodes found</td>
-          </tr>
-        {{end}}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   </div>
   
-  <!-- Pagination -->
-  <div class="flex items-center justify-between mt-6">
-    <button class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white">
-      ← Previous
-    </button>
-    <span class="text-sm text-gray-400">1</span>
-    <button class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white">
-      Next →
-    </button>
-  </div>
 </div>
 {{ end }}

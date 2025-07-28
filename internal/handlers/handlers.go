@@ -576,6 +576,59 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// UserEpisodes handles the user episodes page
+func (h *Handlers) UserEpisodes(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userId")
+	
+	// Fetch user episodes from the graph API
+	episodes, err := h.apiClient.GetUserEpisodes(userID)
+	if err != nil {
+		// If episodes fail, continue with empty episodes (episodes page still viewable)
+		episodes = []zepapi.Episode{}
+		log.Printf("⚠️ Failed to fetch episodes for user %s: %v", userID, err)
+	}
+
+	// Create page data with breadcrumbs
+	data := map[string]interface{}{
+		"Title":    "User Episodes",
+		"SubTitle": "Episodes for user " + userID,
+		"Page":     "user_episodes",
+		"Path":     r.URL.Path,
+		"BreadCrumbs": []BreadCrumb{
+			{
+				Title: "Users",
+				Path:  h.basePath + "/users",
+			},
+			{
+				Title: "User Details", 
+				Path:  h.basePath + "/users/" + userID,
+			},
+			{
+				Title: "Episodes",
+				Path:  r.URL.Path,
+			},
+		},
+		"Data": map[string]interface{}{
+			"Episodes": episodes,
+		},
+		"MenuItems": GetMenuItems(h.basePath),
+		"UserID":    userID,
+	}
+	
+	// Check if this is an HTMX request, if so render only the content
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "UserEpisodesContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
 // UpdateUser handles user detail form submissions
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
