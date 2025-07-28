@@ -1,25 +1,25 @@
 {{ define "ModernUserDetails" }}
-<div class="flex-1 space-y-4 p-4">
+<div class="flex-1 space-y-4 p-6">
   <!-- Header Section -->
   <div class="flex items-center justify-between space-y-2">
     <h2 class="text-3xl font-bold tracking-tight">{{ .User.FirstName }} {{ .User.LastName }}</h2>
   </div>
 
-  <div class="space-y-6">
+  <div class="space-y-8">
     <!-- User ID Section -->
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center justify-between mb-6">
       <div>
-        <p class="block text-sm font-medium mb-2">User ID</p>
-        <div class="w-full inline-flex gap-x-2" id="clipboard-container-user_id">
-          <input class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-w-md" 
+        <p class="block text-sm font-medium mb-3">User ID</p>
+        <div class="w-full inline-flex gap-x-3" id="clipboard-container-user_id">
+          <input class="flex h-11 w-full rounded-md border border-input bg-transparent px-4 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-base file:font-medium file:text-foreground placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 max-w-lg" 
                  id="hs-clipboard-input-user_id" 
                  readonly="" 
                  type="text" 
                  value="{{ .User.UserID }}">
-          <button class="justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 py-3 px-4 group inline-flex items-center gap-x-2 text-sm font-medium rounded-lg disabled:pointer-events-none" 
+          <button class="justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-11 py-3 px-5 group inline-flex items-center gap-x-2 text-base font-medium rounded-lg disabled:pointer-events-none" 
                   type="button" 
                   id="user_id">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy w-4 h-4 group-hover:rotate-6 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy w-5 h-5 group-hover:rotate-6 transition">
               <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
               <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
             </svg>
@@ -30,11 +30,11 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex flex-wrap gap-4 mb-4">
-      <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 rounded-md px-8 text-lg font-medium" 
+    <div class="flex flex-wrap gap-6 mb-6">
+      <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-12 rounded-md px-10 text-lg font-medium" 
               id="view-graph-button">
         <span class="mr-2">View Graph</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2">
           <circle cx="18" cy="5" r="3"></circle>
           <circle cx="6" cy="12" r="3"></circle>
           <circle cx="18" cy="19" r="3"></circle>
@@ -42,9 +42,9 @@
           <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
         </svg>
       </button>
-      <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 h-10 rounded-md px-8 text-lg font-medium">
+      <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 h-12 rounded-md px-10 text-lg font-medium">
         <span class="mr-2">View Episodes</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-filter">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-filter">
           <path d="M3 6h18"></path>
           <path d="M7 12h10"></path>
           <path d="M10 18h4"></path>
@@ -53,18 +53,18 @@
     </div>
 
     <!-- User Details Form Card -->
-    <div class="rounded-xl border bg-card text-card-foreground shadow p-6">
+    <div class="rounded-xl border bg-card text-card-foreground shadow p-8">
       <form>
-        <div class="space-y-4">
+        <div class="space-y-6">
           <div>
-            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="first_name">Full name</label>
-            <div class="sm:flex space-y-2 sm:space-y-0 sm:space-x-2 mt-2">
-              <input class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" 
+            <label class="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="first_name">Full name</label>
+            <div class="sm:flex space-y-3 sm:space-y-0 sm:space-x-3 mt-3">
+              <input class="flex h-11 w-full rounded-md border border-input bg-transparent px-4 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-base file:font-medium file:text-foreground placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" 
                      id="first_name" 
                      placeholder="First name" 
                      value="{{ .User.FirstName }}" 
                      name="first_name">
-              <input class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" 
+              <input class="flex h-11 w-full rounded-md border border-input bg-transparent px-4 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-base file:font-medium file:text-foreground placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" 
                      id="last_name" 
                      placeholder="Last name" 
                      value="{{ .User.LastName }}" 
@@ -73,8 +73,8 @@
           </div>
           
           <div>
-            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="email">Email</label>
-            <input class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm mt-2" 
+            <label class="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="email">Email</label>
+            <input class="flex h-11 w-full rounded-md border border-input bg-transparent px-4 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-base file:font-medium file:text-foreground placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 mt-3" 
                    id="email" 
                    placeholder="name@domain.com" 
                    type="email" 
@@ -83,11 +83,11 @@
           </div>
           
           <div>
-            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Created</label>
-            <p class="mt-2 text-sm text-muted-foreground">{{if .User.CreatedAt}}{{ .User.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}{{end}}</p>
+            <label class="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Created</label>
+            <p class="mt-3 text-base text-muted-foreground">{{if .User.CreatedAt}}{{ .User.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}{{end}}</p>
           </div>
           
-          <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2" 
+          <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-11 px-6 py-2" 
                   type="submit">
             Save changes
           </button>
@@ -97,22 +97,22 @@
 
     <!-- Sessions Section -->
     <div>
-      <h3 class="text-lg font-medium mb-4">Sessions</h3>
+      <h3 class="text-xl font-medium mb-6">Sessions</h3>
       <div class="rounded-xl border bg-card text-card-foreground shadow">
         <div class="relative w-full overflow-auto">
-          <table class="w-full caption-bottom text-sm">
+          <table class="w-full caption-bottom text-base">
             <thead class="[&_tr]:border-b">
               <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Session</th>
-                <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Created</th>
-                <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Classifications</th>
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Session</th>
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Created</th>
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Classifications</th>
               </tr>
             </thead>
             <tbody class="[&_tr:last-child]:border-0">
               {{if .Data.Rows}}
                 {{range .Data.Rows}}
                 <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted" data-state="false">
-                  <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
+                  <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
                     <a class="text-primary hover:text-primary/80 hover:underline" 
                        href="{{ adminPath "/sessions/" }}{{ .Session.SessionID }}"
                        hx-get="{{ adminPath "/sessions/" }}{{ .Session.SessionID }}" 
@@ -120,17 +120,17 @@
                       {{ .Session.SessionID }}
                     </a>
                   </td>
-                  <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
+                  <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
                     {{ .Session.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}
                   </td>
-                  <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
+                  <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
                     -
                   </td>
                 </tr>
                 {{end}}
               {{else}}
                 <tr>
-                  <td colspan="3" class="p-8 text-center text-muted-foreground text-sm">No sessions found</td>
+                  <td colspan="3" class="p-12 text-center text-muted-foreground text-base">No sessions found</td>
                 </tr>
               {{end}}
             </tbody>
@@ -140,15 +140,15 @@
     </div>
 
     <!-- Danger Zone -->
-    <div class="border-t pt-6 mt-8">
-      <h3 class="text-base font-medium text-muted-foreground mb-4">Danger Zone</h3>
-      <div class="bg-destructive/5 border border-destructive/20 rounded-md p-4">
+    <div class="border-t pt-8 mt-12">
+      <h3 class="text-lg font-medium text-muted-foreground mb-6">Danger Zone</h3>
+      <div class="bg-destructive/5 border border-destructive/20 rounded-md p-6">
         <div class="flex items-center justify-between">
           <div>
-            <h4 class="font-medium">Delete this user</h4>
-            <p class="text-sm text-muted-foreground mt-1">Once deleted, it will be permanently removed and cannot be recovered.</p>
+            <h4 class="font-medium text-base">Delete this user</h4>
+            <p class="text-base text-muted-foreground mt-2">Once deleted, it will be permanently removed and cannot be recovered.</p>
           </div>
-          <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs" 
+          <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-10 rounded-md px-4 text-sm" 
                   type="button"
                   hx-confirm="Are you sure you want to delete this user?" 
                   hx-delete="{{ .Path }}" 
