@@ -1,20 +1,17 @@
 {{ define "SideNav" }}
-<nav class="p-6 w-full flex flex-col flex-wrap" x-data="{ currentItem: window.location.pathname.split('/')[2] ?? '' }"
-    x-init="window.addEventListener('htmx:pushedIntoHistory', () => { currentItem = window.location.pathname.split('/')[2] ?? '' })">
-    <ul class="space-y-1.5" hx-boost="true">
-        {{range .MenuItems }}
-            {{ $pathList := split "/" .Path }}
-            {{ $item := $pathList._2 }}
-        <li>
-            <a :class="{ 'bg-accent text-accent-foreground': '{{ $item }}' === currentItem }"
-                class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-muted-foreground rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors"
-                {{ if .External }} target="_blank" rel="noopener noreferrer" {{ end }} href="{{ .Path }}"
-                hx-select="{{ .ContentID }}" hx-target="#page-content">
+<nav class="grid items-start gap-1 text-sm font-medium px-4 py-2">
+    {{range .MenuItems }}
+        {{ $pathList := split "/" .Path }}
+        {{ $item := $pathList._2 }}
+    <a class="block" href="{{ .Path }}" {{ if .External }} target="_blank" rel="noopener noreferrer" {{ end }}
+       hx-select="{{ .ContentID }}" hx-target="#page-content">
+        <button class="inline-flex gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground px-4 py-2 w-full h-10 justify-start items-center">
+            <span class="flex items-center">
                 {{.Icon }}
-                {{.Name}}
-            </a>
-        </li>
-        {{end}}
-    </ul>
+                <span class="ml-2">{{.Name}}</span>
+            </span>
+        </button>
+    </a>
+    {{end}}
 </nav>
 {{end}}
