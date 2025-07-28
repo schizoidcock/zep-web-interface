@@ -1,13 +1,131 @@
 {{ define "SettingsContent" }}
-<div id="settings" class="max-w-[85rem] mx-auto">
-    {{template "BreadCrumbs" .}}
-    {{ template "PageTitles" . }}
-    <div class="px-4 py-5 sm:px-6 lg:px-8 lg:py-7 mx-auto">
-        <!-- Card -->
-        <div class="bg-white rounded-xl shadow p-4 sm:p-7 dark:bg-gray-200">
-            <div class="pl-10 py-10 text-xs max-h-[40rem] overflow-y-scroll">
-                {{ .Data.ConfigHTML }}
+<div class="py-8 space-y-4 px-8">
+    <!-- Header -->
+    <div class="flex flex-col space-y-2">
+        <h1 class="text-3xl font-bold tracking-tight">Project Settings</h1>
+        <p class="text-muted-foreground">View system configuration and status</p>
+    </div>
+
+    <!-- System Overview Card -->
+    <div class="rounded-xl border bg-card text-card-foreground shadow p-6">
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold">System Status</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-2">
+                    <h3 class="text-sm font-medium text-muted-foreground">Server Health</h3>
+                    <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-500 text-white shadow">
+                        Healthy
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-sm font-medium text-muted-foreground">API Version</h3>
+                    <p class="text-sm">v1.0.2</p>
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-sm font-medium text-muted-foreground">Connection</h3>
+                    <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground shadow">
+                        Connected
+                    </div>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Configuration Details -->
+    <div class="space-y-6">
+        <!-- Server Configuration -->
+        <div class="rounded-xl border bg-card text-card-foreground shadow p-6">
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold">Server Configuration</h2>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <h3 class="text-sm font-medium text-muted-foreground">API URL</h3>
+                            <div class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
+                                {{ index .Data "zep_api_url" }}
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-sm font-medium text-muted-foreground">Authentication</h3>
+                            <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground shadow">
+                                API Key Configured
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Statistics -->
+        <div class="rounded-xl border bg-card text-card-foreground shadow p-6">
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold">System Statistics</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-2">
+                        <h3 class="text-sm font-medium text-muted-foreground">Total Users</h3>
+                        <p class="text-2xl font-bold">{{ index .Data "total_users" }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-sm font-medium text-muted-foreground">Total Sessions</h3>
+                        <p class="text-2xl font-bold">{{ index .Data "total_sessions" }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-sm font-medium text-muted-foreground">Active Sessions</h3>
+                        <p class="text-2xl font-bold">{{ index .Data "active_sessions" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Web Interface Configuration -->
+        <div class="rounded-xl border bg-card text-card-foreground shadow p-6">
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold">Web Interface Configuration</h2>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <h3 class="text-sm font-medium text-muted-foreground">Host</h3>
+                            <div class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
+                                {{ index .Data "host" }}
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-sm font-medium text-muted-foreground">Port</h3>
+                            <div class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
+                                {{ index .Data "port" }}
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-sm font-medium text-muted-foreground">CORS Origins</h3>
+                            <div class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
+                                {{ index .Data "cors_origins" }}
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-sm font-medium text-muted-foreground">TLS Enabled</h3>
+                            {{ if eq (index .Data "tls_enabled") "true" }}
+                                <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-500 text-white shadow">
+                                    Enabled
+                                </div>
+                            {{ else }}
+                                <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground shadow">
+                                    Disabled
+                                </div>
+                            {{ end }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raw Configuration (Collapsible) -->
+        <div class="rounded-xl border bg-card text-card-foreground shadow p-6">
+            <details class="space-y-4">
+                <summary class="text-xl font-semibold cursor-pointer hover:text-primary">Raw Configuration</summary>
+                <div class="mt-4 p-4 rounded-md border bg-muted/50 max-h-96 overflow-y-auto">
+                    <pre class="text-xs font-mono whitespace-pre-wrap">{{ .Data.ConfigHTML }}</pre>
+                </div>
+            </details>
         </div>
     </div>
 </div>

@@ -802,113 +802,80 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Create comprehensive configuration display like v0.27
-	configHTML := `
-	<div class="mb-6">
-		<h3 class="text-lg font-semibold text-gray-800 mb-4">🚀 Zep System Configuration & Status</h3>
-		<div class="space-y-4">
-			<div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-				<h4 class="font-medium text-blue-800 mb-2">🔗 Zep Server Connection</h4>
-				<div class="text-sm text-blue-700 space-y-1">
-					<div>📡 <strong>API URL:</strong> ` + os.Getenv("ZEP_API_URL") + `</div>
-					<div>🔐 <strong>Authentication:</strong> ✅ API Key Configured</div>
-					<div>📋 <strong>Server Version:</strong> ` + health["version"].(string) + `</div>
-					<div>💚 <strong>Health Status:</strong> ` + health["status"].(string) + `</div>
-				</div>
-			</div>
-			
-			<div class="bg-green-50 p-4 rounded-lg border border-green-200">
-				<h4 class="font-medium text-green-800 mb-2">📊 System Statistics</h4>
-				<div class="text-sm text-green-700 space-y-1">
-					<div>👥 <strong>Total Users:</strong> ` + formatStatValue(stats["total_users"]) + `</div>
-					<div>💬 <strong>Total Sessions:</strong> ` + formatStatValue(stats["total_sessions"]) + `</div>
-					<div>🟢 <strong>Active Sessions:</strong> ` + formatStatValue(stats["active_sessions"]) + `</div>
-					<div>🔴 <strong>Ended Sessions:</strong> ` + formatStatValue(stats["ended_sessions"]) + `</div>
-				</div>
-			</div>
-			
-			<div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-				<h4 class="font-medium text-yellow-800 mb-2">🌐 Web Interface Server</h4>
-				<div class="text-sm text-yellow-700 space-y-1">
-					<div>🏠 <strong>Host:</strong> ` + func() string {
+	// Create comprehensive configuration display for raw config section
+	configHTML := `🚀 Zep System Configuration & Status
+
+🔗 Zep Server Connection
+📡 API URL: ` + os.Getenv("ZEP_API_URL") + `
+🔐 Authentication: ✅ API Key Configured
+📋 Server Version: ` + health["version"].(string) + `
+💚 Health Status: ` + health["status"].(string) + `
+
+📊 System Statistics
+👥 Total Users: ` + formatStatValue(stats["total_users"]) + `
+💬 Total Sessions: ` + formatStatValue(stats["total_sessions"]) + `
+🟢 Active Sessions: ` + formatStatValue(stats["active_sessions"]) + `
+🔴 Ended Sessions: ` + formatStatValue(stats["ended_sessions"]) + `
+
+🌐 Web Interface Server
+🏠 Host: ` + func() string {
 		if host := os.Getenv("HOST"); host != "" {
 			return host
 		}
 		return "::"
-	}() + `</div>
-					<div>🚪 <strong>Port:</strong> ` + func() string {
+	}() + `
+🚪 Port: ` + func() string {
 		if port := os.Getenv("PORT"); port != "" {
 			return port
 		}
 		return "8080"
-	}() + `</div>
-					<div>🔒 <strong>TLS:</strong> ` + func() string {
+	}() + `
+🔒 TLS: ` + func() string {
 		if tls := os.Getenv("TLS_ENABLED"); tls == "true" {
 			return "✅ Enabled"
 		}
 		return "❌ Disabled"
-	}() + `</div>
-				</div>
-			</div>
-			
-			<div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-				<h4 class="font-medium text-purple-800 mb-2">⚙️ Network & Security</h4>
-				<div class="text-sm text-purple-700 space-y-1">
-					<div>🌍 <strong>CORS Origins:</strong> ` + func() string {
+	}() + `
+
+⚙️ Network & Security
+🌍 CORS Origins: ` + func() string {
 		if cors := os.Getenv("CORS_ORIGINS"); cors != "" {
 			return cors
 		}
 		return "*"
-	}() + `</div>
-					<div>🔄 <strong>Trust Proxy:</strong> ` + func() string {
+	}() + `
+🔄 Trust Proxy: ` + func() string {
 		if proxy := os.Getenv("TRUST_PROXY"); proxy == "false" {
 			return "❌ Disabled"
 		}
 		return "✅ Enabled"
-	}() + `</div>
-					<div>🛡️ <strong>HTTP Proxy:</strong> ` + func() string {
+	}() + `
+🛡️ HTTP Proxy: ` + func() string {
 		if proxy := os.Getenv("PROXY_URL"); proxy != "" {
 			return "✅ Configured"
 		}
 		return "❌ Not configured"
-	}() + `</div>
-				</div>
-			</div>
-			
-			<div class="bg-red-50 p-4 rounded-lg border border-red-200">
-				<h4 class="font-medium text-red-800 mb-2">🗄️ Database & Storage</h4>
-				<div class="text-sm text-red-700 space-y-1">
-					<div>🐘 <strong>Database:</strong> PostgreSQL (via Zep API)</div>
-					<div>📊 <strong>Connection Status:</strong> ✅ Connected (API responding)</div>
-					<div>🏷️ <strong>Project Scope:</strong> Multi-tenant with UUID filtering</div>
-					<div>🔍 <strong>Search:</strong> ✅ Full-text search available</div>
-				</div>
-			</div>
-			
-			<div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-				<h4 class="font-medium text-indigo-800 mb-2">🤖 AI & Processing Features</h4>
-				<div class="text-sm text-indigo-700 space-y-1">
-					<div>💬 <strong>Message Processing:</strong> ✅ Available</div>
-					<div>📝 <strong>Memory Management:</strong> ✅ Session memory supported</div>
-					<div>🔍 <strong>Session Search:</strong> ✅ Advanced search endpoint</div>
-					<div>🏷️ <strong>Message Roles:</strong> system, user, assistant, function, tool</div>
-				</div>
-			</div>
-			
-			<div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-				<h4 class="font-medium text-gray-800 mb-2">🎯 Environment & Deployment</h4>
-				<div class="text-sm text-gray-700 space-y-1">
-					<div>📝 <strong>Config Source:</strong> Environment Variables</div>
-					<div>🚀 <strong>Interface Status:</strong> ✅ Running</div>
-					<div>🌍 <strong>Deployment:</strong> Production</div>
-					<div>⚡ <strong>API Version:</strong> v2</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	`
+	}() + `
 
-	// Create page data with breadcrumbs
+🗄️ Database & Storage
+🐘 Database: PostgreSQL (via Zep API)
+📊 Connection Status: ✅ Connected (API responding)
+🏷️ Project Scope: Multi-tenant with UUID filtering
+🔍 Search: ✅ Full-text search available
+
+🤖 AI & Processing Features
+💬 Message Processing: ✅ Available
+📝 Memory Management: ✅ Session memory supported
+🔍 Session Search: ✅ Advanced search endpoint
+🏷️ Message Roles: system, user, assistant, function, tool
+
+🎯 Environment & Deployment
+📝 Config Source: Environment Variables
+🚀 Interface Status: ✅ Running
+🌍 Deployment: Production
+⚡ API Version: v2`
+
+	// Create page data with structured data for template
 	data := map[string]interface{}{
 		"Title":    "Settings",
 		"SubTitle": "Web interface configuration and status",
@@ -922,7 +889,35 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 		},
 		"MenuItems": GetMenuItems(h.basePath),
 		"Data": map[string]interface{}{
-			"ConfigHTML": template.HTML(configHTML),
+			"ConfigHTML": configHTML,
+			// System Statistics
+			"total_users":    formatStatValue(stats["total_users"]),
+			"total_sessions": formatStatValue(stats["total_sessions"]),
+			"active_sessions": formatStatValue(stats["active_sessions"]),
+			// Server Configuration
+			"zep_api_url": os.Getenv("ZEP_API_URL"),
+			"version":     health["version"].(string),
+			"status":      health["status"].(string),
+			// Web Interface Configuration
+			"host": func() string {
+				if host := os.Getenv("HOST"); host != "" {
+					return host
+				}
+				return "::"
+			}(),
+			"port": func() string {
+				if port := os.Getenv("PORT"); port != "" {
+					return port
+				}
+				return "8080"
+			}(),
+			"cors_origins": func() string {
+				if cors := os.Getenv("CORS_ORIGINS"); cors != "" {
+					return cors
+				}
+				return "*"
+			}(),
+			"tls_enabled": os.Getenv("TLS_ENABLED"),
 		},
 	}
 	
