@@ -148,7 +148,10 @@
             <p class="text-sm text-muted-foreground mt-1">Once deleted, it will be permanently removed and cannot be recovered.</p>
           </div>
           <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs" 
-                  type="button">
+                  type="button"
+                  hx-confirm="Are you sure you want to delete this user? This action cannot be undone."
+                  hx-delete="{{ .Path }}"
+                  hx-target="#page-content">
             Delete User
           </button>
         </div>
