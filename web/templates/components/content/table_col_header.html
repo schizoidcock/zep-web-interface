@@ -10,11 +10,11 @@
     <div class="flex items-center gap-x-2">
         <a class="group inline-flex items-center gap-x-2"
             href="{{ $basePath }}?order={{ .Column.OrderByKey }}&asc={{ $asc }}">
-            <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {{ .Column.Name }}
             </span>
             <div
-                class="flex justify-center items-center w-5 h-5 border border-gray-200 group-hover:bg-gray-200 text-gray-400 rounded dark:border-gray-700 dark:group-hover:bg-gray-700 dark:text-gray-400">
+                class="flex justify-center items-center w-5 h-5 border border-border group-hover:bg-accent text-muted-foreground rounded">
                 <svg class="w-2.5 h-2.5" width="16" height="16" viewBox="0 0 16 16" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -33,7 +33,7 @@
 {{ define "TH" }}
 <th scope="col" class="pl-6 lg:pl-6 xl:pl-6 pr-6 py-3 text-left">
     <div class="flex items-center gap-x-2">
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
+        <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {{ .Name }}
         </span>
     </div>
