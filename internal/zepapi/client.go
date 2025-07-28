@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -619,20 +620,28 @@ func (c *Client) GetSystemStats() (map[string]interface{}, error) {
 	return stats, nil
 }
 
-// GetServerHealth checks server health and version
+// GetServerHealth checks server health by testing a simple API call
 func (c *Client) GetServerHealth() (map[string]interface{}, error) {
-	resp, err := c.get("/healthz")
+	// Test actual API endpoint instead of just healthz
+	resp, err := c.get("/api/v2/users")
 	if err != nil {
-		return nil, err
+		return map[string]interface{}{
+			"status":  "unhealthy",
+			"version": "unknown",
+			"error":   err.Error(),
+		}, nil
 	}
 	defer resp.Body.Close()
 	
 	health := make(map[string]interface{})
+	
+	// Determine health based on actual API response
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		health["status"] = "healthy"
 	} else {
 		health["status"] = "unhealthy"
 	}
+	
 	health["status_code"] = resp.StatusCode
 	
 	// Extract version from headers if available
@@ -641,9 +650,6 @@ func (c *Client) GetServerHealth() (map[string]interface{}, error) {
 	} else {
 		health["version"] = "unknown"
 	}
-	
-	// Record response time
-	health["response_time"] = "< 1ms" // Placeholder since we don't have timing here
 	
 	return health, nil
 }

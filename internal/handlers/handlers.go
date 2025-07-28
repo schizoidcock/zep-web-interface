@@ -801,6 +801,8 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 			"version": "Unknown",
 		}
 	}
+	
+	log.Printf("DEBUG: Settings handler - health status: %v", health["status"])
 
 	// Create comprehensive configuration display for raw config section
 	configHTML := `🚀 Zep System Configuration & Status
