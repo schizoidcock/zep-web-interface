@@ -58,6 +58,7 @@
         </div>
       </div>
       
+      {{if .Data.Rows}}
       <div class="flex items-center justify-start space-x-2 py-4">
         <nav role="navigation" aria-label="pagination" class="mx-auto flex w-full justify-start">
           <ul class="flex flex-row items-center gap-1">
@@ -87,6 +88,7 @@
           </ul>
         </nav>
       </div>
+      {{end}}
     </div>
   </div>
 </div>
