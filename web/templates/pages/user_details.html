@@ -1,18 +1,6 @@
 {{ define "UserDetailsContent" }}
-<div id="users_details" class="max-w-[85rem] mx-auto">
-    {{ template "BreadCrumbs" .}}
-    {{ template "PageTitles" . }}
-    {{ template "UserDetailsForm" . }}
-    <div class="max-w-[85rem] px-4 py-1 sm:px-6 lg:px-8 lg:py-1 mx-auto">
-        <div class="border-b border-gray-200"></div>
-        <h3 class="mt-8 text-xl text-gray-800 font-bold dark:text-gray-400">Sessions</h3>
-    </div>
-    {{ template "SessionTable" . }}
-    <div class="max-w-[85rem] px-4 py-1 sm:px-6 lg:px-8 lg:py-1 mx-auto">
-        <div class="border-b border-gray-200"></div>
-        <h3 class="mt-8 text-xl text-gray-800 font-bold dark:text-gray-400">Danger</h3>
-    </div>
-    {{ template "DeleteUser" . }}
+<div id="users_details">
+    {{ template "ModernUserDetails" . }}
 </div>
 {{ end }}
 
