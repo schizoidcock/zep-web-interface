@@ -130,6 +130,14 @@ func formatStatValue(value interface{}) string {
 	}
 }
 
+// safeString safely converts interface{} to string
+func safeString(value interface{}) string {
+	if value == nil {
+		return "unknown"
+	}
+	return fmt.Sprintf("%v", value)
+}
+
 // Dashboard handles the main dashboard page
 func (h *Handlers) Dashboard(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
@@ -805,10 +813,77 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 	log.Printf("DEBUG: Settings handler - health status: %v", health["status"])
 
 	// Create comprehensive configuration display for raw config section
-	configHTML := `🚀 Zep System Configuration & Status
+	configHTML := fmt.Sprintf(`🚀 Zep System Configuration & Status
 
 🔗 Zep Server Connection
-📡 API URL: ` + os.Getenv("ZEP_API_URL") + `
+📡 API URL: %s
+🔐 Authentication: ✅ API Key Configured
+📋 Server Version: %s
+💚 Health Status: %s
+
+📊 System Statistics
+👥 Total Users: %s
+💬 Total Sessions: %s
+🟢 Active Sessions: %s
+🔴 Ended Sessions: %s
+
+🌐 Web Interface Server
+🏠 Host: %s
+🚪 Port: %s
+🔒 TLS: %s
+
+⚙️ Network & Security
+🌍 CORS Origins: %s
+🔄 Trust Proxy: %s
+
+📁 Configuration Details
+- All settings are loaded from environment variables
+- No sensitive data is exposed in this interface
+- Server logs are available via Railway dashboard
+
+💡 Quick Actions
+- Restart service: Railway dashboard ➜ Deployments
+- View logs: Railway dashboard ➜ Logs
+- Update config: Railway dashboard ➜ Variables
+`,
+		os.Getenv("ZEP_API_URL"),
+		safeString(health["version"]),
+		safeString(health["status"]),
+		safeString(stats["total_users"]),
+		safeString(stats["total_sessions"]),
+		safeString(stats["active_sessions"]),
+		safeString(stats["ended_sessions"]),
+		func() string {
+			if host := os.Getenv("HOST"); host != "" {
+				return host
+			}
+			return "::"
+		}(),
+		func() string {
+			if port := os.Getenv("PORT"); port != "" {
+				return port
+			}
+			return "8080"
+		}(),
+		func() string {
+			if tls := os.Getenv("TLS_ENABLED"); tls == "true" {
+				return "✅ Enabled"
+			}
+			return "❌ Disabled"
+		}(),
+		func() string {
+			if cors := os.Getenv("CORS_ORIGINS"); cors != "" {
+				return cors
+			}
+			return "*"
+		}(),
+		func() string {
+			if proxy := os.Getenv("TRUST_PROXY"); proxy == "false" {
+				return "❌ Disabled"
+			}
+			return "✅ Enabled"
+		}(),
+	)"ZEP_API_URL") + `
 🔐 Authentication: ✅ API Key Configured
 📋 Server Version: ` + health["version"].(string) + `
 💚 Health Status: ` + health["status"].(string) + `
