@@ -102,26 +102,26 @@
           <table class="w-full caption-bottom text-sm">
             <thead class="[&_tr]:border-b">
               <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Session</th>
-                <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Created</th>
-                <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Classifications</th>
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Session</th>
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Created</th>
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Classifications</th>
               </tr>
             </thead>
             <tbody class="[&_tr:last-child]:border-0">
               {{if .Data.Rows}}
                 {{range .Data.Rows}}
                 <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted" data-state="false">
-                  <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
-                    <a class="text-primary hover:text-primary/80 hover:underline" 
+                  <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    <a class="text-primary hover:text-primary/80 hover:underline font-medium" 
                        href="{{ adminPath "/sessions/" }}{{ .Session.SessionID }}">
                       {{ .Session.SessionID }}
                     </a>
                   </td>
-                  <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
-                    {{ .Session.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}
+                  <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    <span class="text-muted-foreground">{{ .Session.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}</span>
                   </td>
-                  <td class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
-                    -
+                  <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    <span class="text-muted-foreground">-</span>
                   </td>
                 </tr>
                 {{end}}
