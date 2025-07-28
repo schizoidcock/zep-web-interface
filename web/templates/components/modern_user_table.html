@@ -15,7 +15,7 @@
         </tr>
       </thead>
       <tbody>
-        {{range .Data.Users}}
+        {{range .Data.Rows}}
         <tr class="border-b border-gray-800 hover:bg-gray-800/50">
           <td class="py-3 px-4">
             <a href="{{ adminPath "/users/" }}{{ .UserID }}" 
@@ -43,7 +43,7 @@
     </table>
   </div>
   
-  {{if not .Data.Users}}
+  {{if not .Data.Rows}}
   <div class="text-center py-12">
     <p class="text-gray-400">No users found</p>
   </div>
