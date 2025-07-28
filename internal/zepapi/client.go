@@ -152,7 +152,7 @@ type UsersResponse struct {
 
 // API methods for Zep v1.0.2 (uses v2 API endpoints)
 func (c *Client) GetSessions() ([]Session, error) {
-	resp, err := c.get("/api/v2/sessions")
+	resp, err := c.get("/api/v2/sessions-ordered")
 	if err != nil {
 		return nil, err
 	}
@@ -203,41 +203,21 @@ func (c *Client) GetSession(sessionID string) (*Session, error) {
 }
 
 func (c *Client) DeleteSession(sessionID string) error {
-	// Try different endpoints for session deletion based on v0.27 and v1.0.2 patterns
-	endpoints := []string{
-		"/api/v2/sessions/" + sessionID + "/memory", // Like v0.27 memory endpoint
-		"/api/v2/sessions/" + sessionID,             // Direct session endpoint
+	// Use the official Zep API endpoint for session memory deletion
+	resp, err := c.delete("/api/v2/sessions/" + sessionID + "/memory")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	
+	// Check for successful deletion
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent {
+		return nil
 	}
 	
-	var lastErr error
-	for _, endpoint := range endpoints {
-		resp, err := c.delete(endpoint)
-		if err != nil {
-			lastErr = err
-			continue
-		}
-		defer resp.Body.Close()
-		
-		// If successful, return
-		if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent {
-			return nil
-		}
-		
-		// If 405 Method Not Allowed, try next endpoint
-		if resp.StatusCode == http.StatusMethodNotAllowed {
-			continue
-		}
-		
-		// For other errors, return the error
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
-	}
-	
-	// If all endpoints failed
-	if lastErr != nil {
-		return fmt.Errorf("failed to delete session, last error: %v", lastErr)
-	}
-	return fmt.Errorf("no working endpoint found for session deletion")
+	// Handle error response
+	body, _ := io.ReadAll(resp.Body)
+	return fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
 }
 
 func (c *Client) GetMessageList(sessionID string, page, pageSize int) ([]Message, int, error) {
@@ -285,7 +265,42 @@ func (c *Client) GetMessageList(sessionID string, page, pageSize int) ([]Message
 }
 
 func (c *Client) GetUsers() ([]User, error) {
-	// Try the ordered users endpoint first, then fallback to simple endpoint
+	// Use the proper ordered users endpoint as per official API
+	resp, err := c.get("/api/v2/users-ordered?pageNumber=1&pageSize=100")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Read the raw response body for debugging
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	
+	log.Printf("🔍 DEBUG GetUsers - Status: %d, Response: %s", resp.StatusCode, string(body))
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Parse as ordered response
+	var orderedResp struct {
+		Users     []User `json:"users"`
+		RowCount  int    `json:"row_count"`
+		TotalCount int   `json:"total_count"`
+	}
+	if err := json.Unmarshal(body, &orderedResp); err != nil {
+		log.Printf("❌ Failed to unmarshal users: %v", err)
+		return nil, err
+	}
+
+	log.Printf("✅ Parsed %d users from ordered response", len(orderedResp.Users))
+	return orderedResp.Users, nil
+}
+
+func (c *Client) GetUsersLegacy() ([]User, error) {
+	// Fallback method with multiple endpoints for compatibility
 	endpoints := []string{
 		"/api/v2/users-ordered?pageNumber=1&pageSize=100",
 		"/api/v2/users?limit=100&cursor=0",
