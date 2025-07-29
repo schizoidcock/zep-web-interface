@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
       email: emailInput.value.trim()
     };
     
-    // Enable if there are changes OR if there's content but no saved data
+    // Check for changes - any field that's different from initial
     const hasChanges = currentValues.firstName !== initialValues.firstName ||
                       currentValues.lastName !== initialValues.lastName ||
                       currentValues.email !== initialValues.email;
@@ -276,8 +276,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const hasCurrentContent = currentValues.firstName || currentValues.lastName || currentValues.email;
     const hasInitialData = initialValues.firstName || initialValues.lastName || initialValues.email;
     
-    // Enable button if: there are changes OR (has content but no initial saved data)
+    // Enable button if: 
+    // 1. There are changes from initial state, OR
+    // 2. Has current content but no initial saved data (new user scenario)
     const shouldEnable = hasChanges || (hasCurrentContent && !hasInitialData);
+    
+    // Debug logging to understand what's happening
+    console.log('Button State Debug:', {
+      currentValues,
+      initialValues,
+      hasChanges,
+      hasCurrentContent,
+      hasInitialData,
+      shouldEnable
+    });
     
     saveButton.disabled = !shouldEnable;
   }
@@ -298,9 +310,19 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // Handle HTMX events to reset button state
-  form.addEventListener('htmx:afterRequest', function() {
+  form.addEventListener('htmx:afterRequest', function(event) {
     loadingSpinner.classList.add('hidden');
     buttonText.textContent = 'Save Changes';
+    
+    // Update initial values after successful save
+    if (event.detail.xhr.status >= 200 && event.detail.xhr.status < 300) {
+      initialValues.firstName = firstNameInput.value.trim();
+      initialValues.lastName = lastNameInput.value.trim();
+      initialValues.email = emailInput.value.trim();
+      
+      console.log('Updated initial values after save:', initialValues);
+    }
+    
     updateButtonState();
   });
 });
