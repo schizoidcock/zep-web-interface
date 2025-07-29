@@ -626,10 +626,10 @@ func (c *Client) GetSystemStats() (map[string]interface{}, error) {
 
 // GetServerHealth checks server health and returns actual status
 func (c *Client) GetServerHealth() (map[string]interface{}, error) {
-	fullURL := strings.TrimRight(c.baseURL, "/") + "/healthz"
+	fullURL := strings.TrimRight(c.baseURL, "/") + "/health"
 	log.Printf("🔍 DEBUG Checking health at: %s", fullURL)
 	
-	resp, err := c.get("/healthz")
+	resp, err := c.get("/health")
 	if err != nil {
 		log.Printf("❌ Health check failed: %v", err)
 		return map[string]interface{}{
@@ -641,53 +641,43 @@ func (c *Client) GetServerHealth() (map[string]interface{}, error) {
 	defer resp.Body.Close()
 	
 	body, _ := io.ReadAll(resp.Body)
-	bodyStr := strings.TrimSpace(string(body))
-	log.Printf("🔍 DEBUG Health response - Status: %d, Body: '%s'", resp.StatusCode, bodyStr)
+	log.Printf("🔍 DEBUG Health response - Status: %d, Body: %s", resp.StatusCode, string(body))
 	
-	// Try to parse as JSON first
+	// Parse JSON response
 	var responseData map[string]interface{}
-	if err := json.Unmarshal(body, &responseData); err == nil {
-		// Successfully parsed JSON
-		if status, ok := responseData["status"].(string); ok {
-			responseData["status"] = strings.ToLower(status)
+	if err := json.Unmarshal(body, &responseData); err != nil {
+		log.Printf("⚠️ Failed to parse health JSON: %v", err)
+		// Fallback based on HTTP status
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			responseData = map[string]interface{}{
+				"status":  "healthy",
+				"version": "unknown",
+			}
 		} else {
-			responseData["status"] = "healthy" // Default if no status field
+			responseData = map[string]interface{}{
+				"status":  "unhealthy",
+				"version": "unknown",
+			}
 		}
-		
-		// Ensure version exists
-		if _, ok := responseData["version"]; !ok {
-			responseData["version"] = "unknown"
-		}
-		
-		log.Printf("✅ Health check JSON result: %+v", responseData)
-		return responseData, nil
 	}
 	
-	// Handle plain text responses
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		// For plain text responses like "." or "ok", consider healthy
-		status := "healthy"
-		if strings.Contains(strings.ToLower(bodyStr), "unhealthy") || 
-		   strings.Contains(strings.ToLower(bodyStr), "error") ||
-		   strings.Contains(strings.ToLower(bodyStr), "fail") {
-			status = "unhealthy"
-		} else if bodyStr == "." || bodyStr == "ok" || bodyStr == "" || bodyStr == "healthy" {
-			status = "healthy"
+	// Ensure we have a status field
+	if status, ok := responseData["status"].(string); ok {
+		responseData["status"] = strings.ToLower(status)
+	} else {
+		// Default to healthy if no status field but 200 response
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			responseData["status"] = "healthy"
+		} else {
+			responseData["status"] = "unhealthy"
 		}
-		
-		return map[string]interface{}{
-			"status":    status,
-			"service":   "zep-server",
-			"version":   "unknown",
-			"raw":       bodyStr,
-		}, nil
 	}
 	
-	// If we get here, assume unhealthy
-	return map[string]interface{}{
-		"status":    "unhealthy",
-		"service":   "zep-server",
-		"version":   "unknown",
-		"raw":       bodyStr,
-	}, nil
+	// Ensure version exists
+	if _, ok := responseData["version"]; !ok {
+		responseData["version"] = "unknown"
+	}
+	
+	log.Printf("✅ Health check result: %+v", responseData)
+	return responseData, nil
 }
