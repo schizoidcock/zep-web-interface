@@ -906,7 +906,7 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 			"active_sessions": formatStatValue(stats["active_sessions"]),
 			// Server Configuration
 			"zep_api_url": os.Getenv("ZEP_API_URL"),
-			"version":     health["version"].(string),
+			"version":     safeString(health["version"]),
 			"status":      health["status"].(string),
 			// Web Interface Configuration
 			"host": func() string {
