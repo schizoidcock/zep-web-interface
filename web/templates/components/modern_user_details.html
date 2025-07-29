@@ -100,7 +100,7 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
-            <span id="button-text">Save changes</span>
+            <span id="button-text">Save Changes</span>
           </button>
         </div>
       </form>
@@ -265,11 +265,12 @@ document.addEventListener('DOMContentLoaded', function() {
       email: emailInput.value.trim()
     };
     
-    // Enable if any field has data (either current input or initial value)
-    const hasData = currentValues.firstName || currentValues.lastName || currentValues.email ||
-                   initialValues.firstName || initialValues.lastName || initialValues.email;
+    // Enable only if there are changes from initial values
+    const hasChanges = currentValues.firstName !== initialValues.firstName ||
+                      currentValues.lastName !== initialValues.lastName ||
+                      currentValues.email !== initialValues.email;
     
-    saveButton.disabled = !hasData;
+    saveButton.disabled = !hasChanges;
   }
   
   // Add event listeners to form inputs
@@ -290,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Handle HTMX events to reset button state
   form.addEventListener('htmx:afterRequest', function() {
     loadingSpinner.classList.add('hidden');
-    buttonText.textContent = 'Save changes';
+    buttonText.textContent = 'Save Changes';
     updateButtonState();
   });
 });
