@@ -275,11 +275,16 @@ function showDeleteSessionModal() {
   // FORCE LIGHT MODE STYLING regardless of detection
   modalContainer.style.setProperty('background-color', '#ffffff', 'important');
   modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
+  modalContainer.style.setProperty('border-radius', '12px', 'important'); // rounded-xl = 12px
   modalContainer.style.setProperty('color', '#000000', 'important');
   modalHeader.style.setProperty('border-bottom', '1px solid #d1d5db', 'important');
   modalHeader.style.setProperty('background-color', '#ffffff', 'important');
+  modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
+  modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
   modalFooter.style.setProperty('border-top', '1px solid #d1d5db', 'important');
   modalFooter.style.setProperty('background-color', '#ffffff', 'important');
+  modalFooter.style.setProperty('border-bottom-left-radius', '12px', 'important');
+  modalFooter.style.setProperty('border-bottom-right-radius', '12px', 'important');
   
   // Force ALL text elements to black
   const allTextElements = modal.querySelectorAll('*');
@@ -325,6 +330,7 @@ function showDeleteSessionModal() {
   const modalBody = modal.querySelector('.p-6:not(#session-modal-header):not(#session-modal-footer)');
   if (modalBody) {
     modalBody.style.setProperty('background-color', '#ffffff', 'important');
+    modalBody.style.setProperty('border-radius', '0px', 'important'); // Middle section should not have radius
   }
   
   // Ensure proper button spacing (10px gap)
