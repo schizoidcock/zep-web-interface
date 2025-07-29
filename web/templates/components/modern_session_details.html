@@ -2,7 +2,20 @@
 <div class="py-8 space-y-4 px-8">
   <!-- Header Section -->
   <div class="flex flex-col space-y-2">
-    <h2 class="text-3xl font-bold tracking-tight">Session Details</h2>
+    <div class="flex items-center space-x-4">
+      <a href="{{ adminPath "/sessions/" }}" 
+         hx-get="{{ adminPath "/sessions/" }}" 
+         hx-target="#page-content"
+         hx-push-url="true">
+        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 w-9">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+            <path d="m12 19-7-7 7-7"></path>
+            <path d="M19 12H5"></path>
+          </svg>
+        </button>
+      </a>
+      <h2 class="text-3xl font-bold tracking-tight">Session Details</h2>
+    </div>
     <p class="text-muted-foreground">View session information and messages</p>
   </div>
   
