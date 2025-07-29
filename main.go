@@ -14,6 +14,9 @@ import (
 )
 
 func main() {
+	// Configure logging to use stdout instead of stderr
+	log.SetOutput(os.Stdout)
+	
 	// Load configuration
 	cfg := config.Load()
 
