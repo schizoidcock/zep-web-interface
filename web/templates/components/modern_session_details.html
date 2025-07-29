@@ -262,75 +262,145 @@ function showDeleteSessionModal() {
   const hasDarkClass = htmlElement.classList.contains('dark') || bodyElement.classList.contains('dark');
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   
-  // Check actual computed styles of the page
+  // Check actual computed styles of the page to detect current theme
   const bodyBgColor = window.getComputedStyle(bodyElement).backgroundColor;
   const htmlBgColor = window.getComputedStyle(htmlElement).backgroundColor;
   
-  // More reliable dark mode detection
-  const isDark = hasDarkClass || (prefersDark && !hasDarkClass === false);
+  // Parse RGB values to determine if background is dark
+  const isDarkBackground = (color) => {
+    if (!color || color === 'transparent') return false;
+    const rgb = color.match(/\d+/g);
+    if (!rgb) return false;
+    const [r, g, b] = rgb.map(Number);
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5; // Dark if luminance is less than 50%
+  };
   
-  // Force light mode styling - this interface appears to be in light mode
-  console.log('Session Theme detection:', { hasDarkClass, prefersDark, bodyBgColor, htmlBgColor, isDark });
+  // Determine if we're in dark mode
+  const isDark = hasDarkClass || isDarkBackground(bodyBgColor) || isDarkBackground(htmlBgColor);
   
-  // FORCE LIGHT MODE STYLING regardless of detection
-  modalContainer.style.setProperty('background-color', '#ffffff', 'important');
-  modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
-  modalContainer.style.setProperty('border-radius', '12px', 'important'); // rounded-xl = 12px
-  modalContainer.style.setProperty('color', '#000000', 'important');
-  modalHeader.style.setProperty('border-bottom', '1px solid #d1d5db', 'important');
-  modalHeader.style.setProperty('background-color', '#ffffff', 'important');
-  modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
-  modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
-  modalFooter.style.setProperty('border-top', '1px solid #d1d5db', 'important');
-  modalFooter.style.setProperty('background-color', '#ffffff', 'important');
-  modalFooter.style.setProperty('border-bottom-left-radius', '12px', 'important');
-  modalFooter.style.setProperty('border-bottom-right-radius', '12px', 'important');
-  
-  // Force ALL text elements to black
-  const allTextElements = modal.querySelectorAll('*');
-  allTextElements.forEach(element => {
-    if (element.textContent && element.textContent.trim()) {
-      element.style.setProperty('color', '#000000', 'important');
-    }
+  // Enhanced theme detection logging
+  console.log('Session Theme detection:', { 
+    hasDarkClass, 
+    prefersDark, 
+    bodyBgColor, 
+    htmlBgColor, 
+    isDarkBackground: isDarkBackground(bodyBgColor),
+    finalIsDark: isDark 
   });
   
-  // Specifically target the cancel button and force its styling
-  const cancelButton = modal.querySelector('button[onclick="hideDeleteSessionModal()"]');
-  if (cancelButton) {
-    // Completely override button styling
-    cancelButton.style.setProperty('background-color', '#ffffff', 'important');
-    cancelButton.style.setProperty('color', '#000000', 'important');
-    cancelButton.style.setProperty('border', '1px solid #d1d5db', 'important');
-    cancelButton.style.setProperty('border-radius', '6px', 'important');
-    cancelButton.style.setProperty('padding', '8px 12px', 'important');
+  if (isDark) {
+    // Dark mode styling
+    modalContainer.style.setProperty('background-color', '#0f172a', 'important'); // slate-900
+    modalContainer.style.setProperty('border', '1px solid #374151', 'important'); // gray-700
+    modalContainer.style.setProperty('border-radius', '12px', 'important');
+    modalContainer.style.setProperty('color', '#ffffff', 'important');
+    modalHeader.style.setProperty('border-bottom', '1px solid #374151', 'important');
+    modalHeader.style.setProperty('background-color', '#0f172a', 'important');
+    modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
+    modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
+    modalFooter.style.setProperty('border-top', '1px solid #374151', 'important');
+    modalFooter.style.setProperty('background-color', '#0f172a', 'important');
+    modalFooter.style.setProperty('border-bottom-left-radius', '12px', 'important');
+    modalFooter.style.setProperty('border-bottom-right-radius', '12px', 'important');
     
-    // Remove any existing event listeners and add new ones
-    cancelButton.removeEventListener('mouseenter', cancelSessionButtonHover);
-    cancelButton.removeEventListener('mouseleave', cancelSessionButtonLeave);
+    // Force ALL text elements to white in dark mode
+    const allTextElements = modal.querySelectorAll('*');
+    allTextElements.forEach(element => {
+      if (element.textContent && element.textContent.trim()) {
+        element.style.setProperty('color', '#ffffff', 'important');
+      }
+    });
     
-    // Force text color on hover as well
-    cancelButton.addEventListener('mouseenter', cancelSessionButtonHover);
-    cancelButton.addEventListener('mouseleave', cancelSessionButtonLeave);
-  }
-  
-  // Force the warning box styling
-  const warningBox = modal.querySelector('.bg-red-50');
-  if (warningBox) {
-    warningBox.style.setProperty('background-color', '#fef2f2', 'important');
-    warningBox.style.setProperty('border', '1px solid #fecaca', 'important');
-  }
-  
-  // Force warning text color
-  const warningText = modal.querySelector('.text-red-600');
-  if (warningText) {
-    warningText.style.setProperty('color', '#dc2626', 'important');
-  }
-  
-  // Force modal body background
-  const modalBody = modal.querySelector('.p-6:not(#session-modal-header):not(#session-modal-footer)');
-  if (modalBody) {
-    modalBody.style.setProperty('background-color', '#ffffff', 'important');
-    modalBody.style.setProperty('border-radius', '0px', 'important'); // Middle section should not have radius
+    // Style cancel button for dark mode
+    const cancelButton = modal.querySelector('button[onclick="hideDeleteSessionModal()"]');
+    if (cancelButton) {
+      cancelButton.style.setProperty('background-color', '#374151', 'important');
+      cancelButton.style.setProperty('color', '#ffffff', 'important');
+      cancelButton.style.setProperty('border', '1px solid #4b5563', 'important');
+      cancelButton.style.setProperty('border-radius', '6px', 'important');
+      cancelButton.style.setProperty('padding', '8px 12px', 'important');
+      
+      cancelButton.removeEventListener('mouseenter', cancelSessionButtonHoverDark);
+      cancelButton.removeEventListener('mouseleave', cancelSessionButtonLeaveDark);
+      cancelButton.addEventListener('mouseenter', cancelSessionButtonHoverDark);
+      cancelButton.addEventListener('mouseleave', cancelSessionButtonLeaveDark);
+    }
+    
+    // Style warning box for dark mode
+    const warningBox = modal.querySelector('.bg-red-50');
+    if (warningBox) {
+      warningBox.style.setProperty('background-color', '#7f1d1d', 'important'); // red-900
+      warningBox.style.setProperty('border', '1px solid #991b1b', 'important'); // red-800
+    }
+    
+    const warningText = modal.querySelector('.text-red-600');
+    if (warningText) {
+      warningText.style.setProperty('color', '#fca5a5', 'important'); // red-300
+    }
+    
+    const modalBody = modal.querySelector('.p-6:not(#session-modal-header):not(#session-modal-footer)');
+    if (modalBody) {
+      modalBody.style.setProperty('background-color', '#0f172a', 'important');
+      modalBody.style.setProperty('border-radius', '0px', 'important');
+    }
+    
+  } else {
+    // Light mode styling
+    modalContainer.style.setProperty('background-color', '#ffffff', 'important');
+    modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
+    modalContainer.style.setProperty('border-radius', '12px', 'important');
+    modalContainer.style.setProperty('color', '#000000', 'important');
+    modalHeader.style.setProperty('border-bottom', '1px solid #d1d5db', 'important');
+    modalHeader.style.setProperty('background-color', '#ffffff', 'important');
+    modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
+    modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
+    modalFooter.style.setProperty('border-top', '1px solid #d1d5db', 'important');
+    modalFooter.style.setProperty('background-color', '#ffffff', 'important');
+    modalFooter.style.setProperty('border-bottom-left-radius', '12px', 'important');
+    modalFooter.style.setProperty('border-bottom-right-radius', '12px', 'important');
+    
+    // Force ALL text elements to black in light mode
+    const allTextElements = modal.querySelectorAll('*');
+    allTextElements.forEach(element => {
+      if (element.textContent && element.textContent.trim()) {
+        element.style.setProperty('color', '#000000', 'important');
+      }
+    });
+    
+    // Style cancel button for light mode
+    const cancelButton = modal.querySelector('button[onclick="hideDeleteSessionModal()"]');
+    if (cancelButton) {
+      cancelButton.style.setProperty('background-color', '#ffffff', 'important');
+      cancelButton.style.setProperty('color', '#000000', 'important');
+      cancelButton.style.setProperty('border', '1px solid #d1d5db', 'important');
+      cancelButton.style.setProperty('border-radius', '6px', 'important');
+      cancelButton.style.setProperty('padding', '8px 12px', 'important');
+      
+      cancelButton.removeEventListener('mouseenter', cancelSessionButtonHover);
+      cancelButton.removeEventListener('mouseleave', cancelSessionButtonLeave);
+      cancelButton.addEventListener('mouseenter', cancelSessionButtonHover);
+      cancelButton.addEventListener('mouseleave', cancelSessionButtonLeave);
+    }
+    
+    // Style warning box for light mode
+    const warningBox = modal.querySelector('.bg-red-50');
+    if (warningBox) {
+      warningBox.style.setProperty('background-color', '#fef2f2', 'important');
+      warningBox.style.setProperty('border', '1px solid #fecaca', 'important');
+    }
+    
+    const warningText = modal.querySelector('.text-red-600');
+    if (warningText) {
+      warningText.style.setProperty('color', '#dc2626', 'important');
+    }
+    
+    const modalBody = modal.querySelector('.p-6:not(#session-modal-header):not(#session-modal-footer)');
+    if (modalBody) {
+      modalBody.style.setProperty('background-color', '#ffffff', 'important');
+      modalBody.style.setProperty('border-radius', '0px', 'important');
+    }
   }
   
   // Ensure proper button spacing (10px gap)
@@ -341,7 +411,7 @@ function showDeleteSessionModal() {
   setTimeout(() => confirmButton.focus(), 100);
 }
 
-// Helper functions for session button hover states
+// Helper functions for session button hover states (light mode)
 function cancelSessionButtonHover() {
   this.style.setProperty('color', '#000000', 'important');
   this.style.setProperty('background-color', '#f3f4f6', 'important');
@@ -350,6 +420,17 @@ function cancelSessionButtonHover() {
 function cancelSessionButtonLeave() {
   this.style.setProperty('color', '#000000', 'important');
   this.style.setProperty('background-color', '#ffffff', 'important');
+}
+
+// Helper functions for session button hover states (dark mode)
+function cancelSessionButtonHoverDark() {
+  this.style.setProperty('color', '#ffffff', 'important');
+  this.style.setProperty('background-color', '#4b5563', 'important');
+}
+
+function cancelSessionButtonLeaveDark() {
+  this.style.setProperty('color', '#ffffff', 'important');
+  this.style.setProperty('background-color', '#374151', 'important');
 }
 
 function hideDeleteSessionModal() {
