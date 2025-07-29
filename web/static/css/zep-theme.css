@@ -33,6 +33,8 @@ Based on the official Zep website design system
   /* Brand Colors */
   --brand-pink: 327 68% 56%; /* #D5479D converted to HSL */
   --brand-purple: 262.1 83.3% 57.8%;
+  --success: 142 76% 36%; /* Green for success/healthy status */
+  --success-foreground: 210 20% 98%;
   
   /* Chart Colors */
   --chart-1: 12 76% 61%;
@@ -129,6 +131,8 @@ body {
 .bg-input { background-color: hsl(var(--input)); }
 .bg-brand-pink { background-color: hsl(var(--brand-pink)); }
 .bg-brand-purple { background-color: hsl(var(--brand-purple)); }
+.bg-success { background-color: hsl(var(--success)); }
+.bg-success-foreground { background-color: hsl(var(--success-foreground)); }
 
 /* Text Colors */
 .text-background { color: hsl(var(--background)); }
@@ -151,6 +155,8 @@ body {
 .text-input { color: hsl(var(--input)); }
 .text-brand-pink { color: hsl(var(--brand-pink)); }
 .text-brand-purple { color: hsl(var(--brand-purple)); }
+.text-success { color: hsl(var(--success)); }
+.text-success-foreground { color: hsl(var(--success-foreground)); }
 
 /* Border Colors */
 .border-background { border-color: hsl(var(--background)); }
