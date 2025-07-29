@@ -627,7 +627,7 @@ func (c *Client) GetSystemStats() (map[string]interface{}, error) {
 // GetServerHealth checks server health and returns actual status
 func (c *Client) GetServerHealth() (map[string]interface{}, error) {
 	fullURL := strings.TrimRight(c.baseURL, "/") + "/health"
-	log.Printf("🔍 DEBUG Checking health at: %s", fullURL)
+	log.Printf("🔍 DEBUG Checking health at: %s (v2)", fullURL)
 	
 	resp, err := c.get("/health")
 	if err != nil {
