@@ -327,17 +327,36 @@ function showDeleteModal() {
     modalHeader.style.borderBottom = '1px solid #374151'; // gray-700
     modalFooter.style.borderTop = '1px solid #374151'; // gray-700
   } else {
-    // Light mode styling
-    modalContainer.style.backgroundColor = '#ffffff'; // white
-    modalContainer.style.border = '1px solid #d1d5db'; // gray-300
-    modalContainer.style.color = '#000000';
+    // Light mode styling - force white background with black text
+    modalContainer.style.backgroundColor = '#ffffff !important'; // white
+    modalContainer.style.border = '1px solid #d1d5db !important'; // gray-300
+    modalContainer.style.color = '#000000 !important';
     modalHeader.style.borderBottom = '1px solid #d1d5db'; // gray-300
     modalFooter.style.borderTop = '1px solid #d1d5db'; // gray-300
+    
+    // Force all text elements to black in light mode
+    const textElements = modal.querySelectorAll('h3, h4, p, strong');
+    textElements.forEach(element => {
+      element.style.color = '#000000 !important';
+    });
     
     // Fix cancel button text color in light mode
     const cancelButton = modal.querySelector('button[onclick="hideDeleteModal()"]');
     if (cancelButton) {
-      cancelButton.style.color = '#000000';
+      cancelButton.style.color = '#000000 !important';
+    }
+    
+    // Ensure modal body text is black
+    const modalBody = modal.querySelector('.p-6:not(#modal-header):not(#modal-footer)');
+    if (modalBody) {
+      modalBody.style.color = '#000000 !important';
+      // Force all child text elements
+      const bodyTextElements = modalBody.querySelectorAll('*');
+      bodyTextElements.forEach(element => {
+        if (element.textContent && element.textContent.trim()) {
+          element.style.color = '#000000 !important';
+        }
+      });
     }
   }
   
