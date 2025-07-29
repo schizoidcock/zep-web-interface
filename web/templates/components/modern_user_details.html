@@ -125,7 +125,10 @@
                 <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted" data-state="false">
                   <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
                     <a class="text-primary hover:text-primary/80 hover:underline font-medium" 
-                       href="{{ adminPath "/sessions/" }}{{ .Session.SessionID }}">
+                       href="{{ adminPath "/sessions/" }}{{ .Session.SessionID }}"
+                       hx-get="{{ adminPath "/sessions/" }}{{ .Session.SessionID }}"
+                       hx-target="#page-content"
+                       hx-push-url="true">
                       {{ .Session.SessionID }}
                     </a>
                   </td>
@@ -265,12 +268,18 @@ document.addEventListener('DOMContentLoaded', function() {
       email: emailInput.value.trim()
     };
     
-    // Enable only if there are changes from initial values
+    // Enable if there are changes OR if there's content but no saved data
     const hasChanges = currentValues.firstName !== initialValues.firstName ||
                       currentValues.lastName !== initialValues.lastName ||
                       currentValues.email !== initialValues.email;
     
-    saveButton.disabled = !hasChanges;
+    const hasCurrentContent = currentValues.firstName || currentValues.lastName || currentValues.email;
+    const hasInitialData = initialValues.firstName || initialValues.lastName || initialValues.email;
+    
+    // Enable button if: there are changes OR (has content but no initial saved data)
+    const shouldEnable = hasChanges || (hasCurrentContent && !hasInitialData);
+    
+    saveButton.disabled = !shouldEnable;
   }
   
   // Add event listeners to form inputs
