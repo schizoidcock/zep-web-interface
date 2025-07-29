@@ -183,9 +183,9 @@
       
       <!-- Modal -->
       <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-md w-full mx-4 border border-gray-300 dark:border-gray-600" style="background-color: white;" data-theme-bg="true">
+        <div class="relative rounded-xl shadow-2xl max-w-md w-full mx-4" id="modal-container" data-theme-bg="true">
           <!-- Modal Header -->
-          <div class="flex items-center justify-between p-6 border-b border-gray-300 dark:border-gray-600">
+          <div class="flex items-center justify-between p-6" id="modal-header">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Delete User</h3>
             <button type="button" onclick="hideDeleteModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +217,7 @@
           </div>
           
           <!-- Modal Footer -->
-          <div class="flex items-center justify-end gap-12 p-6 border-t border-gray-300 dark:border-gray-600">
+          <div class="flex items-center justify-end p-6" id="modal-footer" style="gap: 50px;">
             <button type="button" 
                     onclick="hideDeleteModal()"
                     class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-3 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
@@ -310,16 +310,33 @@ function showDeleteModal() {
   const modal = document.getElementById('delete-confirmation-modal');
   modal.classList.remove('hidden');
   
-  // Ensure proper background colors based on theme
-  const modalDialog = modal.querySelector('[data-theme-bg]');
+  // Get modal elements
+  const modalContainer = modal.querySelector('#modal-container');
+  const modalHeader = modal.querySelector('#modal-header');
+  const modalFooter = modal.querySelector('#modal-footer');
+  
+  // Detect theme
   const isDark = document.documentElement.classList.contains('dark') || 
                  window.matchMedia('(prefers-color-scheme: dark)').matches;
   
   if (isDark) {
-    modalDialog.style.backgroundColor = '#0f172a'; // slate-900
+    // Dark mode styling
+    modalContainer.style.backgroundColor = '#0f172a'; // slate-900
+    modalContainer.style.border = '1px solid #374151'; // gray-700
+    modalContainer.style.color = '#ffffff';
+    modalHeader.style.borderBottom = '1px solid #374151'; // gray-700
+    modalFooter.style.borderTop = '1px solid #374151'; // gray-700
   } else {
-    modalDialog.style.backgroundColor = '#ffffff'; // white
+    // Light mode styling
+    modalContainer.style.backgroundColor = '#ffffff'; // white
+    modalContainer.style.border = '1px solid #d1d5db'; // gray-300
+    modalContainer.style.color = '#000000';
+    modalHeader.style.borderBottom = '1px solid #d1d5db'; // gray-300
+    modalFooter.style.borderTop = '1px solid #d1d5db'; // gray-300
   }
+  
+  // Ensure proper button spacing (50px gap)
+  modalFooter.style.gap = '50px';
   
   // Focus trap for accessibility
   const confirmButton = document.getElementById('confirm-delete-button');
