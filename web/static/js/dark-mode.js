@@ -28,7 +28,7 @@ const HSThemeAppearance = {
         document.querySelector('html').classList.remove('default')
         document.querySelector('html').classList.remove('auto')
 
-        document.querySelector('html').classList.add(this.getOriginalAppearance())
+        document.querySelector('html').classList.add(theme)
 
         setTimeout(() => {
             $resetStylesEl.remove()
@@ -60,8 +60,19 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
 
 window.addEventListener('load', () => {
     const $clickableThemes = document.querySelectorAll('[data-hs-theme-click-value]')
+    const $themeToggle = document.getElementById('theme-toggle')
 
+    // Handle the original data-hs-theme-click-value elements
     $clickableThemes.forEach($item => {
         $item.addEventListener('click', () => HSThemeAppearance.setAppearance($item.getAttribute('data-hs-theme-click-value'), true, $item))
     })
+
+    // Handle the new theme toggle button
+    if ($themeToggle) {
+        $themeToggle.addEventListener('click', () => {
+            const currentTheme = HSThemeAppearance.getAppearance()
+            const newTheme = currentTheme === 'dark' ? 'default' : 'dark'
+            HSThemeAppearance.setAppearance(newTheme, true, $themeToggle)
+        })
+    }
 })
