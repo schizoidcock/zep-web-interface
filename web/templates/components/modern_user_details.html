@@ -91,15 +91,16 @@
           </div>
           
           <button id="save-button"
-                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2" 
-                  type="submit">
-            <span class="htmx-indicator">
+                  class="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2" 
+                  type="submit"
+                  disabled>
+            <span class="htmx-indicator hidden">
               <svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
-            Save changes
+            <span id="button-text">Save changes</span>
           </button>
         </div>
       </form>
@@ -168,4 +169,61 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('user-update-form');
+  const saveButton = document.getElementById('save-button');
+  const buttonText = document.getElementById('button-text');
+  const loadingSpinner = saveButton.querySelector('.htmx-indicator');
+  
+  const firstNameInput = document.getElementById('first_name');
+  const lastNameInput = document.getElementById('last_name');
+  const emailInput = document.getElementById('email');
+  
+  // Store initial values
+  const initialValues = {
+    firstName: firstNameInput.value.trim(),
+    lastName: lastNameInput.value.trim(),
+    email: emailInput.value.trim()
+  };
+  
+  // Check if button should be enabled
+  function updateButtonState() {
+    const currentValues = {
+      firstName: firstNameInput.value.trim(),
+      lastName: lastNameInput.value.trim(),
+      email: emailInput.value.trim()
+    };
+    
+    // Enable if any field has data (either current input or initial value)
+    const hasData = currentValues.firstName || currentValues.lastName || currentValues.email ||
+                   initialValues.firstName || initialValues.lastName || initialValues.email;
+    
+    saveButton.disabled = !hasData;
+  }
+  
+  // Add event listeners to form inputs
+  [firstNameInput, lastNameInput, emailInput].forEach(input => {
+    input.addEventListener('input', updateButtonState);
+  });
+  
+  // Initial button state check
+  updateButtonState();
+  
+  // Handle form submission - show loading state
+  form.addEventListener('submit', function() {
+    loadingSpinner.classList.remove('hidden');
+    buttonText.textContent = 'Saving...';
+    saveButton.disabled = true;
+  });
+  
+  // Handle HTMX events to reset button state
+  form.addEventListener('htmx:afterRequest', function() {
+    loadingSpinner.classList.add('hidden');
+    buttonText.textContent = 'Save changes';
+    updateButtonState();
+  });
+});
+</script>
 {{ end }}
