@@ -253,12 +253,34 @@ document.addEventListener('DOMContentLoaded', function() {
   const lastNameInput = document.getElementById('last_name');
   const emailInput = document.getElementById('email');
   
+  // Verify all elements exist
+  if (!form || !saveButton || !buttonText || !firstNameInput || !lastNameInput || !emailInput) {
+    console.error('Missing required DOM elements:', {
+      form: !!form,
+      saveButton: !!saveButton,
+      buttonText: !!buttonText,
+      firstNameInput: !!firstNameInput,
+      lastNameInput: !!lastNameInput,
+      emailInput: !!emailInput
+    });
+    return;
+  }
+  
+  console.log('All DOM elements found, initializing form logic');
+  
   // Store initial values
   const initialValues = {
     firstName: firstNameInput.value.trim(),
     lastName: lastNameInput.value.trim(),
     email: emailInput.value.trim()
   };
+  
+  console.log('Initial values captured:', initialValues);
+  
+  // Initialize lastKnownValue for real-time monitoring
+  firstNameInput.lastKnownValue = initialValues.firstName;
+  lastNameInput.lastKnownValue = initialValues.lastName;
+  emailInput.lastKnownValue = initialValues.email;
   
   // Check if button should be enabled
   function updateButtonState() {
@@ -269,9 +291,10 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // Check for changes - any field that's different from initial
-    const hasChanges = currentValues.firstName !== initialValues.firstName ||
-                      currentValues.lastName !== initialValues.lastName ||
-                      currentValues.email !== initialValues.email;
+    const firstNameChanged = currentValues.firstName !== initialValues.firstName;
+    const lastNameChanged = currentValues.lastName !== initialValues.lastName;
+    const emailChanged = currentValues.email !== initialValues.email;
+    const hasChanges = firstNameChanged || lastNameChanged || emailChanged;
     
     const hasCurrentContent = currentValues.firstName || currentValues.lastName || currentValues.email;
     const hasInitialData = initialValues.firstName || initialValues.lastName || initialValues.email;
@@ -281,26 +304,100 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2. Has current content but no initial saved data (new user scenario)
     const shouldEnable = hasChanges || (hasCurrentContent && !hasInitialData);
     
-    // Debug logging to understand what's happening
-    console.log('Button State Debug:', {
+    // Enhanced debug logging to understand what's happening
+    console.log('Button State Debug (Enhanced):', {
       currentValues,
       initialValues,
+      changes: {
+        firstName: firstNameChanged,
+        lastName: lastNameChanged,
+        email: emailChanged
+      },
       hasChanges,
       hasCurrentContent,
       hasInitialData,
-      shouldEnable
+      shouldEnable,
+      buttonCurrentlyDisabled: saveButton.disabled
     });
     
     saveButton.disabled = !shouldEnable;
+    
+    // Additional logging when button state changes
+    if (saveButton.disabled !== !shouldEnable) {
+      console.log('Button state is changing from', saveButton.disabled, 'to', !shouldEnable);
+    }
   }
   
-  // Add event listeners to form inputs
+  // Add event listeners to form inputs - multiple event types to catch all changes
   [firstNameInput, lastNameInput, emailInput].forEach(input => {
-    input.addEventListener('input', updateButtonState);
+    // Listen to multiple events to ensure we catch all changes
+    ['input', 'change', 'keyup', 'keydown', 'paste', 'cut', 'blur', 'focus'].forEach(eventType => {
+      input.addEventListener(eventType, function() {
+        console.log(`Event triggered: ${eventType} on ${input.id}, value: "${input.value}"`);
+        // Small delay to ensure paste/cut operations complete
+        setTimeout(updateButtonState, 5);
+      });
+    });
+  });
+  
+  // Real-time monitoring - check every 100ms for changes
+  setInterval(function() {
+    const currentValues = {
+      firstName: firstNameInput.value.trim(),
+      lastName: lastNameInput.value.trim(),
+      email: emailInput.value.trim()
+    };
+    
+    // Only update if values actually changed to avoid spam
+    const valuesChanged = currentValues.firstName !== firstNameInput.lastKnownValue ||
+                         currentValues.lastName !== lastNameInput.lastKnownValue ||
+                         currentValues.email !== emailInput.lastKnownValue;
+    
+    if (valuesChanged) {
+      console.log('Real-time monitor detected change:', currentValues);
+      firstNameInput.lastKnownValue = currentValues.firstName;
+      lastNameInput.lastKnownValue = currentValues.lastName;
+      emailInput.lastKnownValue = currentValues.email;
+      updateButtonState();
+    }
+  }, 100);
+  
+  // Add MutationObserver to catch programmatic value changes
+  const observer = new MutationObserver(function(mutations) {
+    let shouldUpdate = false;
+    mutations.forEach(function(mutation) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+        console.log('MutationObserver detected value change on', mutation.target.id);
+        shouldUpdate = true;
+      }
+    });
+    if (shouldUpdate) {
+      setTimeout(updateButtonState, 5);
+    }
+  });
+  
+  // Observe value attribute changes on all inputs
+  [firstNameInput, lastNameInput, emailInput].forEach(input => {
+    observer.observe(input, { attributes: true, attributeFilter: ['value'] });
   });
   
   // Initial button state check
   updateButtonState();
+  
+  // Add a global function for manual testing
+  window.testButtonState = function() {
+    console.log('=== MANUAL BUTTON STATE TEST ===');
+    updateButtonState();
+  };
+  
+  // Add a global function to reset initial values manually
+  window.resetInitialValues = function() {
+    initialValues.firstName = firstNameInput.value.trim();
+    initialValues.lastName = lastNameInput.value.trim();
+    initialValues.email = emailInput.value.trim();
+    console.log('Reset initial values to:', initialValues);
+    updateButtonState();
+  };
   
   // Handle form submission - show loading state
   form.addEventListener('submit', function() {
