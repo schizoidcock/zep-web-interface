@@ -3,8 +3,8 @@
   <!-- Header Section -->
   <div class="flex flex-col space-y-2">
     <div class="flex items-center space-x-4">
-      <a href="{{ adminPath "/sessions/" }}" 
-         hx-get="{{ adminPath "/sessions/" }}" 
+      <a href="{{ adminPath "/sessions" }}" 
+         hx-get="{{ adminPath "/sessions" }}" 
          hx-target="#page-content"
          hx-push-url="true">
         <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 w-9">
@@ -174,13 +174,13 @@
   <!-- Delete Session Confirmation Modal -->
   <div id="delete-session-confirmation-modal" class="fixed inset-0 z-50 hidden">
     <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black"></div>
+    <div class="fixed inset-0 bg-white dark:bg-black backdrop-blur-sm"></div>
     
     <!-- Modal -->
     <div class="fixed inset-0 flex items-center justify-center p-4">
-      <div class="relative bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
+      <div class="relative bg-white dark:bg-black rounded-xl shadow-xl max-w-md w-full mx-4 border border-gray-200 dark:border-gray-600">
         <!-- Modal Header -->
-        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Delete Session</h3>
           <button type="button" onclick="hideDeleteSessionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,7 +199,7 @@
             </div>
             <div class="flex-1">
               <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Are you sure?</h4>
-              <p class="text-sm text-white mb-4">
+              <p class="text-sm text-gray-900 dark:text-white mb-4">
                 This will permanently delete the session <strong>{{ .Data.Session.SessionID }}</strong> and all associated data. This action cannot be undone.
               </p>
               <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
@@ -212,7 +212,7 @@
         </div>
         
         <!-- Modal Footer -->
-        <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-end space-x-10 p-6 border-t border-gray-200 dark:border-gray-600">
           <button type="button" 
                   onclick="hideDeleteSessionModal()"
                   class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-3 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
