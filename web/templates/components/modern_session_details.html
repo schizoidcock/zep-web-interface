@@ -181,13 +181,13 @@
   <!-- Delete Session Confirmation Modal -->
   <div id="delete-session-confirmation-modal" class="fixed inset-0 z-50 hidden">
     <!-- Backdrop -->
-    <div class="fixed inset-0 bg-white dark:bg-black backdrop-blur-sm"></div>
+    <div class="fixed inset-0 bg-black/80 dark:bg-black/80 backdrop-blur-sm"></div>
     
     <!-- Modal -->
     <div class="fixed inset-0 flex items-center justify-center p-4">
-      <div class="relative bg-white dark:bg-black rounded-xl shadow-xl max-w-md w-full mx-4 border border-gray-200 dark:border-gray-600">
+      <div class="relative rounded-xl shadow-2xl max-w-md w-full mx-4" id="session-modal-container" data-theme-bg="true">
         <!-- Modal Header -->
-        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
+        <div class="flex items-center justify-between p-6" id="session-modal-header">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Delete Session</h3>
           <button type="button" onclick="hideDeleteSessionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,7 +219,7 @@
         </div>
         
         <!-- Modal Footer -->
-        <div class="flex items-center justify-end space-x-10 p-6 border-t border-gray-200 dark:border-gray-600">
+        <div class="flex items-center justify-end p-6" id="session-modal-footer" style="gap: 10px;">
           <button type="button" 
                   onclick="hideDeleteSessionModal()"
                   class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-3 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
@@ -248,6 +248,41 @@
 function showDeleteSessionModal() {
   const modal = document.getElementById('delete-session-confirmation-modal');
   modal.classList.remove('hidden');
+  
+  // Get modal elements
+  const modalContainer = modal.querySelector('#session-modal-container');
+  const modalHeader = modal.querySelector('#session-modal-header');
+  const modalFooter = modal.querySelector('#session-modal-footer');
+  
+  // Detect theme
+  const isDark = document.documentElement.classList.contains('dark') || 
+                 window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
+  if (isDark) {
+    // Dark mode styling
+    modalContainer.style.backgroundColor = '#0f172a'; // slate-900
+    modalContainer.style.border = '1px solid #374151'; // gray-700
+    modalContainer.style.color = '#ffffff';
+    modalHeader.style.borderBottom = '1px solid #374151'; // gray-700
+    modalFooter.style.borderTop = '1px solid #374151'; // gray-700
+  } else {
+    // Light mode styling
+    modalContainer.style.backgroundColor = '#ffffff'; // white
+    modalContainer.style.border = '1px solid #d1d5db'; // gray-300
+    modalContainer.style.color = '#000000';
+    modalHeader.style.borderBottom = '1px solid #d1d5db'; // gray-300
+    modalFooter.style.borderTop = '1px solid #d1d5db'; // gray-300
+    
+    // Fix cancel button text color in light mode
+    const cancelButton = modal.querySelector('button[onclick="hideDeleteSessionModal()"]');
+    if (cancelButton) {
+      cancelButton.style.color = '#000000';
+    }
+  }
+  
+  // Ensure proper button spacing (10px gap)
+  modalFooter.style.gap = '10px';
+  
   // Focus trap for accessibility
   const confirmButton = document.getElementById('confirm-delete-session-button');
   setTimeout(() => confirmButton.focus(), 100);

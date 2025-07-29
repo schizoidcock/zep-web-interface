@@ -217,7 +217,7 @@
           </div>
           
           <!-- Modal Footer -->
-          <div class="flex items-center justify-end p-6" id="modal-footer" style="gap: 50px;">
+          <div class="flex items-center justify-end p-6" id="modal-footer" style="gap: 10px;">
             <button type="button" 
                     onclick="hideDeleteModal()"
                     class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-3 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
@@ -333,10 +333,16 @@ function showDeleteModal() {
     modalContainer.style.color = '#000000';
     modalHeader.style.borderBottom = '1px solid #d1d5db'; // gray-300
     modalFooter.style.borderTop = '1px solid #d1d5db'; // gray-300
+    
+    // Fix cancel button text color in light mode
+    const cancelButton = modal.querySelector('button[onclick="hideDeleteModal()"]');
+    if (cancelButton) {
+      cancelButton.style.color = '#000000';
+    }
   }
   
-  // Ensure proper button spacing (50px gap)
-  modalFooter.style.gap = '50px';
+  // Ensure proper button spacing (10px gap)
+  modalFooter.style.gap = '10px';
   
   // Focus trap for accessibility
   const confirmButton = document.getElementById('confirm-delete-button');
