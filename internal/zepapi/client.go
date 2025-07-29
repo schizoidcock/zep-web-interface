@@ -626,8 +626,12 @@ func (c *Client) GetSystemStats() (map[string]interface{}, error) {
 
 // GetServerHealth checks server health and returns actual status
 func (c *Client) GetServerHealth() (map[string]interface{}, error) {
+	fullURL := c.baseURL + "/health"
+	log.Printf("🔍 DEBUG Checking health at: %s", fullURL)
+	
 	resp, err := c.get("/health")
 	if err != nil {
+		log.Printf("❌ Health check failed: %v", err)
 		return map[string]interface{}{
 			"status":  "unhealthy",
 			"version": "unknown",
@@ -636,9 +640,12 @@ func (c *Client) GetServerHealth() (map[string]interface{}, error) {
 	}
 	defer resp.Body.Close()
 	
-	var responseData map[string]interface{}
 	body, _ := io.ReadAll(resp.Body)
+	log.Printf("🔍 DEBUG Health response - Status: %d, Body: %s", resp.StatusCode, string(body))
+	
+	var responseData map[string]interface{}
 	if err := json.Unmarshal(body, &responseData); err != nil {
+		log.Printf("⚠️ Failed to parse health JSON: %v", err)
 		// Fallback to HTTP status if JSON parsing fails
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 			responseData = map[string]interface{}{"status": "healthy"}
@@ -654,5 +661,11 @@ func (c *Client) GetServerHealth() (map[string]interface{}, error) {
 		responseData["status"] = strings.ToLower(status)
 	}
 	
+	// Ensure version exists
+	if _, ok := responseData["version"]; !ok {
+		responseData["version"] = "unknown"
+	}
+	
+	log.Printf("✅ Health check result: %+v", responseData)
 	return responseData, nil
 }

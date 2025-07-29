@@ -810,7 +810,7 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	
-	log.Printf("DEBUG: Settings handler - health status: %v", health["status"])
+	log.Printf("DEBUG: Settings handler - health status: '%v' (type: %T)", health["status"], health["status"])
 
 	// Create comprehensive configuration display for raw config section
 	configHTML := fmt.Sprintf(`🚀 Zep System Configuration & Status
@@ -907,7 +907,7 @@ func (h *Handlers) Settings(w http.ResponseWriter, r *http.Request) {
 			// Server Configuration
 			"zep_api_url": os.Getenv("ZEP_API_URL"),
 			"version":     safeString(health["version"]),
-			"status":      health["status"].(string),
+			"status":      safeString(health["status"]),
 			// Web Interface Configuration
 			"host": func() string {
 				if host := os.Getenv("HOST"); host != "" {
