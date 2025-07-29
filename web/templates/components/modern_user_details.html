@@ -357,11 +357,35 @@ function showDeleteModal() {
     const [r, g, b] = rgb.map(Number);
     // Calculate relative luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance < 0.5; // Dark if luminance is less than 50%
+    return luminance < 0.3; // More strict threshold for dark detection
   };
   
-  // Determine if we're in dark mode
-  const isDark = hasDarkClass || isDarkBackground(bodyBgColor) || isDarkBackground(htmlBgColor);
+  // Check if background is light (opposite of dark)
+  const isLightBackground = (color) => {
+    if (!color || color === 'transparent') return true; // Default to light
+    const rgb = color.match(/\d+/g);
+    if (!rgb) return true;
+    const [r, g, b] = rgb.map(Number);
+    // Calculate relative luminance  
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.7; // Light if luminance is greater than 70%
+  };
+  
+  // Determine if we're in dark mode with multiple checks
+  const bodyIsDark = isDarkBackground(bodyBgColor);
+  const htmlIsDark = isDarkBackground(htmlBgColor);
+  const bodyIsLight = isLightBackground(bodyBgColor);
+  const htmlIsLight = isLightBackground(htmlBgColor);
+  
+  // Enhanced logic: prioritize actual background color detection
+  let isDark;
+  if (bodyIsLight || htmlIsLight) {
+    isDark = false; // Force light mode if any element has light background
+  } else if (bodyIsDark || htmlIsDark) {
+    isDark = true; // Force dark mode if any element has dark background
+  } else {
+    isDark = hasDarkClass; // Fallback to class detection
+  }
   
   // Enhanced theme detection logging
   console.log('Theme detection:', { 
@@ -369,7 +393,10 @@ function showDeleteModal() {
     prefersDark, 
     bodyBgColor, 
     htmlBgColor, 
-    isDarkBackground: isDarkBackground(bodyBgColor),
+    bodyIsDark,
+    htmlIsDark,
+    bodyIsLight,
+    htmlIsLight,
     finalIsDark: isDark 
   });
   
