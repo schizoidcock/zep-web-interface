@@ -155,15 +155,171 @@
           <h4 class="font-medium">Delete this session</h4>
           <p class="text-sm text-muted-foreground mt-1">Once deleted, it will be permanently removed and cannot be recovered.</p>
         </div>
-        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs" 
+        <button id="delete-session-button"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs" 
                 type="button"
-                hx-confirm="Are you sure you want to delete this session?" 
-                hx-delete="{{ .Path }}" 
-                hx-target="#page-content">
-          Delete Session
+                onclick="showDeleteSessionModal()">
+          <span class="htmx-indicator hidden">
+            <svg class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          <span id="delete-session-button-text">Delete Session</span>
         </button>
       </div>
     </div>
   </div>
+  
+  <!-- Delete Session Confirmation Modal -->
+  <div id="delete-session-confirmation-modal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black"></div>
+    
+    <!-- Modal -->
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+      <div class="relative bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Delete Session</h3>
+          <button type="button" onclick="hideDeleteSessionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="p-6">
+          <div class="flex items-start space-x-4">
+            <div class="flex-shrink-0">
+              <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.632 0L4.182 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Are you sure?</h4>
+              <p class="text-sm text-white mb-4">
+                This will permanently delete the session <strong>{{ .Data.Session.SessionID }}</strong> and all associated data. This action cannot be undone.
+              </p>
+              <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+                <p class="text-xs text-red-600 dark:text-red-400">
+                  <strong>Warning:</strong> All session messages and related data will be permanently removed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+          <button type="button" 
+                  onclick="hideDeleteSessionModal()"
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-3 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
+            Cancel
+          </button>
+          <button type="button" 
+                  id="confirm-delete-session-button"
+                  onclick="confirmDeleteSession()"
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs">
+            <span class="htmx-indicator hidden">
+              <svg class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </span>
+            <span id="confirm-delete-session-text">Yes, Delete Session</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+// Session Delete Modal Functions
+function showDeleteSessionModal() {
+  const modal = document.getElementById('delete-session-confirmation-modal');
+  modal.classList.remove('hidden');
+  // Focus trap for accessibility
+  const confirmButton = document.getElementById('confirm-delete-session-button');
+  setTimeout(() => confirmButton.focus(), 100);
+}
+
+function hideDeleteSessionModal() {
+  const modal = document.getElementById('delete-session-confirmation-modal');
+  modal.classList.add('hidden');
+  
+  // Reset modal state
+  const confirmButton = document.getElementById('confirm-delete-session-button');
+  const confirmText = document.getElementById('confirm-delete-session-text');
+  const confirmSpinner = confirmButton.querySelector('.htmx-indicator');
+  
+  confirmButton.disabled = false;
+  confirmText.textContent = 'Yes, Delete Session';
+  confirmSpinner.classList.add('hidden');
+}
+
+function confirmDeleteSession() {
+  const confirmButton = document.getElementById('confirm-delete-session-button');
+  const confirmText = document.getElementById('confirm-delete-session-text');
+  const confirmSpinner = confirmButton.querySelector('.htmx-indicator');
+  const deleteButton = document.getElementById('delete-session-button');
+  const deleteButtonText = document.getElementById('delete-session-button-text');
+  const deleteButtonSpinner = deleteButton.querySelector('.htmx-indicator');
+  
+  // Show loading state in modal
+  confirmButton.disabled = true;
+  confirmText.textContent = 'Deleting...';
+  confirmSpinner.classList.remove('hidden');
+  
+  // Show loading state in main button
+  deleteButton.disabled = true;
+  deleteButtonText.textContent = 'Deleting...';
+  deleteButtonSpinner.classList.remove('hidden');
+  
+  // Create and configure HTMX request
+  const xhr = new XMLHttpRequest();
+  xhr.open('DELETE', '{{ .Path }}', true);
+  xhr.setRequestHeader('HX-Request', 'true');
+  xhr.setRequestHeader('HX-Target', '#page-content');
+  
+  xhr.onload = function() {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      // Success - update page content and redirect
+      document.getElementById('page-content').innerHTML = xhr.responseText;
+      
+      // Auto-redirect to sessions list after successful deletion
+      setTimeout(() => {
+        window.location.href = '{{ adminPath "/sessions/" }}';
+      }, 100);
+    } else {
+      // Error handling
+      hideDeleteSessionModal();
+      
+      // Reset button states
+      deleteButton.disabled = false;
+      deleteButtonText.textContent = 'Delete Session';
+      deleteButtonSpinner.classList.add('hidden');
+      
+      // Show error notification (you can customize this)
+      alert('Failed to delete session. Please try again.');
+    }
+  };
+  
+  xhr.onerror = function() {
+    // Network error
+    hideDeleteSessionModal();
+    
+    // Reset button states
+    deleteButton.disabled = false;
+    deleteButtonText.textContent = 'Delete Session';
+    deleteButtonSpinner.classList.add('hidden');
+    
+    alert('Network error. Please check your connection and try again.');
+  };
+  
+  xhr.send();
+}
+</script>
 {{ end }}
