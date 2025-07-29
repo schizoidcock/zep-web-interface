@@ -58,8 +58,8 @@ func (c *Client) request(method, endpoint string, body interface{}) (*http.Respo
 
 	req.Header.Set("Content-Type", "application/json")
 	if c.apiKey != "" {
-		// Zep server expects "Api-Key" prefix, not "Bearer"
-		req.Header.Set("Authorization", "Api-Key "+c.apiKey)
+		// Use Bearer format for zep-server-railway Go REST API
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	}
 
 	return c.httpClient.Do(req)
