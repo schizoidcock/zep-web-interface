@@ -327,36 +327,54 @@ function showDeleteModal() {
     modalHeader.style.borderBottom = '1px solid #374151'; // gray-700
     modalFooter.style.borderTop = '1px solid #374151'; // gray-700
   } else {
-    // Light mode styling - force white background with black text
-    modalContainer.style.backgroundColor = '#ffffff !important'; // white
-    modalContainer.style.border = '1px solid #d1d5db !important'; // gray-300
-    modalContainer.style.color = '#000000 !important';
-    modalHeader.style.borderBottom = '1px solid #d1d5db'; // gray-300
-    modalFooter.style.borderTop = '1px solid #d1d5db'; // gray-300
+    // Light mode styling - FORCE white background with black text
+    modalContainer.style.setProperty('background-color', '#ffffff', 'important');
+    modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
+    modalContainer.style.setProperty('color', '#000000', 'important');
+    modalHeader.style.setProperty('border-bottom', '1px solid #d1d5db', 'important');
+    modalFooter.style.setProperty('border-top', '1px solid #d1d5db', 'important');
     
-    // Force all text elements to black in light mode
-    const textElements = modal.querySelectorAll('h3, h4, p, strong');
-    textElements.forEach(element => {
-      element.style.color = '#000000 !important';
+    // Force ALL text elements to black in light mode
+    const allTextElements = modal.querySelectorAll('*');
+    allTextElements.forEach(element => {
+      if (element.textContent && element.textContent.trim()) {
+        element.style.setProperty('color', '#000000', 'important');
+      }
     });
     
-    // Fix cancel button text color in light mode
+    // Specifically target the cancel button and force its styling
     const cancelButton = modal.querySelector('button[onclick="hideDeleteModal()"]');
     if (cancelButton) {
-      cancelButton.style.color = '#000000 !important';
+      // Completely override button styling
+      cancelButton.style.setProperty('background-color', '#ffffff', 'important');
+      cancelButton.style.setProperty('color', '#000000', 'important');
+      cancelButton.style.setProperty('border', '1px solid #d1d5db', 'important');
+      cancelButton.style.setProperty('border-radius', '6px', 'important');
+      cancelButton.style.setProperty('padding', '8px 12px', 'important');
+      
+      // Force text color on hover as well
+      cancelButton.addEventListener('mouseenter', function() {
+        this.style.setProperty('color', '#000000', 'important');
+        this.style.setProperty('background-color', '#f3f4f6', 'important');
+      });
+      
+      cancelButton.addEventListener('mouseleave', function() {
+        this.style.setProperty('color', '#000000', 'important');
+        this.style.setProperty('background-color', '#ffffff', 'important');
+      });
     }
     
-    // Ensure modal body text is black
-    const modalBody = modal.querySelector('.p-6:not(#modal-header):not(#modal-footer)');
-    if (modalBody) {
-      modalBody.style.color = '#000000 !important';
-      // Force all child text elements
-      const bodyTextElements = modalBody.querySelectorAll('*');
-      bodyTextElements.forEach(element => {
-        if (element.textContent && element.textContent.trim()) {
-          element.style.color = '#000000 !important';
-        }
-      });
+    // Force the warning box styling
+    const warningBox = modal.querySelector('.bg-red-50');
+    if (warningBox) {
+      warningBox.style.setProperty('background-color', '#fef2f2', 'important');
+      warningBox.style.setProperty('border', '1px solid #fecaca', 'important');
+    }
+    
+    // Force warning text color
+    const warningText = modal.querySelector('.text-red-600');
+    if (warningText) {
+      warningText.style.setProperty('color', '#dc2626', 'important');
     }
   }
   
