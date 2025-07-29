@@ -254,67 +254,77 @@ function showDeleteSessionModal() {
   const modalHeader = modal.querySelector('#session-modal-header');
   const modalFooter = modal.querySelector('#session-modal-footer');
   
-  // Detect theme
-  const isDark = document.documentElement.classList.contains('dark') || 
-                 window.matchMedia('(prefers-color-scheme: dark)').matches;
+  // Enhanced theme detection - check multiple indicators
+  const htmlElement = document.documentElement;
+  const bodyElement = document.body;
   
-  if (isDark) {
-    // Dark mode styling
-    modalContainer.style.backgroundColor = '#0f172a'; // slate-900
-    modalContainer.style.border = '1px solid #374151'; // gray-700
-    modalContainer.style.color = '#ffffff';
-    modalHeader.style.borderBottom = '1px solid #374151'; // gray-700
-    modalFooter.style.borderTop = '1px solid #374151'; // gray-700
-  } else {
-    // Light mode styling - FORCE white background with black text
-    modalContainer.style.setProperty('background-color', '#ffffff', 'important');
-    modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
-    modalContainer.style.setProperty('color', '#000000', 'important');
-    modalHeader.style.setProperty('border-bottom', '1px solid #d1d5db', 'important');
-    modalFooter.style.setProperty('border-top', '1px solid #d1d5db', 'important');
-    
-    // Force ALL text elements to black in light mode
-    const allTextElements = modal.querySelectorAll('*');
-    allTextElements.forEach(element => {
-      if (element.textContent && element.textContent.trim()) {
-        element.style.setProperty('color', '#000000', 'important');
-      }
-    });
-    
-    // Specifically target the cancel button and force its styling
-    const cancelButton = modal.querySelector('button[onclick="hideDeleteSessionModal()"]');
-    if (cancelButton) {
-      // Completely override button styling
-      cancelButton.style.setProperty('background-color', '#ffffff', 'important');
-      cancelButton.style.setProperty('color', '#000000', 'important');
-      cancelButton.style.setProperty('border', '1px solid #d1d5db', 'important');
-      cancelButton.style.setProperty('border-radius', '6px', 'important');
-      cancelButton.style.setProperty('padding', '8px 12px', 'important');
-      
-      // Force text color on hover as well
-      cancelButton.addEventListener('mouseenter', function() {
-        this.style.setProperty('color', '#000000', 'important');
-        this.style.setProperty('background-color', '#f3f4f6', 'important');
-      });
-      
-      cancelButton.addEventListener('mouseleave', function() {
-        this.style.setProperty('color', '#000000', 'important');
-        this.style.setProperty('background-color', '#ffffff', 'important');
-      });
+  // Check for dark mode indicators
+  const hasDarkClass = htmlElement.classList.contains('dark') || bodyElement.classList.contains('dark');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
+  // Check actual computed styles of the page
+  const bodyBgColor = window.getComputedStyle(bodyElement).backgroundColor;
+  const htmlBgColor = window.getComputedStyle(htmlElement).backgroundColor;
+  
+  // More reliable dark mode detection
+  const isDark = hasDarkClass || (prefersDark && !hasDarkClass === false);
+  
+  // Force light mode styling - this interface appears to be in light mode
+  console.log('Session Theme detection:', { hasDarkClass, prefersDark, bodyBgColor, htmlBgColor, isDark });
+  
+  // FORCE LIGHT MODE STYLING regardless of detection
+  modalContainer.style.setProperty('background-color', '#ffffff', 'important');
+  modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
+  modalContainer.style.setProperty('color', '#000000', 'important');
+  modalHeader.style.setProperty('border-bottom', '1px solid #d1d5db', 'important');
+  modalHeader.style.setProperty('background-color', '#ffffff', 'important');
+  modalFooter.style.setProperty('border-top', '1px solid #d1d5db', 'important');
+  modalFooter.style.setProperty('background-color', '#ffffff', 'important');
+  
+  // Force ALL text elements to black
+  const allTextElements = modal.querySelectorAll('*');
+  allTextElements.forEach(element => {
+    if (element.textContent && element.textContent.trim()) {
+      element.style.setProperty('color', '#000000', 'important');
     }
+  });
+  
+  // Specifically target the cancel button and force its styling
+  const cancelButton = modal.querySelector('button[onclick="hideDeleteSessionModal()"]');
+  if (cancelButton) {
+    // Completely override button styling
+    cancelButton.style.setProperty('background-color', '#ffffff', 'important');
+    cancelButton.style.setProperty('color', '#000000', 'important');
+    cancelButton.style.setProperty('border', '1px solid #d1d5db', 'important');
+    cancelButton.style.setProperty('border-radius', '6px', 'important');
+    cancelButton.style.setProperty('padding', '8px 12px', 'important');
     
-    // Force the warning box styling
-    const warningBox = modal.querySelector('.bg-red-50');
-    if (warningBox) {
-      warningBox.style.setProperty('background-color', '#fef2f2', 'important');
-      warningBox.style.setProperty('border', '1px solid #fecaca', 'important');
-    }
+    // Remove any existing event listeners and add new ones
+    cancelButton.removeEventListener('mouseenter', cancelSessionButtonHover);
+    cancelButton.removeEventListener('mouseleave', cancelSessionButtonLeave);
     
-    // Force warning text color
-    const warningText = modal.querySelector('.text-red-600');
-    if (warningText) {
-      warningText.style.setProperty('color', '#dc2626', 'important');
-    }
+    // Force text color on hover as well
+    cancelButton.addEventListener('mouseenter', cancelSessionButtonHover);
+    cancelButton.addEventListener('mouseleave', cancelSessionButtonLeave);
+  }
+  
+  // Force the warning box styling
+  const warningBox = modal.querySelector('.bg-red-50');
+  if (warningBox) {
+    warningBox.style.setProperty('background-color', '#fef2f2', 'important');
+    warningBox.style.setProperty('border', '1px solid #fecaca', 'important');
+  }
+  
+  // Force warning text color
+  const warningText = modal.querySelector('.text-red-600');
+  if (warningText) {
+    warningText.style.setProperty('color', '#dc2626', 'important');
+  }
+  
+  // Force modal body background
+  const modalBody = modal.querySelector('.p-6:not(#session-modal-header):not(#session-modal-footer)');
+  if (modalBody) {
+    modalBody.style.setProperty('background-color', '#ffffff', 'important');
   }
   
   // Ensure proper button spacing (10px gap)
@@ -323,6 +333,17 @@ function showDeleteSessionModal() {
   // Focus trap for accessibility
   const confirmButton = document.getElementById('confirm-delete-session-button');
   setTimeout(() => confirmButton.focus(), 100);
+}
+
+// Helper functions for session button hover states
+function cancelSessionButtonHover() {
+  this.style.setProperty('color', '#000000', 'important');
+  this.style.setProperty('background-color', '#f3f4f6', 'important');
+}
+
+function cancelSessionButtonLeave() {
+  this.style.setProperty('color', '#000000', 'important');
+  this.style.setProperty('background-color', '#ffffff', 'important');
 }
 
 function hideDeleteSessionModal() {
