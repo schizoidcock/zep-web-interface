@@ -38,7 +38,8 @@
             <a href="{{ adminPath "/users/" }}{{ .Data.Session.UserID }}" 
                class="text-primary hover:text-primary/80 hover:underline"
                hx-get="{{ adminPath "/users/" }}{{ .Data.Session.UserID }}" 
-               hx-target="#page-content">
+               hx-target="#page-content"
+               hx-push-url="true">
               {{ .Data.Session.UserID }}
             </a>
           {{else}}
