@@ -13,17 +13,17 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="space-y-2">
                     <h3 class="text-sm font-medium text-muted-foreground">Server Health</h3>
-                    {{ if eq (index .Data "status") "healthy" }}
+                    {{ if eq (lower (index .Data "status")) "healthy" }}
                         <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-500 text-white shadow">
                             Healthy
                         </div>
-                    {{ else if eq (index .Data "status") "unhealthy" }}
+                    {{ else if eq (lower (index .Data "status")) "unhealthy" }}
                         <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-red-500 text-white shadow">
                             Unhealthy
                         </div>
                     {{ else }}
-                        <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground shadow">
-                            {{ index .Data "status" }}
+                        <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-red-500 text-white shadow">
+                            Unhealthy
                         </div>
                     {{ end }}
                 </div>
