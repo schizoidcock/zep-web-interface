@@ -245,59 +245,53 @@
       <div class="fixed inset-0 bg-black/80 dark:bg-black/80 backdrop-blur-sm"></div>
       
       <!-- Modal -->
-      <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="relative rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] mx-4" id="graph-modal-container" data-theme-bg="true">
+      <div class="fixed inset-0 flex items-center justify-center">
+        <div class="relative w-full h-full" id="graph-modal-container" data-theme-bg="true">
           <!-- Modal Header -->
-          <div class="flex items-center justify-between p-6 border-b" id="graph-modal-header">
+          <div class="flex items-center justify-between p-6" id="graph-modal-header" style="border-bottom: none;">
             <div>
-              <h3 class="text-lg font-semibold">Knowledge Graph</h3>
-              <p class="text-sm text-muted-foreground">Interactive visualization of user's knowledge graph</p>
+              <h3 class="text-lg font-semibold">User Relationship Graph</h3>
+              <p class="text-sm">Visualization of user relationships and connections</p>
             </div>
-            <button type="button" onclick="hideGraphModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" style="padding: 0; margin: 0; width: auto; height: auto; background: none; border: none;">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" onclick="hideGraphModal()" class="transition-colors" style="padding: 8px; margin: 0; background: none; border: none;">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
           </div>
           
           <!-- Modal Body -->
-          <div class="flex-1 p-6 overflow-hidden" style="height: calc(90vh - 140px);">
+          <div class="flex-1 overflow-hidden" style="height: calc(100vh - 140px);" id="graph-modal-body">
             <!-- Loading State -->
             <div id="graph-modal-loading" class="flex items-center justify-center h-full">
               <div class="flex flex-col items-center space-y-3">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <div class="text-sm text-muted-foreground">Loading graph visualization...</div>
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <div class="text-sm text-gray-400">Loading graph visualization...</div>
               </div>
             </div>
             
             <!-- Graph Content -->
-            <div id="graph-modal-content" class="hidden h-full">
-              <!-- Graph Stats -->
-              <div class="absolute top-20 left-10 z-10">
-                <div class="bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
-                  <div class="text-sm font-medium mb-2">Graph Stats</div>
-                  <div class="space-y-1 text-xs text-muted-foreground">
-                    <div>Triplets: <span id="modal-triplet-count">0</span></div>
-                    <div>Nodes: <span id="modal-node-count">0</span></div>
-                    <div>Relations: <span id="modal-relation-count">0</span></div>
-                  </div>
-                </div>
-              </div>
-              
+            <div id="graph-modal-content" class="hidden h-full relative">
               <!-- Graph Canvas -->
-              <div id="graph-modal-canvas" class="w-full h-full border border-border rounded-lg bg-background overflow-hidden relative"></div>
-              
-              <!-- Empty State -->
-              <div id="graph-modal-empty" class="hidden flex items-center justify-center h-full">
-                <div class="flex flex-col items-center space-y-4">
-                  <svg class="w-16 h-16 text-muted-foreground opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                  </svg>
-                  <div class="space-y-2 text-center">
-                    <h3 class="text-lg font-medium">No Graph Data</h3>
-                    <p class="text-muted-foreground max-w-md">
-                      This user doesn't have any graph data yet. Graph data is built automatically as users interact with the system.
-                    </p>
+              <div id="graph-modal-canvas" class="w-full h-full overflow-hidden relative"></div>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="graph-modal-empty" class="hidden flex items-center justify-center h-full">
+              <div class="flex flex-col items-center space-y-4">
+                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                </svg>
+                <div class="space-y-2 text-center">
+                  <h3 class="text-lg font-medium" id="empty-title">No Graph Data Available</h3>
+                  <p class="max-w-md text-sm" id="empty-subtitle">
+                    There are no relationships to visualize for this graph yet. Graph is updated asynchronously as new episodes are added.
+                  </p>
+                  <div class="flex items-center justify-center mt-4 text-xs" id="empty-hint">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Try refreshing or check back later.
                   </div>
                 </div>
               </div>
@@ -305,18 +299,16 @@
           </div>
           
           <!-- Modal Footer -->
-          <div class="flex items-center justify-between p-6 border-t" id="graph-modal-footer">
-            <div class="flex items-center space-x-2">
-              <button id="modal-reset-view" class="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">
-                Reset View
-              </button>
-              <button id="modal-toggle-labels" class="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">
-                Toggle Labels
-              </button>
-            </div>
-            <div class="text-xs text-muted-foreground">
-              Click nodes and edges to view details
-            </div>
+          <div class="absolute bottom-0 left-0 right-0 flex items-center justify-between p-6" id="graph-modal-footer" style="background: transparent; border: none;">
+            <button onclick="refreshGraph()" class="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors" style="background: none; border: none; padding: 8px;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              <span class="text-sm">Refresh</span>
+            </button>
+            <button onclick="hideGraphModal()" class="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors" style="background: none; border: none; padding: 8px;">
+              <span class="text-sm">Close</span>
+            </button>
           </div>
         </div>
       </div>
@@ -1298,20 +1290,21 @@ window.showGraphModal = function(userId) {
   const content = document.getElementById('graph-modal-content');
   const empty = document.getElementById('graph-modal-empty');
   
-  // Show modal with animation
+  // Store userId for refresh functionality
+  window.currentGraphUserId = userId;
+  
+  // Show modal with fade-in animation
   modal.classList.remove('hidden');
   
-  // Apply theme styling
+  // Apply theme styling immediately
   applyGraphModalTheme();
   
   // Add modal appear animation
   modalContainer.style.opacity = '0';
-  modalContainer.style.transform = 'scale(0.95)';
-  modalContainer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+  modalContainer.style.transition = 'opacity 0.3s ease-out';
   
   setTimeout(() => {
     modalContainer.style.opacity = '1';
-    modalContainer.style.transform = 'scale(1)';
   }, 10);
   
   // Show loading state
@@ -1323,20 +1316,41 @@ window.showGraphModal = function(userId) {
   loadGraphData(userId);
 }
 
+window.refreshGraph = function() {
+  if (window.currentGraphUserId) {
+    const loading = document.getElementById('graph-modal-loading');
+    const content = document.getElementById('graph-modal-content');
+    const empty = document.getElementById('graph-modal-empty');
+    
+    // Show loading state
+    loading.classList.remove('hidden');
+    content.classList.add('hidden');
+    empty.classList.add('hidden');
+    
+    // Clear existing graph
+    const canvas = document.getElementById('graph-modal-canvas');
+    if (canvas) canvas.innerHTML = '';
+    
+    // Reload graph data
+    loadGraphData(window.currentGraphUserId);
+  }
+}
+
 window.hideGraphModal = function() {
   const modal = document.getElementById('graph-modal');
   const modalContainer = document.getElementById('graph-modal-container');
   
   // Add fade out animation
-  modalContainer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+  modalContainer.style.transition = 'opacity 0.3s ease-out';
   modalContainer.style.opacity = '0';
-  modalContainer.style.transform = 'scale(0.95)';
   
   setTimeout(() => {
     modal.classList.add('hidden');
     // Clear graph content
     const canvas = document.getElementById('graph-modal-canvas');
     if (canvas) canvas.innerHTML = '';
+    // Clear stored user ID
+    window.currentGraphUserId = null;
   }, 300);
 }
 
@@ -1370,9 +1384,8 @@ window.loadGraphData = function(userId) {
           loading.classList.add('hidden');
           content.classList.remove('hidden');
           
-          // Update stats
-          document.getElementById('modal-triplet-count').textContent = triplets.length;
-          document.getElementById('modal-relation-count').textContent = triplets.length;
+          // Re-apply theme styling after content is shown
+          applyGraphModalTheme();
           
           // Initialize graph visualization
           initializeModalGraph(triplets);
@@ -1380,22 +1393,28 @@ window.loadGraphData = function(userId) {
           // Show empty state
           loading.classList.add('hidden');
           empty.classList.remove('hidden');
+          
+          // Re-apply theme styling for empty state
+          applyGraphModalTheme();
         }
       } catch (e) {
         console.error('Failed to parse graph data:', e);
         loading.classList.add('hidden');
         empty.classList.remove('hidden');
+        applyGraphModalTheme();
       }
     } else {
       // No graph data found, show empty state
       loading.classList.add('hidden');
       empty.classList.remove('hidden');
+      applyGraphModalTheme();
     }
   })
   .catch(error => {
     console.error('Failed to load graph data:', error);
     loading.classList.add('hidden');
     empty.classList.remove('hidden');
+    applyGraphModalTheme();
   });
 }
 
@@ -1595,28 +1614,115 @@ window.applyGraphModalTheme = function() {
   const modalContainer = document.getElementById('graph-modal-container');
   const modalHeader = document.getElementById('graph-modal-header');
   const modalFooter = document.getElementById('graph-modal-footer');
+  const modalBody = document.getElementById('graph-modal-body');
+  const canvas = document.getElementById('graph-modal-canvas');
   
   // Detect theme
   const isDark = detectTheme();
   
   if (isDark) {
-    // Dark mode styling
-    modalContainer.style.setProperty('background-color', '#0f172a', 'important');
-    modalContainer.style.setProperty('border', '1px solid #374151', 'important');
+    // Dark mode styling - Very dark background like in screenshot
+    modalContainer.style.setProperty('background-color', '#1a1a1a', 'important');
     modalContainer.style.setProperty('color', '#ffffff', 'important');
-    modalHeader.style.setProperty('border-bottom', '1px solid #374151', 'important');
-    modalHeader.style.setProperty('background-color', '#0f172a', 'important');
-    modalFooter.style.setProperty('border-top', '1px solid #374151', 'important');
-    modalFooter.style.setProperty('background-color', '#0f172a', 'important');
+    modalHeader.style.setProperty('background-color', '#1a1a1a', 'important');
+    modalBody.style.setProperty('background-color', '#1a1a1a', 'important');
+    modalFooter.style.setProperty('background-color', 'transparent', 'important');
+    
+    // Update canvas background for dark theme
+    if (canvas) {
+      canvas.style.setProperty('background-color', '#1a1a1a', 'important');
+      // Add subtle grid pattern like in screenshot
+      canvas.style.setProperty('background-image', 'radial-gradient(circle, #333 1px, transparent 1px)', 'important');
+      canvas.style.setProperty('background-size', '20px 20px', 'important');
+    }
+    
+    // Update header text colors for dark theme
+    const title = modalHeader.querySelector('h3');
+    const subtitle = modalHeader.querySelector('p');
+    const closeBtn = modalHeader.querySelector('button');
+    if (title) title.style.setProperty('color', '#ffffff', 'important');
+    if (subtitle) subtitle.style.setProperty('color', '#9ca3af', 'important');
+    if (closeBtn) {
+      closeBtn.style.setProperty('color', '#9ca3af', 'important');
+      closeBtn.addEventListener('mouseenter', () => closeBtn.style.setProperty('color', '#ffffff', 'important'));
+      closeBtn.addEventListener('mouseleave', () => closeBtn.style.setProperty('color', '#9ca3af', 'important'));
+    }
+    
+    // Update empty state colors for dark theme
+    const emptyTitle = document.getElementById('empty-title');
+    const emptySubtitle = document.getElementById('empty-subtitle');
+    const emptyHint = document.getElementById('empty-hint');
+    const emptyIcon = document.querySelector('#graph-modal-empty svg');
+    if (emptyTitle) emptyTitle.style.setProperty('color', '#ffffff', 'important');
+    if (emptySubtitle) emptySubtitle.style.setProperty('color', '#9ca3af', 'important');
+    if (emptyHint) emptyHint.style.setProperty('color', '#6b7280', 'important');
+    if (emptyIcon) emptyIcon.style.setProperty('color', '#6b7280', 'important');
+    
+    // Update footer button colors for dark theme
+    const refreshBtn = modalFooter.querySelector('button[onclick="refreshGraph()"]');
+    const footerCloseBtn = modalFooter.querySelector('button[onclick="hideGraphModal()"]');
+    if (refreshBtn) {
+      refreshBtn.style.setProperty('color', '#9ca3af', 'important');
+      refreshBtn.addEventListener('mouseenter', () => refreshBtn.style.setProperty('color', '#ffffff', 'important'));
+      refreshBtn.addEventListener('mouseleave', () => refreshBtn.style.setProperty('color', '#9ca3af', 'important'));
+    }
+    if (footerCloseBtn) {
+      footerCloseBtn.style.setProperty('color', '#9ca3af', 'important');
+      footerCloseBtn.addEventListener('mouseenter', () => footerCloseBtn.style.setProperty('color', '#ffffff', 'important'));
+      footerCloseBtn.addEventListener('mouseleave', () => footerCloseBtn.style.setProperty('color', '#9ca3af', 'important'));
+    }
+    
   } else {
-    // Light mode styling
-    modalContainer.style.setProperty('background-color', '#ffffff', 'important');
-    modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
+    // Light mode styling - Light background like in screenshot  
+    modalContainer.style.setProperty('background-color', '#f8f9fa', 'important');
     modalContainer.style.setProperty('color', '#000000', 'important');
-    modalHeader.style.setProperty('border-bottom', '1px solid #d1d5db', 'important');
-    modalHeader.style.setProperty('background-color', '#ffffff', 'important');
-    modalFooter.style.setProperty('border-top', '1px solid #d1d5db', 'important');
-    modalFooter.style.setProperty('background-color', '#ffffff', 'important');
+    modalHeader.style.setProperty('background-color', '#f8f9fa', 'important');
+    modalBody.style.setProperty('background-color', '#f8f9fa', 'important');
+    modalFooter.style.setProperty('background-color', 'transparent', 'important');
+    
+    // Update canvas background for light theme
+    if (canvas) {
+      canvas.style.setProperty('background-color', '#f8f9fa', 'important');
+      // Add subtle grid pattern like in screenshot
+      canvas.style.setProperty('background-image', 'radial-gradient(circle, #e5e7eb 1px, transparent 1px)', 'important');
+      canvas.style.setProperty('background-size', '20px 20px', 'important');
+    }
+    
+    // Update header text colors for light theme
+    const title = modalHeader.querySelector('h3');
+    const subtitle = modalHeader.querySelector('p');
+    const closeBtn = modalHeader.querySelector('button');
+    if (title) title.style.setProperty('color', '#000000', 'important');
+    if (subtitle) subtitle.style.setProperty('color', '#6b7280', 'important');
+    if (closeBtn) {
+      closeBtn.style.setProperty('color', '#6b7280', 'important');
+      closeBtn.addEventListener('mouseenter', () => closeBtn.style.setProperty('color', '#000000', 'important'));
+      closeBtn.addEventListener('mouseleave', () => closeBtn.style.setProperty('color', '#6b7280', 'important'));
+    }
+    
+    // Update empty state colors for light theme
+    const emptyTitle = document.getElementById('empty-title');
+    const emptySubtitle = document.getElementById('empty-subtitle');
+    const emptyHint = document.getElementById('empty-hint');
+    const emptyIcon = document.querySelector('#graph-modal-empty svg');
+    if (emptyTitle) emptyTitle.style.setProperty('color', '#000000', 'important');
+    if (emptySubtitle) emptySubtitle.style.setProperty('color', '#6b7280', 'important');
+    if (emptyHint) emptyHint.style.setProperty('color', '#9ca3af', 'important');
+    if (emptyIcon) emptyIcon.style.setProperty('color', '#9ca3af', 'important');
+    
+    // Update footer button colors for light theme
+    const refreshBtn = modalFooter.querySelector('button[onclick="refreshGraph()"]');
+    const footerCloseBtn = modalFooter.querySelector('button[onclick="hideGraphModal()"]');
+    if (refreshBtn) {
+      refreshBtn.style.setProperty('color', '#6b7280', 'important');
+      refreshBtn.addEventListener('mouseenter', () => refreshBtn.style.setProperty('color', '#000000', 'important'));
+      refreshBtn.addEventListener('mouseleave', () => refreshBtn.style.setProperty('color', '#6b7280', 'important'));
+    }
+    if (footerCloseBtn) {
+      footerCloseBtn.style.setProperty('color', '#6b7280', 'important');
+      footerCloseBtn.addEventListener('mouseenter', () => footerCloseBtn.style.setProperty('color', '#000000', 'important'));
+      footerCloseBtn.addEventListener('mouseleave', () => footerCloseBtn.style.setProperty('color', '#6b7280', 'important'));
+    }
   }
 }
 
