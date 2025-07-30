@@ -226,13 +226,7 @@
             <button type="button" 
                     id="confirm-delete-button"
                     onclick="confirmDelete()"
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs">
-              <span class="htmx-indicator hidden">
-                <svg class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </span>
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs">
               <span id="confirm-delete-text">Yes, Delete User</span>
             </button>
           </div>
@@ -738,33 +732,39 @@ function cancelButtonLeaveDark() {
 
 function hideDeleteModal() {
   const modal = document.getElementById('delete-confirmation-modal');
-  modal.classList.add('hidden');
+  // Add fade out effect
+  modal.style.transition = 'opacity 0.3s ease-out';
+  modal.style.opacity = '0';
+  
+  setTimeout(() => {
+    modal.classList.add('hidden');
+    modal.style.opacity = '1'; // Reset for next time
+  }, 300);
   
   // Reset modal state
   const confirmButton = document.getElementById('confirm-delete-button');
   const confirmText = document.getElementById('confirm-delete-text');
-  const confirmSpinner = confirmButton.querySelector('.htmx-indicator');
   
   confirmButton.disabled = false;
   confirmText.textContent = 'Yes, Delete User';
-  confirmSpinner.classList.add('hidden');
 }
 
 function confirmDelete() {
   const confirmButton = document.getElementById('confirm-delete-button');
   const confirmText = document.getElementById('confirm-delete-text');
-  const confirmSpinner = confirmButton.querySelector('.htmx-indicator');
   const deleteButton = document.getElementById('delete-user-button');
   const deleteButtonText = document.getElementById('delete-button-text');
   const deleteButtonSpinner = deleteButton.querySelector('.htmx-indicator');
   
-  // Show loading state in modal
-  confirmButton.disabled = true;
-  confirmText.textContent = 'Deleting...';
-  confirmSpinner.classList.remove('hidden');
+  // Immediately close modal with fade effect
+  hideDeleteModal();
   
-  // Show loading state in main button
+  // Add fade effect to main delete button
+  deleteButton.style.transition = 'opacity 0.3s ease-out';
+  deleteButton.style.opacity = '0.5';
   deleteButton.disabled = true;
+  
+  // Show minimal loading state in main button only
   deleteButtonText.textContent = 'Deleting...';
   deleteButtonSpinner.classList.remove('hidden');
   
@@ -778,62 +778,42 @@ function confirmDelete() {
   deleteRequest.onreadystatechange = function() {
     if (deleteRequest.readyState === XMLHttpRequest.DONE) {
       if (deleteRequest.status === 200) {
-        // Success - hide modal and redirect to users list
-        hideDeleteModal();
+        // Success - show bottom-left notification
+        showSuccessNotification('User deleted successfully');
         
-        // Show success message briefly then redirect
-        const successMessage = document.createElement('div');
-        successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-        successMessage.textContent = 'User deleted successfully';
-        document.body.appendChild(successMessage);
-        
-        // Redirect to users list after short delay
-        setTimeout(() => {
-          window.location.href = '{{ adminPath "/users" }}';
-        }, 1500);
-        
-      } else {
-        // Error - reset states and show error
-        hideDeleteModal();
-        
-        // Reset main button state
+        // Reset button state and redirect
+        deleteButton.style.opacity = '1';
         deleteButton.disabled = false;
         deleteButtonText.textContent = 'Delete User';
         deleteButtonSpinner.classList.add('hidden');
         
-        // Show error message
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-        errorMessage.textContent = 'Failed to delete user. Please try again.';
-        document.body.appendChild(errorMessage);
-        
-        // Remove error message after 5 seconds
+        // Redirect to users list after short delay
         setTimeout(() => {
-          errorMessage.remove();
-        }, 5000);
+          window.location.href = '{{ adminPath "/users" }}';
+        }, 1000);
+        
+      } else {
+        // Error - reset states and show error
+        deleteButton.style.opacity = '1';
+        deleteButton.disabled = false;
+        deleteButtonText.textContent = 'Delete User';
+        deleteButtonSpinner.classList.add('hidden');
+        
+        // Show error notification
+        showErrorNotification('Failed to delete user. Please try again.');
       }
     }
   };
   
   deleteRequest.onerror = function() {
     // Network error - reset states and show error
-    hideDeleteModal();
-    
-    // Reset main button state
+    deleteButton.style.opacity = '1';
     deleteButton.disabled = false;
     deleteButtonText.textContent = 'Delete User';
     deleteButtonSpinner.classList.add('hidden');
     
-    // Show error message
-    const errorMessage = document.createElement('div');
-    errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-    errorMessage.textContent = 'Network error. Please check your connection and try again.';
-    document.body.appendChild(errorMessage);
-    
-    // Remove error message after 5 seconds
-    setTimeout(() => {
-      errorMessage.remove();
-    }, 5000);
+    // Show error notification
+    showErrorNotification('Network error. Please check your connection and try again.');
   };
   
   // Send the delete request
@@ -859,5 +839,60 @@ document.addEventListener('keydown', function(event) {
     }
   }
 });
+
+// Notification system for bottom-left notifications
+function showSuccessNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'fixed bottom-4 left-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-y-full transition-transform duration-300 ease-out';
+  notification.innerHTML = `
+    <div class="flex items-center space-x-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+      <span>${message}</span>
+    </div>
+  `;
+  document.body.appendChild(notification);
+  
+  // Trigger animation
+  setTimeout(() => {
+    notification.classList.remove('translate-y-full');
+  }, 10);
+  
+  // Auto-remove after 4 seconds
+  setTimeout(() => {
+    notification.classList.add('translate-y-full');
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 4000);
+}
+
+function showErrorNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'fixed bottom-4 left-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-y-full transition-transform duration-300 ease-out';
+  notification.innerHTML = `
+    <div class="flex items-center space-x-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+      <span>${message}</span>
+    </div>
+  `;
+  document.body.appendChild(notification);
+  
+  // Trigger animation
+  setTimeout(() => {
+    notification.classList.remove('translate-y-full');
+  }, 10);
+  
+  // Auto-remove after 6 seconds (longer for error messages)
+  setTimeout(() => {
+    notification.classList.add('translate-y-full');
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 6000);
+}
 </script>
 {{ end }}
