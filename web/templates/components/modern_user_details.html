@@ -1293,18 +1293,21 @@ window.showGraphModal = function(userId) {
   // Store userId for refresh functionality
   window.currentGraphUserId = userId;
   
-  // Show modal with fade-in animation
+  // Show modal first
   modal.classList.remove('hidden');
   
   // Apply theme styling immediately
   applyGraphModalTheme();
   
-  // Add modal appear animation
+  // Add modal appear animation with scaling (same as delete modal)
   modalContainer.style.opacity = '0';
-  modalContainer.style.transition = 'opacity 0.3s ease-out';
+  modalContainer.style.transform = 'scale(0.95)';
+  modalContainer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
   
+  // Trigger appear animation
   setTimeout(() => {
     modalContainer.style.opacity = '1';
+    modalContainer.style.transform = 'scale(1)';
   }, 10);
   
   // Show loading state
@@ -1340,9 +1343,10 @@ window.hideGraphModal = function() {
   const modal = document.getElementById('graph-modal');
   const modalContainer = document.getElementById('graph-modal-container');
   
-  // Add fade out animation
-  modalContainer.style.transition = 'opacity 0.3s ease-out';
+  // Add fade out effect to container with scaling (same as delete modal)
+  modalContainer.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
   modalContainer.style.opacity = '0';
+  modalContainer.style.transform = 'scale(0.95)';
   
   setTimeout(() => {
     modal.classList.add('hidden');
@@ -1351,7 +1355,10 @@ window.hideGraphModal = function() {
     if (canvas) canvas.innerHTML = '';
     // Clear stored user ID
     window.currentGraphUserId = null;
-  }, 300);
+    // Reset transform for next time
+    modalContainer.style.opacity = '1';
+    modalContainer.style.transform = 'scale(1)';
+  }, 400);
 }
 
 window.loadGraphData = function(userId) {
