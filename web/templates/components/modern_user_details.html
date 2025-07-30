@@ -236,6 +236,9 @@
       </div>
     </div>
     
+    <!-- Hidden inputs for JavaScript -->
+    <input type="hidden" id="graph-api-base-url" value="{{ adminPath "/users/" }}">
+    
     <!-- Graph Modal -->
     <div id="graph-modal" class="fixed inset-0 z-50 hidden">
       <!-- Backdrop -->
@@ -1343,7 +1346,8 @@ window.loadGraphData = function(userId) {
   const empty = document.getElementById('graph-modal-empty');
   
   // Make API request to get graph data
-  fetch(`{{ adminPath "/users/" }}${userId}/graph`, {
+  const graphUrl = document.getElementById('graph-api-base-url').value + userId + '/graph';
+  fetch(graphUrl, {
     method: 'GET',
     headers: {
       'Accept': 'application/json',
