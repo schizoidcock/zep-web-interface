@@ -433,9 +433,9 @@ func (c *Client) GetUserGraphTriplets(userID string) ([]RawTriplet, error) {
 	
 	// Step 2: For each episode, get its mentions (nodes and edges)
 	for _, episode := range episodes {
-		mentions, err := c.GetEpisodeMentions(episode.UUID)
+		mentions, err := c.GetEpisodeMentions(episode.EpisodeID)
 		if err != nil {
-			log.Printf("⚠️ Failed to get mentions for episode %s: %v", episode.UUID, err)
+			log.Printf("⚠️ Failed to get mentions for episode %s: %v", episode.EpisodeID, err)
 			continue
 		}
 
@@ -472,7 +472,7 @@ func (c *Client) GetUserGraphTriplets(userID string) ([]RawTriplet, error) {
 					Name:           edge.Name,
 					Fact:           edge.Fact,
 					Content:        episode.Content, // Episode content provides context
-					Summary:        episode.SourceDescription,
+					Summary:        episode.Description,
 					CreatedAt:      edge.CreatedAt,
 					UpdatedAt:      edge.UpdatedAt,
 					ValidAt:        getStringValue(edge.ValidAt),
