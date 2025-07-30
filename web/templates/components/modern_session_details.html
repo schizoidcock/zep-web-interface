@@ -591,9 +591,13 @@ window.confirmDeleteSession = function() {
         deleteButton.disabled = false;
         deleteButtonText.textContent = 'Delete Session';
         
-        // Redirect to sessions list after short delay
+        // Redirect to user details page after short delay
         setTimeout(() => {
+          {{if .Data.Session.UserID}}
+          window.location.href = '{{ adminPath "/users/" }}{{ .Data.Session.UserID }}';
+          {{else}}
           window.location.href = '{{ adminPath "/sessions" }}';
+          {{end}}
         }, 1500); // Increased delay to let notification show
         
       } else {
