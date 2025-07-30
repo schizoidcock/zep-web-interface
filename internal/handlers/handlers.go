@@ -634,7 +634,7 @@ func (h *Handlers) UserGraph(w http.ResponseWriter, r *http.Request) {
 	cacheKey := fmt.Sprintf("graph:%s", userID)
 	var triplets []zepapi.RawTriplet
 	
-	if cached := h.cache.Get(cacheKey); cached != nil {
+	if cached, found := h.cache.Get(cacheKey); found && cached != nil {
 		if cachedTriplets, ok := cached.([]zepapi.RawTriplet); ok {
 			triplets = cachedTriplets
 			log.Printf("📊 Cache hit for user graph: %s (%d triplets)", userID, len(triplets))
@@ -1144,7 +1144,7 @@ func (h *Handlers) UserEpisodesAPI(w http.ResponseWriter, r *http.Request) {
 	
 	// Check cache first
 	cacheKey := fmt.Sprintf("episodes:%s", userID)
-	if cached := h.cache.Get(cacheKey); cached != nil {
+	if cached, found := h.cache.Get(cacheKey); found && cached != nil {
 		if episodes, ok := cached.([]zepapi.Episode); ok {
 			log.Printf("📋 Cache hit for user episodes: %s (%d episodes)", userID, len(episodes))
 			
@@ -1207,7 +1207,7 @@ func (h *Handlers) UserGraphAPI(w http.ResponseWriter, r *http.Request) {
 	
 	// Check cache first
 	cacheKey := fmt.Sprintf("graph:%s", userID)
-	if cached := h.cache.Get(cacheKey); cached != nil {
+	if cached, found := h.cache.Get(cacheKey); found && cached != nil {
 		if triplets, ok := cached.([]zepapi.RawTriplet); ok {
 			log.Printf("📊 Cache hit for user graph: %s (%d triplets)", userID, len(triplets))
 			
