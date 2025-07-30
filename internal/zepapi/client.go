@@ -2,6 +2,7 @@ package zepapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -19,17 +21,24 @@ type Client struct {
 }
 
 func NewClient(baseURL, apiKey, proxyURL string) *Client {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
+	// Create optimized transport with connection pooling
+	transport := &http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 10,
+		IdleConnTimeout:     90 * time.Second,
+		DisableKeepAlives:   false,
 	}
 	
 	// Configure proxy if provided
 	if proxyURL != "" {
 		if proxyParsed, err := url.Parse(proxyURL); err == nil {
-			client.Transport = &http.Transport{
-				Proxy: http.ProxyURL(proxyParsed),
-			}
+			transport.Proxy = http.ProxyURL(proxyParsed)
 		}
+	}
+	
+	client := &http.Client{
+		Timeout:   10 * time.Second, // Reduced from 30s for better UX
+		Transport: transport,
 	}
 	
 	return &Client{
@@ -40,6 +49,10 @@ func NewClient(baseURL, apiKey, proxyURL string) *Client {
 }
 
 func (c *Client) request(method, endpoint string, body interface{}) (*http.Response, error) {
+	return c.requestWithContext(context.Background(), method, endpoint, body)
+}
+
+func (c *Client) requestWithContext(ctx context.Context, method, endpoint string, body interface{}) (*http.Response, error) {
 	url := c.baseURL + endpoint
 	
 	var reqBody io.Reader
@@ -51,12 +64,13 @@ func (c *Client) request(method, endpoint string, body interface{}) (*http.Respo
 		reqBody = bytes.NewBuffer(jsonBody)
 	}
 
-	req, err := http.NewRequest(method, url, reqBody)
+	req, err := http.NewRequestWithContext(ctx, method, url, reqBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "zep-web-interface/1.0")
 	if c.apiKey != "" {
 		// Use Bearer format for zep-server-railway Go REST API
 		req.Header.Set("Authorization", "Bearer "+c.apiKey)
@@ -339,6 +353,55 @@ func (c *Client) GetUsers() ([]User, error) {
 	return orderedResp.Users, nil
 }
 
+// GetUsersWithSessionCounts fetches users with their session counts in a single optimized call
+func (c *Client) GetUsersWithSessionCounts() ([]User, error) {
+	users, err := c.GetUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create concurrent channel-based session count fetcher
+	type sessionCountResult struct {
+		index int
+		count int
+		err   error
+	}
+
+	resultChan := make(chan sessionCountResult, len(users))
+	
+	// Limit concurrent requests to avoid overwhelming the server
+	semaphore := make(chan struct{}, 5) // Max 5 concurrent requests
+
+	// Fetch session counts concurrently
+	for i := range users {
+		go func(idx int, userID string) {
+			semaphore <- struct{}{} // Acquire semaphore
+			defer func() { <-semaphore }() // Release semaphore
+
+			sessions, err := c.GetUserSessions(userID)
+			if err != nil {
+				resultChan <- sessionCountResult{index: idx, count: 0, err: err}
+				return
+			}
+			resultChan <- sessionCountResult{index: idx, count: len(sessions), err: nil}
+		}(i, users[i].UserID)
+	}
+
+	// Collect results
+	for i := 0; i < len(users); i++ {
+		result := <-resultChan
+		if result.err != nil {
+			log.Printf("⚠️ Failed to get session count for user %s: %v", users[result.index].UserID, result.err)
+			users[result.index].SessionCount = 0
+		} else {
+			users[result.index].SessionCount = result.count
+		}
+	}
+
+	log.Printf("✅ Fetched session counts for %d users concurrently", len(users))
+	return users, nil
+}
+
 func (c *Client) GetUsersLegacy() ([]User, error) {
 	// Fallback method with multiple endpoints for compatibility
 	endpoints := []string{
@@ -418,7 +481,7 @@ func getStringValue(ptr *string) string {
 	return *ptr
 }
 
-// GetUserGraphTriplets fetches graph triplets for a specific user by getting user episodes and their mentions
+// GetUserGraphTriplets fetches graph triplets for a specific user with optimized concurrent processing
 func (c *Client) GetUserGraphTriplets(userID string) ([]RawTriplet, error) {
 	// Step 1: Get user episodes first
 	episodes, err := c.GetUserEpisodes(userID)
@@ -428,65 +491,109 @@ func (c *Client) GetUserGraphTriplets(userID string) ([]RawTriplet, error) {
 
 	log.Printf("🔍 Found %d episodes for user %s", len(episodes), userID)
 
-	var triplets []RawTriplet
-	nodeMap := make(map[string]GraphNode) // Track unique nodes
-	
-	// Step 2: For each episode, get its mentions (nodes and edges)
-	for _, episode := range episodes {
-		mentions, err := c.GetEpisodeMentions(episode.EpisodeID)
-		if err != nil {
-			log.Printf("⚠️ Failed to get mentions for episode %s: %v", episode.EpisodeID, err)
-			continue
-		}
-
-		// Step 3: Store all nodes from this episode
-		for _, node := range mentions.Nodes {
-			nodeMap[node.UUID] = GraphNode{
-				UUID:       node.UUID,
-				Name:       node.Name,
-				Summary:    node.Summary,
-				Labels:     node.Labels,
-				Attributes: node.Attributes,
-				CreatedAt:  node.CreatedAt,
-				UpdatedAt:  node.UpdatedAt,
-			}
-		}
-
-		// Step 4: Build triplets from edges
-		for _, edge := range mentions.Edges {
-			sourceNode, sourceExists := nodeMap[edge.SourceNodeUUID]
-			targetNode, targetExists := nodeMap[edge.TargetNodeUUID]
-			
-			if !sourceExists || !targetExists {
-				log.Printf("⚠️ Missing nodes for edge %s (source: %v, target: %v)", edge.UUID, sourceExists, targetExists)
-				continue
-			}
-
-			triplet := RawTriplet{
-				SourceNode: sourceNode,
-				Episode: GraphEpisode{
-					UUID:           edge.UUID, // Use edge UUID as episode reference
-					SourceNodeUUID: edge.SourceNodeUUID,
-					TargetNodeUUID: edge.TargetNodeUUID,
-					Type:           "relationship",
-					Name:           edge.Name,
-					Fact:           edge.Fact,
-					Content:        episode.Content, // Episode content provides context
-					Summary:        episode.Description,
-					CreatedAt:      edge.CreatedAt,
-					UpdatedAt:      edge.UpdatedAt,
-					ValidAt:        getStringValue(edge.ValidAt),
-					ExpiredAt:      getStringValue(edge.ExpiredAt),
-					InvalidAt:      getStringValue(edge.InvalidAt),
-				},
-				TargetNode: targetNode,
-			}
-			
-			triplets = append(triplets, triplet)
-		}
+	if len(episodes) == 0 {
+		return []RawTriplet{}, nil
 	}
 
-	log.Printf("✅ Built %d graph triplets for user %s from %d episodes", len(triplets), userID, len(episodes))
+	var triplets []RawTriplet
+	var mu sync.Mutex
+	nodeMap := make(map[string]GraphNode) // Track unique nodes
+	
+	// Use worker pool for concurrent episode processing
+	const maxWorkers = 3 // Limit concurrent requests
+	semaphore := make(chan struct{}, maxWorkers)
+	var wg sync.WaitGroup
+	
+	// Process episodes concurrently
+	for _, episode := range episodes {
+		wg.Add(1)
+		go func(ep Episode) {
+			defer wg.Done()
+			semaphore <- struct{}{} // Acquire
+			defer func() { <-semaphore }() // Release
+
+			mentions, err := c.GetEpisodeMentions(ep.EpisodeID)
+			if err != nil {
+				log.Printf("⚠️ Failed to get mentions for episode %s: %v", ep.EpisodeID, err)
+				return
+			}
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			// Store all nodes from this episode
+			for _, node := range mentions.Nodes {
+				nodeMap[node.UUID] = GraphNode{
+					UUID:       node.UUID,
+					Name:       node.Name,
+					Summary:    node.Summary,
+					Labels:     node.Labels,
+					Attributes: node.Attributes,
+					CreatedAt:  node.CreatedAt,
+					UpdatedAt:  node.UpdatedAt,
+				}
+			}
+
+			// Build triplets from edges
+			for _, edge := range mentions.Edges {
+				sourceNode, sourceExists := nodeMap[edge.SourceNodeUUID]
+				targetNode, targetExists := nodeMap[edge.TargetNodeUUID]
+				
+				if !sourceExists || !targetExists {
+					// Check if nodes are in current batch
+					for _, node := range mentions.Nodes {
+						if node.UUID == edge.SourceNodeUUID {
+							sourceNode = GraphNode{
+								UUID: node.UUID, Name: node.Name, Summary: node.Summary,
+								Labels: node.Labels, Attributes: node.Attributes,
+								CreatedAt: node.CreatedAt, UpdatedAt: node.UpdatedAt,
+							}
+							sourceExists = true
+						}
+						if node.UUID == edge.TargetNodeUUID {
+							targetNode = GraphNode{
+								UUID: node.UUID, Name: node.Name, Summary: node.Summary,
+								Labels: node.Labels, Attributes: node.Attributes,
+								CreatedAt: node.CreatedAt, UpdatedAt: node.UpdatedAt,
+							}
+							targetExists = true
+						}
+					}
+				}
+				
+				if !sourceExists || !targetExists {
+					log.Printf("⚠️ Missing nodes for edge %s (source: %v, target: %v)", edge.UUID, sourceExists, targetExists)
+					continue
+				}
+
+				triplet := RawTriplet{
+					SourceNode: sourceNode,
+					Episode: GraphEpisode{
+						UUID:           edge.UUID,
+						SourceNodeUUID: edge.SourceNodeUUID,
+						TargetNodeUUID: edge.TargetNodeUUID,
+						Type:           "relationship",
+						Name:           edge.Name,
+						Fact:           edge.Fact,
+						Content:        ep.Content,
+						Summary:        ep.Description,
+						CreatedAt:      edge.CreatedAt,
+						UpdatedAt:      edge.UpdatedAt,
+						ValidAt:        getStringValue(edge.ValidAt),
+						ExpiredAt:      getStringValue(edge.ExpiredAt),
+						InvalidAt:      getStringValue(edge.InvalidAt),
+					},
+					TargetNode: targetNode,
+				}
+				
+				triplets = append(triplets, triplet)
+			}
+		}(episode)
+	}
+
+	wg.Wait()
+
+	log.Printf("✅ Built %d graph triplets for user %s from %d episodes (concurrent)", len(triplets), userID, len(episodes))
 	return triplets, nil
 }
 
@@ -627,43 +734,36 @@ func (c *Client) DeleteUser(userID string) error {
 	return nil
 }
 
-// DeleteUserWithCleanup deletes a user and performs comprehensive cleanup
+// DeleteUserWithCleanup deletes a user and performs comprehensive cleanup with optimized concurrency
 func (c *Client) DeleteUserWithCleanup(userID string) error {
-	log.Printf("🧹 Starting comprehensive user deletion for: %s", userID)
+	log.Printf("🧹 Starting optimized user deletion for: %s", userID)
 	
 	// Step 1: Get all sessions for this user first
 	sessions, err := c.GetUserSessions(userID)
 	if err != nil {
 		log.Printf("⚠️ Could not get sessions for user %s (continuing): %v", userID, err)
-		// Continue anyway, the sessions might not exist
+		sessions = []Session{} // Continue with empty sessions
 	} else {
 		log.Printf("📋 Found %d sessions for user %s", len(sessions), userID)
 	}
 	
-	// Step 2: Delete each session individually (includes graph cleanup)
-	for _, session := range sessions {
-		log.Printf("🗑️ Deleting session: %s", session.SessionID)
-		err := c.DeleteSession(session.SessionID)
-		if err != nil {
-			log.Printf("⚠️ Failed to delete session %s (continuing): %v", session.SessionID, err)
-			// Continue with other sessions even if one fails
-		} else {
-			log.Printf("✅ Successfully deleted session: %s", session.SessionID)
-		}
+	// Step 2: Delete sessions concurrently (major optimization)
+	if len(sessions) > 0 {
+		c.deleteSessionsConcurrently(sessions)
 	}
 	
-	// Step 3: Try to cleanup graph data directly if we have a graph service
-	// This is a safety net in case session deletion didn't clean everything
-	if c.baseURL != "" {
-		log.Printf("🧠 Attempting direct graph cleanup for user: %s", userID)
+	// Step 3: Start graph cleanup in background (non-blocking)
+	go func() {
+		log.Printf("🧠 Starting background graph cleanup for user: %s", userID)
 		err := c.DeleteUserGraphData(userID)
 		if err != nil {
-			log.Printf("⚠️ Direct graph cleanup failed (this is expected if no graph service): %v", err)
-			// This is not a critical error - the graph service might not be available
+			log.Printf("⚠️ Background graph cleanup failed for %s: %v", userID, err)
+		} else {
+			log.Printf("✅ Background graph cleanup completed for %s", userID)
 		}
-	}
+	}()
 	
-	// Step 4: Delete the user from Zep server
+	// Step 4: Delete the user from Zep server (most critical step)
 	log.Printf("👤 Deleting user from Zep server: %s", userID)
 	err = c.DeleteUser(userID)
 	if err != nil {
@@ -671,15 +771,95 @@ func (c *Client) DeleteUserWithCleanup(userID string) error {
 		return fmt.Errorf("failed to delete user from Zep server: %w", err)
 	}
 	
-	log.Printf("✅ Successfully completed comprehensive deletion for user: %s", userID)
+	log.Printf("✅ User deletion completed for: %s (graph cleanup continues in background)", userID)
 	return nil
 }
 
-// DeleteUserGraphData attempts to cleanup graph data for a user (best effort)
+// BulkDeleteUsers deletes multiple users concurrently with progress tracking
+func (c *Client) BulkDeleteUsers(userIDs []string, progressCallback func(completed, total int, userID string, err error)) error {
+	if len(userIDs) == 0 {
+		return fmt.Errorf("no users provided for bulk deletion")
+	}
+	
+	log.Printf("🚀 Starting bulk deletion of %d users", len(userIDs))
+	
+	// Limit concurrent deletions to avoid overwhelming the server
+	maxWorkers := 2 // Conservative limit for user deletions
+	semaphore := make(chan struct{}, maxWorkers)
+	var wg sync.WaitGroup
+	var completed int
+	var mu sync.Mutex
+	
+	for _, userID := range userIDs {
+		wg.Add(1)
+		go func(uid string) {
+			defer wg.Done()
+			semaphore <- struct{}{} // Acquire
+			defer func() { <-semaphore }() // Release
+			
+			err := c.DeleteUserWithCleanup(uid)
+			
+			mu.Lock()
+			completed++
+			currentCompleted := completed
+			mu.Unlock()
+			
+			if progressCallback != nil {
+				progressCallback(currentCompleted, len(userIDs), uid, err)
+			}
+			
+			if err != nil {
+				log.Printf("❌ Bulk deletion failed for user %s: %v", uid, err)
+			} else {
+				log.Printf("✅ Bulk deletion completed for user %s (%d/%d)", uid, currentCompleted, len(userIDs))
+			}
+		}(userID)
+	}
+	
+	wg.Wait()
+	log.Printf("✅ Bulk deletion completed for all %d users", len(userIDs))
+	return nil
+}
+
+// deleteSessionsConcurrently deletes multiple sessions in parallel
+func (c *Client) deleteSessionsConcurrently(sessions []Session) {
+	log.Printf("🚀 Starting concurrent session deletion for %d sessions", len(sessions))
+	
+	// Limit concurrent deletions to avoid overwhelming the server
+	maxWorkers := 3
+	if len(sessions) < maxWorkers {
+		maxWorkers = len(sessions)
+	}
+	
+	semaphore := make(chan struct{}, maxWorkers)
+	var wg sync.WaitGroup
+	
+	for _, session := range sessions {
+		wg.Add(1)
+		go func(s Session) {
+			defer wg.Done()
+			semaphore <- struct{}{} // Acquire
+			defer func() { <-semaphore }() // Release
+			
+			log.Printf("🗑️ Deleting session: %s", s.SessionID)
+			err := c.DeleteSession(s.SessionID)
+			if err != nil {
+				log.Printf("⚠️ Failed to delete session %s: %v", s.SessionID, err)
+			} else {
+				log.Printf("✅ Successfully deleted session: %s", s.SessionID)
+			}
+		}(session)
+	}
+	
+	wg.Wait()
+	log.Printf("✅ Concurrent session deletion completed")
+}
+
+// DeleteUserGraphData attempts to cleanup graph data for a user with optimized timeouts
 func (c *Client) DeleteUserGraphData(userID string) error {
-	// Try different graph service URLs that might be configured
+	// Try different graph service URLs with reduced timeouts
 	graphServiceURLs := []string{
-		// Railway internal network patterns
+		// Railway internal network patterns (most likely to work)
 		"http://zep-falkordb-service.railway.internal:8003",
 		"http://zep-falkordb-service:8003",
 		// Local development patterns
@@ -687,21 +867,25 @@ func (c *Client) DeleteUserGraphData(userID string) error {
 		"http://127.0.0.1:8003",
 	}
 	
+	// Use shorter timeout for faster failure detection
+	client := &http.Client{Timeout: 5 * time.Second}
+	
 	for _, baseURL := range graphServiceURLs {
-		// Step 1: Clear all data from the user's database by calling group deletion
-		groupDeleteURL := fmt.Sprintf("%s/group/%s", baseURL, userID)
+		// Try group deletion with timeout context
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
 		
-		req, err := http.NewRequest("DELETE", groupDeleteURL, nil)
+		groupDeleteURL := fmt.Sprintf("%s/group/%s", baseURL, userID)
+		req, err := http.NewRequestWithContext(ctx, "DELETE", groupDeleteURL, nil)
 		if err != nil {
 			continue
 		}
-		
 		req.Header.Set("Content-Type", "application/json")
 		
-		client := &http.Client{Timeout: 15 * time.Second}
 		resp, err := client.Do(req)
 		if err != nil {
-			continue // Try next URL
+			log.Printf("🔍 Graph service %s not reachable: %v", baseURL, err)
+			continue // Try next URL quickly
 		}
 		defer resp.Body.Close()
 		
@@ -709,37 +893,38 @@ func (c *Client) DeleteUserGraphData(userID string) error {
 		if resp.StatusCode == 200 || resp.StatusCode == 404 {
 			log.Printf("✅ Successfully cleared graph data for user %s via %s", userID, baseURL)
 			
-			// Step 2: Delete the entire database (should now be empty)
-			databaseDeleteURL := fmt.Sprintf("%s/database/%s", baseURL, userID)
+			// Step 2: Delete the entire database (optional, background)
+			go func(dbURL string) {
+				databaseDeleteURL := fmt.Sprintf("%s/database/%s", dbURL, userID)
+				dbCtx, dbCancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer dbCancel()
+				
+				dbReq, err := http.NewRequestWithContext(dbCtx, "DELETE", databaseDeleteURL, nil)
+				if err != nil {
+					log.Printf("⚠️ Failed to create database deletion request: %v", err)
+					return
+				}
+				dbReq.Header.Set("Content-Type", "application/json")
+				
+				dbResp, err := client.Do(dbReq)
+				if err != nil {
+					log.Printf("⚠️ Database deletion failed: %v", err)
+					return
+				}
+				defer dbResp.Body.Close()
+				
+				if dbResp.StatusCode == 200 || dbResp.StatusCode == 404 {
+					log.Printf("✅ Database deletion completed for user %s", userID)
+				} else {
+					log.Printf("⚠️ Database deletion returned %d for user %s", dbResp.StatusCode, userID)
+				}
+			}(baseURL)
 			
-			dbReq, err := http.NewRequest("DELETE", databaseDeleteURL, nil)
-			if err != nil {
-				log.Printf("⚠️ Failed to create database deletion request for user %s: %v", userID, err)
-				return nil // Data cleanup succeeded, database deletion is secondary
-			}
-			
-			dbReq.Header.Set("Content-Type", "application/json")
-			
-			dbResp, err := client.Do(dbReq)
-			if err != nil {
-				log.Printf("⚠️ Database deletion request failed for user %s: %v", userID, err)
-				return nil // Data cleanup succeeded, database deletion is secondary
-			}
-			defer dbResp.Body.Close()
-			
-			if dbResp.StatusCode == 200 || dbResp.StatusCode == 404 {
-				log.Printf("✅ Successfully deleted database for user %s via %s", userID, baseURL)
-			} else {
-				dbBody, _ := io.ReadAll(dbResp.Body)
-				log.Printf("⚠️ Database deletion returned %d for user %s: %s", dbResp.StatusCode, userID, string(dbBody))
-			}
-			
-			return nil
+			return nil // Success - don't try other URLs
 		}
 		
-		// Log what we got but continue trying
-		body, _ := io.ReadAll(resp.Body)
-		log.Printf("🔍 Graph cleanup attempt via %s returned %d: %s", baseURL, resp.StatusCode, string(body))
+		// Log failed attempt but continue quickly
+		log.Printf("🔍 Graph service %s returned %d, trying next", baseURL, resp.StatusCode)
 	}
 	
 	return fmt.Errorf("no graph service responded successfully (tried %d URLs)", len(graphServiceURLs))

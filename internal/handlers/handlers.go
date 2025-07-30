@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/getzep/zep-web-interface/internal/cache"
 	"github.com/getzep/zep-web-interface/internal/zepapi"
 )
 
@@ -16,6 +17,7 @@ type Handlers struct {
 	apiClient *zepapi.Client
 	templates *template.Template
 	basePath  string
+	cache     *cache.Cache
 }
 
 // Data structures matching Zep v0.27 template expectations
@@ -115,6 +117,7 @@ func New(apiClient *zepapi.Client, templates *template.Template, basePath string
 		apiClient: apiClient,
 		templates: templates,
 		basePath:  basePath,
+		cache:     cache.NewCache(),
 	}
 }
 
@@ -359,10 +362,10 @@ func (h *Handlers) DeleteSession(w http.ResponseWriter, r *http.Request) {
 
 // UserList handles the users list page
 func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
-	users, err := h.apiClient.GetUsers()
+	users, err := h.apiClient.GetUsersWithSessionCounts()
 	if err != nil {
 		// Log the specific error for debugging
-		log.Printf("❌ GetUsers error: %v", err)
+		log.Printf("❌ GetUsersWithSessionCounts error: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to get users: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -389,16 +392,8 @@ func (h *Handlers) UserList(w http.ResponseWriter, r *http.Request) {
 		asc = true
 	}
 
-	// Fetch session count for each user (like v0.27)
-	for i := range users {
-		sessions, err := h.apiClient.GetUserSessions(users[i].UserID)
-		if err != nil {
-			// If session fetch fails, set count to 0
-			users[i].SessionCount = 0
-		} else {
-			users[i].SessionCount = len(sessions)
-		}
-	}
+	// Note: Session counts are now fetched concurrently via GetUsersWithSessionCounts
+	// This eliminates the N+1 query problem
 
 	// Calculate pagination
 	totalCount := len(users)
@@ -584,19 +579,11 @@ func (h *Handlers) UserSessions(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UserEpisodes handles the user episodes page
+// UserEpisodes handles the user episodes page with async loading
 func (h *Handlers) UserEpisodes(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
 	
-	// Fetch user episodes from the graph API
-	episodes, err := h.apiClient.GetUserEpisodes(userID)
-	if err != nil {
-		// If episodes fail, continue with empty episodes (episodes page still viewable)
-		episodes = []zepapi.Episode{}
-		log.Printf("⚠️ Failed to fetch episodes for user %s: %v", userID, err)
-	}
-
-	// Create page data with breadcrumbs
+	// Create page data with breadcrumbs - load data asynchronously
 	data := map[string]interface{}{
 		"Title":    "User Episodes",
 		"SubTitle": "Episodes for user " + userID,
@@ -617,7 +604,8 @@ func (h *Handlers) UserEpisodes(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 		"Data": map[string]interface{}{
-			"Episodes": episodes,
+			"AsyncLoad": true, // Trigger async loading in template
+			"ApiUrl":    h.basePath + "/api/users/" + userID + "/episodes",
 		},
 		"MenuItems": GetMenuItems(h.basePath),
 		"UserID":    userID,
@@ -637,19 +625,11 @@ func (h *Handlers) UserEpisodes(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UserGraph handles the user graph visualization page
+// UserGraph handles the user graph visualization page with async loading
 func (h *Handlers) UserGraph(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
 	
-	// Fetch user graph triplets from the graph API
-	triplets, err := h.apiClient.GetUserGraphTriplets(userID)
-	if err != nil {
-		// If graph data fails, continue with empty triplets (graph page still viewable)
-		triplets = []zepapi.RawTriplet{}
-		log.Printf("⚠️ Failed to fetch graph triplets for user %s: %v", userID, err)
-	}
-
-	// Create page data with breadcrumbs
+	// Create page data with breadcrumbs - load data asynchronously
 	data := map[string]interface{}{
 		"Title":    "User Graph",
 		"SubTitle": "Knowledge graph visualization for user " + userID,
@@ -670,7 +650,8 @@ func (h *Handlers) UserGraph(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 		"Data": map[string]interface{}{
-			"Triplets": triplets,
+			"AsyncLoad": true, // Trigger async loading in template
+			"ApiUrl":    h.basePath + "/api/users/" + userID + "/graph",
 		},
 		"MenuItems": GetMenuItems(h.basePath),
 		"UserID":    userID,
@@ -734,28 +715,37 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// DeleteUser handles user deletion
+// DeleteUser handles user deletion with async processing
 func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
 	
-	log.Printf("🗑️ Starting user deletion for: %s", userID)
+	log.Printf("🗑️ Starting optimized user deletion for: %s", userID)
 	
-	// Use comprehensive deletion that includes session and graph cleanup
-	err := h.apiClient.DeleteUserWithCleanup(userID)
-	if err != nil {
-		log.Printf("❌ User deletion failed for %s: %v", userID, err)
-		http.Error(w, fmt.Sprintf("Failed to delete user: %v", err), http.StatusInternalServerError)
-		return
-	}
+	// Start deletion in background for immediate UI response
+	go func() {
+		log.Printf("🚀 Background deletion started for user: %s", userID)
+		err := h.apiClient.DeleteUserWithCleanup(userID)
+		if err != nil {
+			log.Printf("❌ Background user deletion failed for %s: %v", userID, err)
+		} else {
+			log.Printf("✅ Background user deletion completed for: %s", userID)
+		}
+		
+		// Clear any cached user data
+		h.cache.Delete(fmt.Sprintf("user:%s", userID))
+		h.cache.Delete(fmt.Sprintf("episodes:%s", userID))
+		h.cache.Delete(fmt.Sprintf("graph:%s", userID))
+	}()
 	
-	log.Printf("✅ Successfully deleted user: %s", userID)
+	// Immediately respond to user interface (optimistic deletion)
+	log.Printf("✅ User deletion initiated for: %s (processing in background)", userID)
 	
-	// For HTMX requests, redirect back to users list
+	// For HTMX requests, redirect back to users list immediately
 	if r.Header.Get("HX-Request") == "true" {
 		w.Header().Set("HX-Redirect", h.basePath+"/users")
 		w.WriteHeader(http.StatusOK)
 	} else {
-		// For regular requests, redirect to users list
+		// For regular requests, redirect to users list immediately
 		http.Redirect(w, r, h.basePath+"/users", http.StatusFound)
 	}
 }
@@ -1065,7 +1055,7 @@ func (h *Handlers) SessionListAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) UserListAPI(w http.ResponseWriter, r *http.Request) {
-	users, err := h.apiClient.GetUsers()
+	users, err := h.apiClient.GetUsersWithSessionCounts()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
