@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/getzep/zep-web-interface/internal/cache"
@@ -625,11 +626,36 @@ func (h *Handlers) UserEpisodes(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UserGraph handles the user graph visualization page with async loading
+// UserGraph handles the user graph visualization page with direct data loading
 func (h *Handlers) UserGraph(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
 	
-	// Create page data with breadcrumbs - load data asynchronously
+	// Check cache first
+	cacheKey := fmt.Sprintf("graph:%s", userID)
+	var triplets []zepapi.RawTriplet
+	
+	if cached := h.cache.Get(cacheKey); cached != nil {
+		if cachedTriplets, ok := cached.([]zepapi.RawTriplet); ok {
+			triplets = cachedTriplets
+			log.Printf("📊 Cache hit for user graph: %s (%d triplets)", userID, len(triplets))
+		}
+	}
+	
+	// If not cached, fetch from API
+	if triplets == nil {
+		var err error
+		triplets, err = h.apiClient.GetUserGraphTriplets(userID)
+		if err != nil {
+			log.Printf("❌ Failed to get graph triplets for user %s: %v", userID, err)
+			triplets = []zepapi.RawTriplet{} // Empty slice for template
+		} else {
+			// Cache the result
+			h.cache.Set(cacheKey, triplets, 5*time.Minute)
+			log.Printf("✅ Loaded %d triplets for user graph: %s", len(triplets), userID)
+		}
+	}
+	
+	// Create page data with breadcrumbs and actual graph data
 	data := map[string]interface{}{
 		"Title":    "User Graph",
 		"SubTitle": "Knowledge graph visualization for user " + userID,
@@ -650,8 +676,7 @@ func (h *Handlers) UserGraph(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 		"Data": map[string]interface{}{
-			"AsyncLoad": true, // Trigger async loading in template
-			"ApiUrl":    h.basePath + "/api/users/" + userID + "/graph",
+			"Triplets": triplets, // Provide actual triplets data
 		},
 		"MenuItems": GetMenuItems(h.basePath),
 		"UserID":    userID,
@@ -1108,6 +1133,132 @@ func (h *Handlers) UserListAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if err := h.templates.ExecuteTemplate(w, "UserTable", pageData); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// UserEpisodesAPI handles the API endpoint for user episodes (for async loading)
+func (h *Handlers) UserEpisodesAPI(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userId")
+	
+	// Check cache first
+	cacheKey := fmt.Sprintf("episodes:%s", userID)
+	if cached := h.cache.Get(cacheKey); cached != nil {
+		if episodes, ok := cached.([]zepapi.Episode); ok {
+			log.Printf("📋 Cache hit for user episodes: %s (%d episodes)", userID, len(episodes))
+			
+			data := map[string]interface{}{
+				"UserID": userID,
+				"Data": map[string]interface{}{
+					"Episodes": episodes,
+				},
+			}
+			
+			if err := h.templates.ExecuteTemplate(w, "UserEpisodesContent", data); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			return
+		}
+	}
+	
+	// Fetch episodes from API
+	episodes, err := h.apiClient.GetUserEpisodes(userID)
+	if err != nil {
+		log.Printf("❌ Failed to get episodes for user %s: %v", userID, err)
+		
+		// Return empty state
+		data := map[string]interface{}{
+			"UserID": userID,
+			"Data": map[string]interface{}{
+				"Episodes": []zepapi.Episode{},
+			},
+		}
+		
+		if err := h.templates.ExecuteTemplate(w, "UserEpisodesContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	
+	// Cache the result
+	h.cache.Set(cacheKey, episodes, 5*time.Minute)
+	log.Printf("✅ Loaded %d episodes for user: %s", len(episodes), userID)
+	
+	// Create template data
+	data := map[string]interface{}{
+		"UserID": userID,
+		"Data": map[string]interface{}{
+			"Episodes": episodes,
+		},
+	}
+	
+	if err := h.templates.ExecuteTemplate(w, "UserEpisodesContent", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// UserGraphAPI handles the API endpoint for user graph data (for async loading)
+func (h *Handlers) UserGraphAPI(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userId")
+	
+	// Check cache first
+	cacheKey := fmt.Sprintf("graph:%s", userID)
+	if cached := h.cache.Get(cacheKey); cached != nil {
+		if triplets, ok := cached.([]zepapi.RawTriplet); ok {
+			log.Printf("📊 Cache hit for user graph: %s (%d triplets)", userID, len(triplets))
+			
+			data := map[string]interface{}{
+				"UserID": userID,
+				"Data": map[string]interface{}{
+					"Triplets": triplets,
+				},
+			}
+			
+			if err := h.templates.ExecuteTemplate(w, "UserGraphContent", data); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			return
+		}
+	}
+	
+	// Fetch graph triplets from API
+	triplets, err := h.apiClient.GetUserGraphTriplets(userID)
+	if err != nil {
+		log.Printf("❌ Failed to get graph triplets for user %s: %v", userID, err)
+		
+		// Return empty graph state
+		data := map[string]interface{}{
+			"UserID": userID,
+			"Data": map[string]interface{}{
+				"Triplets": []zepapi.RawTriplet{},
+			},
+		}
+		
+		if err := h.templates.ExecuteTemplate(w, "UserGraphContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	
+	// Cache the result
+	h.cache.Set(cacheKey, triplets, 5*time.Minute)
+	log.Printf("✅ Loaded %d triplets for user graph: %s", userID, len(triplets))
+	
+	// Create template data
+	data := map[string]interface{}{
+		"UserID": userID,
+		"Data": map[string]interface{}{
+			"Triplets": triplets,
+		},
+	}
+	
+	if err := h.templates.ExecuteTemplate(w, "UserGraphContent", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

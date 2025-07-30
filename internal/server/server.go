@@ -127,6 +127,8 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 		r.Route(apiPath, func(r chi.Router) {
 			r.Get("/sessions", h.SessionListAPI)
 			r.Get("/users", h.UserListAPI)
+			r.Get("/users/{userId}/episodes", h.UserEpisodesAPI)
+			r.Get("/users/{userId}/graph", h.UserGraphAPI)
 		})
 	} else {
 		// Default routes (no proxy path)
@@ -157,6 +159,8 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 		r.Route("/api", func(r chi.Router) {
 			r.Get("/sessions", h.SessionListAPI)
 			r.Get("/users", h.UserListAPI)
+			r.Get("/users/{userId}/episodes", h.UserEpisodesAPI)
+			r.Get("/users/{userId}/graph", h.UserGraphAPI)
 		})
 	}
 	
