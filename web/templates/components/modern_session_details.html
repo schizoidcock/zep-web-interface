@@ -177,7 +177,7 @@
         <!-- Modal Header -->
         <div class="flex items-center justify-between p-6" id="session-modal-header">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Delete Session</h3>
-          <button type="button" onclick="hideDeleteSessionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <button type="button" onclick="hideDeleteSessionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" style="padding: 0; margin: 0; width: auto; height: auto; background: none; border: none;">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
@@ -226,24 +226,27 @@
 </div>
 
 <script>
-// Add CSS animations for pulse effect
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 0.3;
-      transform: scale(0.92);
+// Add CSS animations for pulse effect (session modal)
+if (!document.getElementById('session-modal-pulse-style')) {
+  const sessionModalStyle = document.createElement('style');
+  sessionModalStyle.id = 'session-modal-pulse-style';
+  sessionModalStyle.textContent = `
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 0.3;
+        transform: scale(0.92);
+      }
+      50% {
+        opacity: 0.5;
+        transform: scale(0.94);
+      }
     }
-    50% {
-      opacity: 0.5;
-      transform: scale(0.94);
-    }
-  }
-`;
-document.head.appendChild(style);
+  `;
+  document.head.appendChild(sessionModalStyle);
+}
 
-// Session Delete Modal Functions
-function showDeleteSessionModal() {
+// Session Delete Modal Functions - Make globally available
+window.showDeleteSessionModal = function() {
   const modal = document.getElementById('delete-session-confirmation-modal');
   
   // Add more prominent fade effect to the delete button when opening modal
@@ -367,7 +370,7 @@ function showDeleteSessionModal() {
     });
     
     // Style cancel button for dark mode
-    const cancelButton = modal.querySelector('button[onclick="hideDeleteSessionModal()"]');
+    const cancelButton = modal.querySelector('#session-modal-footer button[onclick="hideDeleteSessionModal()"]');
     if (cancelButton) {
       cancelButton.style.setProperty('background-color', '#374151', 'important');
       cancelButton.style.setProperty('color', '#ffffff', 'important');
@@ -433,7 +436,7 @@ function showDeleteSessionModal() {
     });
     
     // Style cancel button for light mode
-    const cancelButton = modal.querySelector('button[onclick="hideDeleteSessionModal()"]');
+    const cancelButton = modal.querySelector('#session-modal-footer button[onclick="hideDeleteSessionModal()"]');
     if (cancelButton) {
       cancelButton.style.setProperty('background-color', '#ffffff', 'important');
       cancelButton.style.setProperty('color', '#000000', 'important');
@@ -485,28 +488,28 @@ function showDeleteSessionModal() {
 }
 
 // Helper functions for session button hover states (light mode)
-function cancelSessionButtonHover() {
+window.cancelSessionButtonHover = function() {
   this.style.setProperty('color', '#000000', 'important');
   this.style.setProperty('background-color', '#f3f4f6', 'important');
 }
 
-function cancelSessionButtonLeave() {
+window.cancelSessionButtonLeave = function() {
   this.style.setProperty('color', '#000000', 'important');
   this.style.setProperty('background-color', '#ffffff', 'important');
 }
 
 // Helper functions for session button hover states (dark mode)
-function cancelSessionButtonHoverDark() {
+window.cancelSessionButtonHoverDark = function() {
   this.style.setProperty('color', '#ffffff', 'important');
   this.style.setProperty('background-color', '#4b5563', 'important');
 }
 
-function cancelSessionButtonLeaveDark() {
+window.cancelSessionButtonLeaveDark = function() {
   this.style.setProperty('color', '#ffffff', 'important');
   this.style.setProperty('background-color', '#374151', 'important');
 }
 
-function hideDeleteSessionModal() {
+window.hideDeleteSessionModal = function() {
   const modal = document.getElementById('delete-session-confirmation-modal');
   const modalContainer = modal.querySelector('#session-modal-container');
   
@@ -539,7 +542,7 @@ function hideDeleteSessionModal() {
   confirmText.textContent = 'Yes, Delete Session';
 }
 
-function confirmDeleteSession() {
+window.confirmDeleteSession = function() {
   const confirmButton = document.getElementById('confirm-delete-session-button');
   const confirmText = document.getElementById('confirm-delete-session-text');
   const deleteButton = document.getElementById('delete-session-button');
