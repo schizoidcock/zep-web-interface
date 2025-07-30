@@ -31,8 +31,7 @@
     <!-- Action Buttons -->
     <div class="flex flex-wrap gap-4 mb-4">
       <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 rounded-md px-8 text-lg font-medium" 
-              hx-get="{{ adminPath "/users/" }}{{ .User.UserID }}/graph"
-              hx-target="#page-content"
+              onclick="showGraphModal('{{ .User.UserID }}')"
               id="view-graph-button">
         <span class="mr-2">View Graph</span>
         <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2">
@@ -232,6 +231,89 @@
                     class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-10 rounded-md text-sm" style="width: 150px; padding: 0 16px;">
               <span id="confirm-delete-text">Yes, Delete User</span>
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Graph Modal -->
+    <div id="graph-modal" class="fixed inset-0 z-50 hidden">
+      <!-- Backdrop -->
+      <div class="fixed inset-0 bg-black/80 dark:bg-black/80 backdrop-blur-sm"></div>
+      
+      <!-- Modal -->
+      <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="relative rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] mx-4" id="graph-modal-container" data-theme-bg="true">
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between p-6 border-b" id="graph-modal-header">
+            <div>
+              <h3 class="text-lg font-semibold">Knowledge Graph</h3>
+              <p class="text-sm text-muted-foreground">Interactive visualization of user's knowledge graph</p>
+            </div>
+            <button type="button" onclick="hideGraphModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" style="padding: 0; margin: 0; width: auto; height: auto; background: none; border: none;">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Modal Body -->
+          <div class="flex-1 p-6 overflow-hidden" style="height: calc(90vh - 140px);">
+            <!-- Loading State -->
+            <div id="graph-modal-loading" class="flex items-center justify-center h-full">
+              <div class="flex flex-col items-center space-y-3">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <div class="text-sm text-muted-foreground">Loading graph visualization...</div>
+              </div>
+            </div>
+            
+            <!-- Graph Content -->
+            <div id="graph-modal-content" class="hidden h-full">
+              <!-- Graph Stats -->
+              <div class="absolute top-20 left-10 z-10">
+                <div class="bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
+                  <div class="text-sm font-medium mb-2">Graph Stats</div>
+                  <div class="space-y-1 text-xs text-muted-foreground">
+                    <div>Triplets: <span id="modal-triplet-count">0</span></div>
+                    <div>Nodes: <span id="modal-node-count">0</span></div>
+                    <div>Relations: <span id="modal-relation-count">0</span></div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Graph Canvas -->
+              <div id="graph-modal-canvas" class="w-full h-full border border-border rounded-lg bg-background overflow-hidden relative"></div>
+              
+              <!-- Empty State -->
+              <div id="graph-modal-empty" class="hidden flex items-center justify-center h-full">
+                <div class="flex flex-col items-center space-y-4">
+                  <svg class="w-16 h-16 text-muted-foreground opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                  </svg>
+                  <div class="space-y-2 text-center">
+                    <h3 class="text-lg font-medium">No Graph Data</h3>
+                    <p class="text-muted-foreground max-w-md">
+                      This user doesn't have any graph data yet. Graph data is built automatically as users interact with the system.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Modal Footer -->
+          <div class="flex items-center justify-between p-6 border-t" id="graph-modal-footer">
+            <div class="flex items-center space-x-2">
+              <button id="modal-reset-view" class="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">
+                Reset View
+              </button>
+              <button id="modal-toggle-labels" class="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">
+                Toggle Labels
+              </button>
+            </div>
+            <div class="text-xs text-muted-foreground">
+              Click nodes and edges to view details
+            </div>
           </div>
         </div>
       </div>
@@ -1204,5 +1286,357 @@ window.detectTheme = function() {
     return false; // Default to light mode
   }
 }
+
+// Graph Modal Functions
+window.showGraphModal = function(userId) {
+  const modal = document.getElementById('graph-modal');
+  const modalContainer = document.getElementById('graph-modal-container');
+  const loading = document.getElementById('graph-modal-loading');
+  const content = document.getElementById('graph-modal-content');
+  const empty = document.getElementById('graph-modal-empty');
+  
+  // Show modal with animation
+  modal.classList.remove('hidden');
+  
+  // Apply theme styling
+  applyGraphModalTheme();
+  
+  // Add modal appear animation
+  modalContainer.style.opacity = '0';
+  modalContainer.style.transform = 'scale(0.95)';
+  modalContainer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+  
+  setTimeout(() => {
+    modalContainer.style.opacity = '1';
+    modalContainer.style.transform = 'scale(1)';
+  }, 10);
+  
+  // Show loading state
+  loading.classList.remove('hidden');
+  content.classList.add('hidden');
+  empty.classList.add('hidden');
+  
+  // Load graph data
+  loadGraphData(userId);
+}
+
+window.hideGraphModal = function() {
+  const modal = document.getElementById('graph-modal');
+  const modalContainer = document.getElementById('graph-modal-container');
+  
+  // Add fade out animation
+  modalContainer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+  modalContainer.style.opacity = '0';
+  modalContainer.style.transform = 'scale(0.95)';
+  
+  setTimeout(() => {
+    modal.classList.add('hidden');
+    // Clear graph content
+    const canvas = document.getElementById('graph-modal-canvas');
+    if (canvas) canvas.innerHTML = '';
+  }, 300);
+}
+
+window.loadGraphData = function(userId) {
+  const loading = document.getElementById('graph-modal-loading');
+  const content = document.getElementById('graph-modal-content');
+  const empty = document.getElementById('graph-modal-empty');
+  
+  // Make API request to get graph data
+  fetch(`{{ adminPath "/users/" }}${userId}/graph`, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'HX-Request': 'true'
+    }
+  })
+  .then(response => response.text())
+  .then(html => {
+    // Parse the HTML response to extract graph data
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const graphDataScript = doc.getElementById('graph-data');
+    
+    if (graphDataScript) {
+      try {
+        const triplets = JSON.parse(graphDataScript.textContent);
+        
+        if (triplets && triplets.length > 0) {
+          // Show graph content
+          loading.classList.add('hidden');
+          content.classList.remove('hidden');
+          
+          // Update stats
+          document.getElementById('modal-triplet-count').textContent = triplets.length;
+          document.getElementById('modal-relation-count').textContent = triplets.length;
+          
+          // Initialize graph visualization
+          initializeModalGraph(triplets);
+        } else {
+          // Show empty state
+          loading.classList.add('hidden');
+          empty.classList.remove('hidden');
+        }
+      } catch (e) {
+        console.error('Failed to parse graph data:', e);
+        loading.classList.add('hidden');
+        empty.classList.remove('hidden');
+      }
+    } else {
+      // No graph data found, show empty state
+      loading.classList.add('hidden');
+      empty.classList.remove('hidden');
+    }
+  })
+  .catch(error => {
+    console.error('Failed to load graph data:', error);
+    loading.classList.add('hidden');
+    empty.classList.remove('hidden');
+  });
+}
+
+window.initializeModalGraph = function(triplets) {
+  // Convert triplets to nodes and edges for D3.js
+  const nodes = new Map();
+  const edges = [];
+  
+  triplets.forEach(triplet => {
+    // Add source node
+    if (!nodes.has(triplet.sourceNode.uuid)) {
+      nodes.set(triplet.sourceNode.uuid, {
+        id: triplet.sourceNode.uuid,
+        name: triplet.sourceNode.name || 'Unnamed',
+        labels: triplet.sourceNode.labels || [],
+        summary: triplet.sourceNode.summary || '',
+        type: 'node'
+      });
+    }
+    
+    // Add target node
+    if (!nodes.has(triplet.targetNode.uuid)) {
+      nodes.set(triplet.targetNode.uuid, {
+        id: triplet.targetNode.uuid,
+        name: triplet.targetNode.name || 'Unnamed',
+        labels: triplet.targetNode.labels || [],
+        summary: triplet.targetNode.summary || '',
+        type: 'node'
+      });
+    }
+    
+    // Add episode as edge
+    edges.push({
+      id: triplet.episode.uuid,
+      source: triplet.sourceNode.uuid,
+      target: triplet.targetNode.uuid,
+      name: triplet.episode.name || 'Related to',
+      fact: triplet.episode.fact || '',
+      content: triplet.episode.content || '',
+      type: 'episode'
+    });
+  });
+  
+  const nodeArray = Array.from(nodes.values());
+  
+  // Update node count
+  document.getElementById('modal-node-count').textContent = nodeArray.length;
+  
+  // Initialize D3 visualization in modal
+  const container = document.getElementById('graph-modal-canvas');
+  const width = container.offsetWidth;
+  const height = container.offsetHeight;
+  
+  // Clear any existing content
+  container.innerHTML = '';
+  
+  // Create SVG
+  const svg = d3.select(container)
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height);
+  
+  // Create zoom behavior
+  const zoom = d3.zoom()
+    .scaleExtent([0.1, 4])
+    .on('zoom', (event) => {
+      g.attr('transform', event.transform);
+    });
+  
+  svg.call(zoom);
+  
+  const g = svg.append('g');
+  
+  // Create force simulation
+  const simulation = d3.forceSimulation(nodeArray)
+    .force('link', d3.forceLink(edges).id(d => d.id).distance(100))
+    .force('charge', d3.forceManyBody().strength(-300))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide().radius(30));
+  
+  // Create links
+  const link = g.append('g')
+    .attr('class', 'links')
+    .selectAll('line')
+    .data(edges)
+    .enter()
+    .append('line')
+    .attr('stroke', '#999')
+    .attr('stroke-opacity', 0.6)
+    .attr('stroke-width', 2);
+  
+  // Create nodes
+  const node = g.append('g')
+    .attr('class', 'nodes')
+    .selectAll('circle')
+    .data(nodeArray)
+    .enter()
+    .append('circle')
+    .attr('r', 12)
+    .attr('fill', d => getNodeColor(d.labels))
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 2)
+    .style('cursor', 'pointer')
+    .call(d3.drag()
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended));
+  
+  // Add labels
+  const labels = g.append('g')
+    .attr('class', 'labels')
+    .selectAll('text')
+    .data(nodeArray)
+    .enter()
+    .append('text')
+    .text(d => d.name)
+    .attr('font-size', '10px')
+    .attr('dy', -15)
+    .attr('text-anchor', 'middle')
+    .attr('fill', 'currentColor')
+    .style('pointer-events', 'none');
+  
+  // Add tooltips
+  node.append('title')
+    .text(d => `${d.name}\nLabels: ${d.labels.join(', ')}\nSummary: ${d.summary}`);
+  
+  link.append('title')
+    .text(d => `${d.name}\nFact: ${d.fact}\nContent: ${d.content}`);
+  
+  // Update positions on tick
+  simulation.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x)
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y);
+    
+    node
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
+    
+    labels
+      .attr('x', d => d.x)
+      .attr('y', d => d.y);
+  });
+  
+  // Control handlers
+  document.getElementById('modal-reset-view').onclick = () => {
+    svg.transition().duration(750).call(
+      zoom.transform,
+      d3.zoomIdentity.translate(width / 2, height / 2).scale(1)
+    );
+  };
+  
+  let labelsVisible = true;
+  document.getElementById('modal-toggle-labels').onclick = () => {
+    labelsVisible = !labelsVisible;
+    labels.style('opacity', labelsVisible ? 1 : 0);
+  };
+  
+  // Drag functions
+  function dragstarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+  
+  function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+  }
+  
+  function dragended(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+  
+  // Color function for nodes based on labels
+  function getNodeColor(labels) {
+    if (!labels || labels.length === 0) return '#6b7280';
+    
+    const colorMap = {
+      'Person': '#ef4444',
+      'Organization': '#3b82f6', 
+      'Location': '#10b981',
+      'Event': '#f59e0b',
+      'Concept': '#8b5cf6',
+      'Entity': '#6b7280'
+    };
+    
+    return colorMap[labels[0]] || '#6b7280';
+  }
+}
+
+window.applyGraphModalTheme = function() {
+  const modalContainer = document.getElementById('graph-modal-container');
+  const modalHeader = document.getElementById('graph-modal-header');
+  const modalFooter = document.getElementById('graph-modal-footer');
+  
+  // Detect theme
+  const isDark = detectTheme();
+  
+  if (isDark) {
+    // Dark mode styling
+    modalContainer.style.setProperty('background-color', '#0f172a', 'important');
+    modalContainer.style.setProperty('border', '1px solid #374151', 'important');
+    modalContainer.style.setProperty('color', '#ffffff', 'important');
+    modalHeader.style.setProperty('border-bottom', '1px solid #374151', 'important');
+    modalHeader.style.setProperty('background-color', '#0f172a', 'important');
+    modalFooter.style.setProperty('border-top', '1px solid #374151', 'important');
+    modalFooter.style.setProperty('background-color', '#0f172a', 'important');
+  } else {
+    // Light mode styling
+    modalContainer.style.setProperty('background-color', '#ffffff', 'important');
+    modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
+    modalContainer.style.setProperty('color', '#000000', 'important');
+    modalHeader.style.setProperty('border-bottom', '1px solid #d1d5db', 'important');
+    modalHeader.style.setProperty('background-color', '#ffffff', 'important');
+    modalFooter.style.setProperty('border-top', '1px solid #d1d5db', 'important');
+    modalFooter.style.setProperty('background-color', '#ffffff', 'important');
+  }
+}
+
+// Close graph modal when clicking outside
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('graph-modal');
+  const modalContent = modal?.querySelector('.relative');
+  
+  if (modal && event.target === modal && modalContent && !modalContent.contains(event.target)) {
+    hideGraphModal();
+  }
+});
+
+// Close graph modal with Escape key
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    const modal = document.getElementById('graph-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+      hideGraphModal();
+    }
+  }
+});
 </script>
+
+<!-- Load D3.js for graph visualization -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
 {{ end }}
