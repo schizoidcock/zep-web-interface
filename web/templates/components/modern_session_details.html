@@ -210,13 +210,13 @@
         <div class="flex items-center justify-end p-6" id="session-modal-footer" style="gap: 10px;">
           <button type="button" 
                   onclick="hideDeleteSessionModal()"
-                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-3 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground w-20">
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-4 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground min-w-[80px]">
             Cancel
           </button>
           <button type="button" 
                   id="confirm-delete-session-button"
                   onclick="confirmDeleteSession()"
-                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs w-32">
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-4 text-xs min-w-[140px]">
             <span id="confirm-delete-session-text">Yes, Delete Session</span>
           </button>
         </div>
@@ -230,10 +230,12 @@
 function showDeleteSessionModal() {
   const modal = document.getElementById('delete-session-confirmation-modal');
   
-  // Add fade effect to the delete button when opening modal
+  // Add more prominent fade effect to the delete button when opening modal
   const deleteButton = document.getElementById('delete-session-button');
-  deleteButton.style.transition = 'opacity 0.3s ease-out';
-  deleteButton.style.opacity = '0.7';
+  deleteButton.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+  deleteButton.style.opacity = '0.6';
+  deleteButton.style.transform = 'scale(0.95)';
+  deleteButton.style.filter = 'blur(0.5px)';
   
   modal.classList.remove('hidden');
   
@@ -450,18 +452,21 @@ function cancelSessionButtonLeaveDark() {
 
 function hideDeleteSessionModal() {
   const modal = document.getElementById('delete-session-confirmation-modal');
-  // Add fade out effect
-  modal.style.transition = 'opacity 0.3s ease-out';
+  // Add fade out effect with more dramatic transition
+  modal.style.transition = 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
   modal.style.opacity = '0';
   
-  // Reset delete button opacity when modal closes
+  // Reset delete button with smooth transition back to normal
   const deleteButton = document.getElementById('delete-session-button');
+  deleteButton.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
   deleteButton.style.opacity = '1';
+  deleteButton.style.transform = 'scale(1)';
+  deleteButton.style.filter = 'blur(0px)';
   
   setTimeout(() => {
     modal.classList.add('hidden');
     modal.style.opacity = '1'; // Reset for next time
-  }, 300);
+  }, 400);
   
   // Reset modal state
   const confirmButton = document.getElementById('confirm-delete-session-button');
@@ -480,10 +485,15 @@ function confirmDeleteSession() {
   // Immediately close modal with fade effect
   hideDeleteSessionModal();
   
-  // Add fade effect to main delete button
-  deleteButton.style.transition = 'opacity 0.3s ease-out';
-  deleteButton.style.opacity = '0.5';
+  // Add more prominent fade effect to main delete button with pulse animation
+  deleteButton.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+  deleteButton.style.opacity = '0.3';
+  deleteButton.style.transform = 'scale(0.92)';
+  deleteButton.style.filter = 'blur(1px) grayscale(0.3)';
   deleteButton.disabled = true;
+  
+  // Add pulsing effect
+  deleteButton.style.animation = 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite';
   
   // Show loading state in main button only (no spinner, just text)
   deleteButtonText.textContent = 'Deleting...';
@@ -500,8 +510,12 @@ function confirmDeleteSession() {
         // Success - show bottom-right notification
         showSuccessNotification('Session deleted successfully');
         
-        // Reset button state and redirect
+        // Reset button state with smooth transition back to normal
+        deleteButton.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
         deleteButton.style.opacity = '1';
+        deleteButton.style.transform = 'scale(1)';
+        deleteButton.style.filter = 'blur(0px) grayscale(0)';
+        deleteButton.style.animation = 'none';
         deleteButton.disabled = false;
         deleteButtonText.textContent = 'Delete Session';
         
@@ -512,7 +526,11 @@ function confirmDeleteSession() {
         
       } else {
         // Error - reset states and show error
+        deleteButton.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
         deleteButton.style.opacity = '1';
+        deleteButton.style.transform = 'scale(1)';
+        deleteButton.style.filter = 'blur(0px) grayscale(0)';
+        deleteButton.style.animation = 'none';
         deleteButton.disabled = false;
         deleteButtonText.textContent = 'Delete Session';
         
@@ -524,7 +542,11 @@ function confirmDeleteSession() {
   
   xhr.onerror = function() {
     // Network error - reset states and show error
+    deleteButton.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
     deleteButton.style.opacity = '1';
+    deleteButton.style.transform = 'scale(1)';
+    deleteButton.style.filter = 'blur(0px) grayscale(0)';
+    deleteButton.style.animation = 'none';
     deleteButton.disabled = false;
     deleteButtonText.textContent = 'Delete Session';
     
