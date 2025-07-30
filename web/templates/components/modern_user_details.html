@@ -245,8 +245,8 @@
       <div class="fixed inset-0 bg-black/80 dark:bg-black/80 backdrop-blur-sm"></div>
       
       <!-- Modal -->
-      <div class="fixed inset-0 flex items-center justify-center">
-        <div class="relative w-full h-full" id="graph-modal-container" data-theme-bg="true">
+      <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="relative rounded-xl shadow-2xl w-full max-w-5xl h-[85vh] mx-4" id="graph-modal-container" data-theme-bg="true">
           <!-- Modal Header -->
           <div class="flex items-center justify-between p-6" id="graph-modal-header" style="border-bottom: none;">
             <div>
@@ -261,7 +261,7 @@
           </div>
           
           <!-- Modal Body -->
-          <div class="flex-1 overflow-hidden" style="height: calc(100vh - 140px);" id="graph-modal-body">
+          <div class="flex-1 overflow-hidden" style="height: calc(85vh - 140px);" id="graph-modal-body">
             <!-- Loading State -->
             <div id="graph-modal-loading" class="flex items-center justify-center h-full">
               <div class="flex flex-col items-center space-y-3">
@@ -1630,14 +1630,19 @@ window.applyGraphModalTheme = function() {
   if (isDark) {
     // Dark mode styling - Very dark background like in screenshot
     modalContainer.style.setProperty('background-color', '#1a1a1a', 'important');
+    modalContainer.style.setProperty('border', '1px solid #374151', 'important');
+    modalContainer.style.setProperty('border-radius', '12px', 'important');
     modalContainer.style.setProperty('color', '#ffffff', 'important');
     modalHeader.style.setProperty('background-color', '#1a1a1a', 'important');
+    modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
+    modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
     modalBody.style.setProperty('background-color', '#1a1a1a', 'important');
     modalFooter.style.setProperty('background-color', 'transparent', 'important');
     
     // Update canvas background for dark theme
     if (canvas) {
       canvas.style.setProperty('background-color', '#1a1a1a', 'important');
+      canvas.style.setProperty('border-radius', '8px', 'important');
       // Add subtle grid pattern like in screenshot
       canvas.style.setProperty('background-image', 'radial-gradient(circle, #333 1px, transparent 1px)', 'important');
       canvas.style.setProperty('background-size', '20px 20px', 'important');
@@ -1682,14 +1687,19 @@ window.applyGraphModalTheme = function() {
   } else {
     // Light mode styling - Light background like in screenshot  
     modalContainer.style.setProperty('background-color', '#f8f9fa', 'important');
+    modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
+    modalContainer.style.setProperty('border-radius', '12px', 'important');
     modalContainer.style.setProperty('color', '#000000', 'important');
     modalHeader.style.setProperty('background-color', '#f8f9fa', 'important');
+    modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
+    modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
     modalBody.style.setProperty('background-color', '#f8f9fa', 'important');
     modalFooter.style.setProperty('background-color', 'transparent', 'important');
     
     // Update canvas background for light theme
     if (canvas) {
       canvas.style.setProperty('background-color', '#f8f9fa', 'important');
+      canvas.style.setProperty('border-radius', '8px', 'important');
       // Add subtle grid pattern like in screenshot
       canvas.style.setProperty('background-image', 'radial-gradient(circle, #e5e7eb 1px, transparent 1px)', 'important');
       canvas.style.setProperty('background-size', '20px 20px', 'important');
