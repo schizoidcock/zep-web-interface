@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/getzep/zep-web-interface/internal/zepapi"
 )
 
 // DeletionStatus tracks the status of user deletion operations
@@ -145,7 +146,7 @@ func (h *Handlers) DeleteUserEnhanced(w http.ResponseWriter, r *http.Request) {
 		sessions, err := h.apiClient.GetUserSessions(userID)
 		if err != nil {
 			deletionTracker.UpdateStatus(userID, "sessions_partial", "Could not fetch all sessions, continuing...", 30)
-			sessions = []Session{} // Continue anyway
+			sessions = []zepapi.Session{} // Continue anyway
 		} else {
 			deletionTracker.UpdateStatus(userID, "sessions_found", fmt.Sprintf("Found %d sessions to delete", len(sessions)), 40)
 		}
