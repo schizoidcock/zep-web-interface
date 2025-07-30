@@ -1,0 +1,174 @@
+{{ define "LogsContent" }}
+<div id="logs" class="max-w-[85rem] mx-auto">
+  {{template "BreadCrumbs" .}}
+  {{ template "PageTitles" . }}
+  
+  <!-- Service Logs Section -->
+  <div class="max-w-full px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <!-- Grid of log panels -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- FalkorDB Service Logs -->
+      <div class="bg-card border border-border shadow-sm rounded-lg">
+        <div class="p-4 md:p-6 border-b border-border">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+              <h3 class="text-lg font-semibold text-card-foreground">FalkorDB Service</h3>
+            </div>
+            <button class="text-sm text-muted-foreground hover:text-foreground" 
+                    hx-get="/admin/logs/falkordb" 
+                    hx-target="#falkordb-logs" 
+                    hx-trigger="click">
+              Refresh
+            </button>
+          </div>
+        </div>
+        <div class="p-4 md:p-6">
+          <div id="falkordb-logs" class="h-96 overflow-y-auto bg-muted/20 rounded-md p-4 font-mono text-sm">
+            <div hx-get="/admin/logs/falkordb" hx-trigger="load" class="text-muted-foreground">
+              Loading FalkorDB service logs...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FalkorDB Browser Logs -->
+      <div class="bg-card border border-border shadow-sm rounded-lg">
+        <div class="p-4 md:p-6 border-b border-border">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <h3 class="text-lg font-semibold text-card-foreground">FalkorDB Browser</h3>
+            </div>
+            <button class="text-sm text-muted-foreground hover:text-foreground" 
+                    hx-get="/admin/logs/falkordb-browser" 
+                    hx-target="#falkordb-browser-logs" 
+                    hx-trigger="click">
+              Refresh
+            </button>
+          </div>
+        </div>
+        <div class="p-4 md:p-6">
+          <div id="falkordb-browser-logs" class="h-96 overflow-y-auto bg-muted/20 rounded-md p-4 font-mono text-sm">
+            <div hx-get="/admin/logs/falkordb-browser" hx-trigger="load" class="text-muted-foreground">
+              Loading FalkorDB browser logs...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hybrid Proxy Logs -->
+      <div class="bg-card border border-border shadow-sm rounded-lg">
+        <div class="p-4 md:p-6 border-b border-border">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+              <h3 class="text-lg font-semibold text-card-foreground">Hybrid Proxy</h3>
+            </div>
+            <button class="text-sm text-muted-foreground hover:text-foreground" 
+                    hx-get="/admin/logs/hybrid-proxy" 
+                    hx-target="#hybrid-proxy-logs" 
+                    hx-trigger="click">
+              Refresh
+            </button>
+          </div>
+        </div>
+        <div class="p-4 md:p-6">
+          <div id="hybrid-proxy-logs" class="h-96 overflow-y-auto bg-muted/20 rounded-md p-4 font-mono text-sm">
+            <div hx-get="/admin/logs/hybrid-proxy" hx-trigger="load" class="text-muted-foreground">
+              Loading hybrid proxy logs...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zep Server Logs -->
+      <div class="bg-card border border-border shadow-sm rounded-lg">
+        <div class="p-4 md:p-6 border-b border-border">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <h3 class="text-lg font-semibold text-card-foreground">Zep Server</h3>
+            </div>
+            <button class="text-sm text-muted-foreground hover:text-foreground" 
+                    hx-get="/admin/logs/zep-server" 
+                    hx-target="#zep-server-logs" 
+                    hx-trigger="click">
+              Refresh
+            </button>
+          </div>
+        </div>
+        <div class="p-4 md:p-6">
+          <div id="zep-server-logs" class="h-96 overflow-y-auto bg-muted/20 rounded-md p-4 font-mono text-sm">
+            <div hx-get="/admin/logs/zep-server" hx-trigger="load" class="text-muted-foreground">
+              Loading zep server logs...
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- End Grid -->
+
+    <!-- Auto-refresh controls -->
+    <div class="mt-8 text-center">
+      <div class="inline-flex items-center gap-4 bg-card border border-border rounded-lg p-4">
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" id="auto-refresh" class="rounded" checked>
+          <span class="text-card-foreground">Auto-refresh every 30 seconds</span>
+        </label>
+        <button class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm"
+                onclick="refreshAllLogs()">
+          Refresh All
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- End Service Logs Section -->
+</div>
+
+<script>
+let autoRefreshInterval;
+
+function refreshAllLogs() {
+  htmx.trigger('#falkordb-logs', 'refreshLogs');
+  htmx.trigger('#falkordb-browser-logs', 'refreshLogs');
+  htmx.trigger('#hybrid-proxy-logs', 'refreshLogs');
+  htmx.trigger('#zep-server-logs', 'refreshLogs');
+}
+
+function setupAutoRefresh() {
+  const checkbox = document.getElementById('auto-refresh');
+  
+  if (checkbox.checked) {
+    autoRefreshInterval = setInterval(refreshAllLogs, 30000);
+  } else {
+    clearInterval(autoRefreshInterval);
+  }
+}
+
+// Setup auto-refresh on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const checkbox = document.getElementById('auto-refresh');
+  checkbox.addEventListener('change', setupAutoRefresh);
+  setupAutoRefresh();
+});
+
+// Custom HTMX trigger for refresh
+document.addEventListener('DOMContentLoaded', function() {
+  htmx.on('#falkordb-logs', 'refreshLogs', function() {
+    htmx.ajax('GET', '/admin/logs/falkordb', '#falkordb-logs');
+  });
+  htmx.on('#falkordb-browser-logs', 'refreshLogs', function() {
+    htmx.ajax('GET', '/admin/logs/falkordb-browser', '#falkordb-browser-logs');
+  });
+  htmx.on('#hybrid-proxy-logs', 'refreshLogs', function() {
+    htmx.ajax('GET', '/admin/logs/hybrid-proxy', '#hybrid-proxy-logs');
+  });
+  htmx.on('#zep-server-logs', 'refreshLogs', function() {
+    htmx.ajax('GET', '/admin/logs/zep-server', '#zep-server-logs');
+  });
+});
+</script>
+{{ end }}

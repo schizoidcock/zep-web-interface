@@ -119,6 +119,8 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			r.Get("/users/{userId}/sessions", h.UserSessions)
 			r.Get("/users/{userId}/episodes", h.UserEpisodes)
 			r.Get("/users/{userId}/graph", h.UserGraph)
+			r.Get("/logs", h.Logs)
+			r.Get("/logs/{service}", h.LogsService)
 			r.Get("/settings", h.Settings)
 		})
 
@@ -152,6 +154,8 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			r.Get("/users/{userId}/sessions", h.UserSessions)
 			r.Get("/users/{userId}/episodes", h.UserEpisodes)
 			r.Get("/users/{userId}/graph", h.UserGraph)
+			r.Get("/logs", h.Logs)
+			r.Get("/logs/{service}", h.LogsService)
 			r.Get("/settings", h.Settings)
 		})
 

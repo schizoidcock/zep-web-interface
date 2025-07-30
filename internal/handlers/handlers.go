@@ -1263,3 +1263,109 @@ func (h *Handlers) UserGraphAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// Logs handlers the centralized logs page
+func (h *Handlers) Logs(w http.ResponseWriter, r *http.Request) {
+	// Create page data with breadcrumbs
+	data := &PageData{
+		Title:    "Service Logs",
+		SubTitle: "Centralized view of all service logs",
+		Page:     "logs",
+		Path:     r.URL.Path,
+		BreadCrumbs: []BreadCrumb{
+			{
+				Title: "Logs",
+				Path:  h.basePath + "/logs",
+			},
+		},
+		MenuItems: GetMenuItems(h.basePath),
+	}
+
+	// Check if this is an HTMX request, if so render only the content
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "LogsContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+// LogsService handles individual service log requests
+func (h *Handlers) LogsService(w http.ResponseWriter, r *http.Request) {
+	service := chi.URLParam(r, "service")
+	
+	// Determine service URLs based on Railway service names
+	var serviceURL string
+	switch service {
+	case "falkordb":
+		serviceURL = "https://falkordb-service-production.up.railway.app"
+	case "falkordb-browser":
+		serviceURL = "https://falkordb-browser-production.up.railway.app"
+	case "hybrid-proxy":
+		serviceURL = "https://hybrid-proxy-production.up.railway.app"
+	case "zep-server":
+		serviceURL = "https://zep-server-production.up.railway.app"
+	default:
+		http.Error(w, "Unknown service", http.StatusBadRequest)
+		return
+	}
+	
+	// Simulate fetching logs (since Railway doesn't expose logs API directly)
+	// In a real implementation, you'd use Railway's API or log aggregation service
+	logs := h.fetchServiceLogs(service, serviceURL)
+	
+	// Return logs as HTML
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(logs))
+}
+
+// fetchServiceLogs simulates fetching logs from a service
+func (h *Handlers) fetchServiceLogs(service, serviceURL string) string {
+	// This is a placeholder implementation
+	// In a real scenario, you would:
+	// 1. Use Railway's CLI or API to fetch logs
+	// 2. Connect to a log aggregation service like Loki, ELK, etc.
+	// 3. Use a monitoring service API
+	
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	
+	switch service {
+	case "falkordb":
+		return fmt.Sprintf(`<div class="text-green-600">%s [INFO] FalkorDB service is running</div>
+<div class="text-blue-600">%s [INFO] Connected to database</div>
+<div class="text-gray-600">%s [DEBUG] Processing graph queries</div>
+<div class="text-yellow-600">%s [WARN] High memory usage detected</div>
+<div class="text-green-600">%s [INFO] Graph operations completed successfully</div>
+<div class="text-gray-600">%s [DEBUG] Cleaning up connections</div>`, 
+			timestamp, timestamp, timestamp, timestamp, timestamp, timestamp)
+	case "falkordb-browser":
+		return fmt.Sprintf(`<div class="text-green-600">%s [INFO] FalkorDB Browser started</div>
+<div class="text-blue-600">%s [INFO] Web interface available</div>
+<div class="text-gray-600">%s [DEBUG] Handling browser requests</div>
+<div class="text-green-600">%s [INFO] Database visualization loaded</div>
+<div class="text-gray-600">%s [DEBUG] WebSocket connections active</div>`,
+			timestamp, timestamp, timestamp, timestamp, timestamp)
+	case "hybrid-proxy":
+		return fmt.Sprintf(`<div class="text-green-600">%s [INFO] Hybrid proxy service started</div>
+<div class="text-blue-600">%s [INFO] Proxy routes configured</div>
+<div class="text-gray-600">%s [DEBUG] Forwarding requests</div>
+<div class="text-yellow-600">%s [WARN] Rate limiting applied</div>
+<div class="text-green-600">%s [INFO] All services healthy</div>`,
+			timestamp, timestamp, timestamp, timestamp, timestamp)
+	case "zep-server":
+		return fmt.Sprintf(`<div class="text-green-600">%s [INFO] Zep server initialized</div>
+<div class="text-blue-600">%s [INFO] API endpoints registered</div>
+<div class="text-gray-600">%s [DEBUG] Processing memory requests</div>
+<div class="text-green-600">%s [INFO] Session management active</div>
+<div class="text-gray-600">%s [DEBUG] Background tasks running</div>
+<div class="text-yellow-600">%s [WARN] Cache eviction performed</div>`,
+			timestamp, timestamp, timestamp, timestamp, timestamp, timestamp)
+	default:
+		return fmt.Sprintf(`<div class="text-red-600">%s [ERROR] Unknown service: %s</div>`, timestamp, service)
+	}
+}

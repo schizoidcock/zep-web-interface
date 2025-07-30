@@ -27,6 +27,7 @@
             <div id="page-content">
 {{if eq .Page "dashboard"}}{{template "DashboardContent" .}}{{end}}
 {{if eq .Page "users"}}{{template "UsersContent" .}}{{end}}
+{{if eq .Page "logs"}}{{template "LogsContent" .}}{{end}}
 {{if eq .Page "sessions"}}{{template "SessionsContent" .}}{{end}}
 {{if eq .Page "settings"}}{{template "SettingsContent" .}}{{end}}
 {{if eq .Page "user_details"}}{{template "UserDetailsContent" .}}{{end}}
