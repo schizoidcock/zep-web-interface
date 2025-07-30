@@ -210,13 +210,13 @@
         <div class="flex items-center justify-end p-6" id="session-modal-footer" style="gap: 10px;">
           <button type="button" 
                   onclick="hideDeleteSessionModal()"
-                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" style="width: 90px; padding: 0 12px;">
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-10 rounded-md text-sm border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" style="width: 100px; padding: 0 16px;">
             Cancel
           </button>
           <button type="button" 
                   id="confirm-delete-session-button"
                   onclick="confirmDeleteSession()"
-                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md text-xs" style="width: 150px; padding: 0 12px;">
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-10 rounded-md text-sm" style="width: 170px; padding: 0 16px;">
             <span id="confirm-delete-session-text">Yes, Delete Session</span>
           </button>
         </div>
@@ -253,7 +253,17 @@ function showDeleteSessionModal() {
   deleteButton.style.transform = 'scale(0.95)';
   deleteButton.style.filter = 'blur(0.5px)';
   
+  // Add modal appear animation
   modal.classList.remove('hidden');
+  modal.style.opacity = '0';
+  modal.style.transform = 'scale(0.95)';
+  modal.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+  
+  // Trigger appear animation
+  setTimeout(() => {
+    modal.style.opacity = '1';
+    modal.style.transform = 'scale(1)';
+  }, 10);
   
   // Get modal elements
   const modalContainer = modal.querySelector('#session-modal-container');
@@ -353,8 +363,9 @@ function showDeleteSessionModal() {
       cancelButton.style.setProperty('color', '#ffffff', 'important');
       cancelButton.style.setProperty('border', '1px solid #4b5563', 'important');
       cancelButton.style.setProperty('border-radius', '6px', 'important');
-      cancelButton.style.setProperty('width', '90px', 'important');
-      cancelButton.style.setProperty('padding', '0 12px', 'important');
+      cancelButton.style.setProperty('width', '100px', 'important');
+      cancelButton.style.setProperty('padding', '0 16px', 'important');
+      cancelButton.style.setProperty('height', '40px', 'important');
       
       cancelButton.removeEventListener('mouseenter', cancelSessionButtonHoverDark);
       cancelButton.removeEventListener('mouseleave', cancelSessionButtonLeaveDark);
@@ -365,8 +376,9 @@ function showDeleteSessionModal() {
     // Style delete button for dark mode consistency
     const deleteButton = modal.querySelector('#confirm-delete-session-button');
     if (deleteButton) {
-      deleteButton.style.setProperty('width', '150px', 'important');
-      deleteButton.style.setProperty('padding', '0 12px', 'important');
+      deleteButton.style.setProperty('width', '170px', 'important');
+      deleteButton.style.setProperty('padding', '0 16px', 'important');
+      deleteButton.style.setProperty('height', '40px', 'important');
     }
     
     // Style warning box for dark mode
@@ -417,8 +429,9 @@ function showDeleteSessionModal() {
       cancelButton.style.setProperty('color', '#000000', 'important');
       cancelButton.style.setProperty('border', '1px solid #d1d5db', 'important');
       cancelButton.style.setProperty('border-radius', '6px', 'important');
-      cancelButton.style.setProperty('width', '90px', 'important');
-      cancelButton.style.setProperty('padding', '0 12px', 'important');
+      cancelButton.style.setProperty('width', '100px', 'important');
+      cancelButton.style.setProperty('padding', '0 16px', 'important');
+      cancelButton.style.setProperty('height', '40px', 'important');
       
       cancelButton.removeEventListener('mouseenter', cancelSessionButtonHover);
       cancelButton.removeEventListener('mouseleave', cancelSessionButtonLeave);
@@ -429,8 +442,9 @@ function showDeleteSessionModal() {
     // Style delete button for light mode consistency
     const deleteButton = modal.querySelector('#confirm-delete-session-button');
     if (deleteButton) {
-      deleteButton.style.setProperty('width', '150px', 'important');
-      deleteButton.style.setProperty('padding', '0 12px', 'important');
+      deleteButton.style.setProperty('width', '170px', 'important');
+      deleteButton.style.setProperty('padding', '0 16px', 'important');
+      deleteButton.style.setProperty('height', '40px', 'important');
     }
     
     // Style warning box for light mode
@@ -485,8 +499,9 @@ function cancelSessionButtonLeaveDark() {
 function hideDeleteSessionModal() {
   const modal = document.getElementById('delete-session-confirmation-modal');
   // Add fade out effect with more dramatic transition
-  modal.style.transition = 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+  modal.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
   modal.style.opacity = '0';
+  modal.style.transform = 'scale(0.95)';
   
   // Reset delete button with smooth transition back to normal
   const deleteButton = document.getElementById('delete-session-button');
@@ -498,6 +513,7 @@ function hideDeleteSessionModal() {
   setTimeout(() => {
     modal.classList.add('hidden');
     modal.style.opacity = '1'; // Reset for next time
+    modal.style.transform = 'scale(1)'; // Reset transform
   }, 400);
   
   // Reset modal state
