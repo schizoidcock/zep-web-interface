@@ -499,14 +499,31 @@ function initializeSaveButton() {
       initialValues.lastName = lastNameInput.value.trim();
       initialValues.email = emailInput.value.trim();
       
-      console.log('Updated initial values after save:', initialValues);
+      console.log('✅ Save successful! Updated initial values:', initialValues);
       
-      // Show success notification for successful save
-      showSuccessNotification('User changes saved successfully');
+      // Show success notification BEFORE HTMX processes response
+      // Store notification data to survive HTMX content replacement
+      window.pendingNotification = {
+        type: 'success',
+        message: 'User changes saved successfully',
+        timestamp: Date.now()
+      };
+      
+      // Show notification immediately
+      showSuccessNotificationPersistent('User changes saved successfully');
+      
     } else {
       // Show error notification for failed save
       const errorMessage = event.detail.xhr.responseText || 'Failed to save changes. Please try again.';
-      showErrorNotification(errorMessage);
+      
+      // Store error notification to survive HTMX content replacement
+      window.pendingNotification = {
+        type: 'error', 
+        message: errorMessage,
+        timestamp: Date.now()
+      };
+      
+      showErrorNotificationPersistent(errorMessage);
     }
     
     updateButtonState();
@@ -517,8 +534,15 @@ function initializeSaveButton() {
     loadingSpinner.classList.add('hidden');
     buttonText.textContent = 'Save Changes';
     
+    // Store error notification to survive HTMX content replacement
+    window.pendingNotification = {
+      type: 'error',
+      message: 'Network error. Please check your connection and try again.',
+      timestamp: Date.now()
+    };
+    
     // Show error notification for network/server errors
-    showErrorNotification('Network error. Please check your connection and try again.');
+    showErrorNotificationPersistent('Network error. Please check your connection and try again.');
     
     updateButtonState();
   });
@@ -945,15 +969,27 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
-// Notification system for bottom-right professional notifications
-window.showSuccessNotification = function(message) {
+// Persistent notification system that survives HTMX content replacement
+window.showSuccessNotificationPersistent = function(message) {
+  console.log('🔔 Creating persistent success notification for:', message);
+  
+  // Create notification container outside of HTMX target areas
+  let notificationContainer = document.getElementById('persistent-notifications');
+  if (!notificationContainer) {
+    notificationContainer = document.createElement('div');
+    notificationContainer.id = 'persistent-notifications';
+    notificationContainer.style.cssText = 'position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;';
+    document.body.appendChild(notificationContainer);
+  }
+  
   const notification = document.createElement('div');
   
   // Get theme detection
   const isDark = detectTheme();
   
-  // Base styling with professional box design
-  notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 z-50 transform translate-x-full transition-all duration-300 ease-out min-w-80 max-w-96`;
+  // Base styling with professional box design - position bottom-right with pointer events
+  notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 transform translate-x-full transition-all duration-300 ease-out min-w-80 max-w-96`;
+  notification.style.cssText = 'z-index: 10000; pointer-events: auto;';
   
   // Apply theme-specific styling
   if (isDark) {
@@ -983,8 +1019,8 @@ window.showSuccessNotification = function(message) {
     </div>
   `;
   
-  console.log('🔔 Success notification created, will auto-remove in 7 seconds');
-  document.body.appendChild(notification);
+  console.log('🔔 Persistent success notification created, will auto-remove in 7 seconds');
+  notificationContainer.appendChild(notification);
   
   // Trigger slide-in animation
   setTimeout(() => {
@@ -992,23 +1028,40 @@ window.showSuccessNotification = function(message) {
   }, 10);
   
   // Auto-remove after 7 seconds (longer for better visibility)
-  setTimeout(() => {
-    console.log('🔔 Success notification auto-removing now');
+  const autoRemoveTimeout = setTimeout(() => {
+    console.log('🔔 Persistent success notification auto-removing now');
     notification.classList.add('translate-x-full');
     setTimeout(() => {
-      notification.remove();
+      if (notification.parentNode) {
+        notification.remove();
+      }
     }, 300);
   }, 7000);
+  
+  // Store timeout ID for potential cancellation
+  notification.autoRemoveTimeout = autoRemoveTimeout;
 }
 
-window.showErrorNotification = function(message) {
+window.showErrorNotificationPersistent = function(message) {
+  console.log('🔔 Creating persistent error notification for:', message);
+  
+  // Create notification container outside of HTMX target areas
+  let notificationContainer = document.getElementById('persistent-notifications');
+  if (!notificationContainer) {
+    notificationContainer = document.createElement('div');
+    notificationContainer.id = 'persistent-notifications';
+    notificationContainer.style.cssText = 'position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;';
+    document.body.appendChild(notificationContainer);
+  }
+  
   const notification = document.createElement('div');
   
   // Get theme detection
   const isDark = detectTheme();
   
-  // Base styling with professional box design
-  notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 z-50 transform translate-x-full transition-all duration-300 ease-out min-w-80 max-w-96`;
+  // Base styling with professional box design - position bottom-right with pointer events
+  notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 transform translate-x-full transition-all duration-300 ease-out min-w-80 max-w-96`;
+  notification.style.cssText = 'z-index: 10000; pointer-events: auto;';
   
   // Apply theme-specific styling
   if (isDark) {
@@ -1038,21 +1091,54 @@ window.showErrorNotification = function(message) {
     </div>
   `;
   
-  document.body.appendChild(notification);
+  console.log('🔔 Persistent error notification created, will auto-remove in 8 seconds');
+  notificationContainer.appendChild(notification);
   
   // Trigger slide-in animation
   setTimeout(() => {
     notification.classList.remove('translate-x-full');
   }, 10);
   
-  // Auto-remove after 6 seconds (longer for error messages)
-  setTimeout(() => {
+  // Auto-remove after 8 seconds (longer for error messages)
+  const autoRemoveTimeout = setTimeout(() => {
+    console.log('🔔 Persistent error notification auto-removing now');
     notification.classList.add('translate-x-full');
     setTimeout(() => {
-      notification.remove();
+      if (notification.parentNode) {
+        notification.remove();
+      }
     }, 300);
-  }, 6000);
+  }, 8000);
+  
+  // Store timeout ID for potential cancellation
+  notification.autoRemoveTimeout = autoRemoveTimeout;
 }
+
+// Legacy notification functions (keep for delete functionality compatibility)
+window.showSuccessNotification = function(message) {
+  return showSuccessNotificationPersistent(message);
+}
+
+window.showErrorNotification = function(message) {
+  return showErrorNotificationPersistent(message);
+}
+
+// HTMX event handler to restore notifications after content replacement
+document.addEventListener('htmx:afterSettle', function(event) {
+  // Check if we have a pending notification to restore
+  if (window.pendingNotification && (Date.now() - window.pendingNotification.timestamp) < 8000) {
+    console.log('🔄 HTMX afterSettle - restoring pending notification:', window.pendingNotification);
+    
+    if (window.pendingNotification.type === 'success') {
+      showSuccessNotificationPersistent(window.pendingNotification.message);
+    } else if (window.pendingNotification.type === 'error') {
+      showErrorNotificationPersistent(window.pendingNotification.message);
+    }
+    
+    // Clear the pending notification
+    window.pendingNotification = null;
+  }
+});
 
 // Theme detection function for notifications
 window.detectTheme = function() {
