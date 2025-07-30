@@ -296,16 +296,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailChanged = currentValues.email !== initialValues.email;
     const hasChanges = firstNameChanged || lastNameChanged || emailChanged;
     
+    // Specific deletion detection - check if we had data before but don't now
+    const firstNameDeleted = initialValues.firstName && !currentValues.firstName;
+    const lastNameDeleted = initialValues.lastName && !currentValues.lastName;
+    const emailDeleted = initialValues.email && !currentValues.email;
+    const hasDeletedData = firstNameDeleted || lastNameDeleted || emailDeleted;
+    
+    // Specific addition detection - check if we didn't have data before but do now
+    const firstNameAdded = !initialValues.firstName && currentValues.firstName;
+    const lastNameAdded = !initialValues.lastName && currentValues.lastName;
+    const emailAdded = !initialValues.email && currentValues.email;
+    const hasAddedData = firstNameAdded || lastNameAdded || emailAdded;
+    
     const hasCurrentContent = currentValues.firstName || currentValues.lastName || currentValues.email;
     const hasInitialData = initialValues.firstName || initialValues.lastName || initialValues.email;
     
     // Enable button if: 
-    // 1. There are changes from initial state, OR
-    // 2. Has current content but no initial saved data (new user scenario)
-    const shouldEnable = hasChanges || (hasCurrentContent && !hasInitialData);
+    // 1. There are ANY changes from initial state (including partial deletions), OR
+    // 2. Data was deleted from any field, OR
+    // 3. Data was added to any field, OR
+    // 4. Has current content but no initial saved data (new user scenario)
+    const shouldEnable = hasChanges || hasDeletedData || hasAddedData || (hasCurrentContent && !hasInitialData);
     
     // Enhanced debug logging to understand what's happening
-    console.log('Button State Debug (Enhanced):', {
+    console.log('🔍 DELETION DETECTION DEBUG:', {
       currentValues,
       initialValues,
       changes: {
@@ -313,30 +327,76 @@ document.addEventListener('DOMContentLoaded', function() {
         lastName: lastNameChanged,
         email: emailChanged
       },
-      hasChanges,
-      hasCurrentContent,
-      hasInitialData,
-      shouldEnable,
+      deletions: {
+        firstName: firstNameDeleted,
+        lastName: lastNameDeleted,
+        email: emailDeleted
+      },
+      additions: {
+        firstName: firstNameAdded,
+        lastName: lastNameAdded,
+        email: emailAdded
+      },
+      summary: {
+        hasChanges,
+        hasDeletedData,
+        hasAddedData,
+        hasCurrentContent,
+        hasInitialData,
+        shouldEnable
+      },
       buttonCurrentlyDisabled: saveButton.disabled
     });
     
     saveButton.disabled = !shouldEnable;
     
+    // Show specific message when deletion is detected
+    if (hasDeletedData && !hasChanges) {
+      console.log('🗑️ DELETION DETECTED - Button should be enabled!');
+    }
+    
     // Additional logging when button state changes
     if (saveButton.disabled !== !shouldEnable) {
-      console.log('Button state is changing from', saveButton.disabled, 'to', !shouldEnable);
+      console.log('🔄 Button state changing from', saveButton.disabled, 'to', !shouldEnable);
     }
   }
   
   // Add event listeners to form inputs - multiple event types to catch all changes
   [firstNameInput, lastNameInput, emailInput].forEach(input => {
-    // Listen to multiple events to ensure we catch all changes
-    ['input', 'change', 'keyup', 'keydown', 'paste', 'cut', 'blur', 'focus'].forEach(eventType => {
-      input.addEventListener(eventType, function() {
-        console.log(`Event triggered: ${eventType} on ${input.id}, value: "${input.value}"`);
+    // Listen to multiple events to ensure we catch all changes, especially deletions
+    ['input', 'change', 'keyup', 'keydown', 'keypress', 'paste', 'cut', 'blur', 'focus'].forEach(eventType => {
+      input.addEventListener(eventType, function(event) {
+        // Special handling for deletion keys
+        if (eventType === 'keydown' && (event.key === 'Backspace' || event.key === 'Delete')) {
+          console.log(`🗑️ DELETION KEY DETECTED: ${event.key} on ${input.id}`);
+          // Add a slight delay to ensure the value change is processed
+          setTimeout(updateButtonState, 10);
+          return;
+        }
+        
+        console.log(`📝 Event triggered: ${eventType} on ${input.id}, value: "${input.value}"`);
         // Small delay to ensure paste/cut operations complete
         setTimeout(updateButtonState, 5);
       });
+    });
+    
+    // Add specific deletion detection for better responsiveness
+    input.addEventListener('keydown', function(event) {
+      if (event.key === 'Backspace' || event.key === 'Delete') {
+        // Store pre-deletion value to compare
+        const preDeleteValue = input.value;
+        console.log(`🔍 PRE-DELETE VALUE: "${preDeleteValue}" on ${input.id}`);
+        
+        // Check the value after the deletion happens
+        setTimeout(() => {
+          const postDeleteValue = input.value;
+          console.log(`🔍 POST-DELETE VALUE: "${postDeleteValue}" on ${input.id}`);
+          if (preDeleteValue !== postDeleteValue) {
+            console.log(`✅ DELETION CONFIRMED on ${input.id}: "${preDeleteValue}" → "${postDeleteValue}"`);
+            updateButtonState();
+          }
+        }, 1);
+      }
     });
   });
   
