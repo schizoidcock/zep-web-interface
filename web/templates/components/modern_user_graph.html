@@ -79,14 +79,21 @@
 </div>
 
 {{ if .Data.Triplets }}
+<!-- Load D3.js first -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Get graph data from hidden script tag
-    const graphDataElement = document.getElementById('graph-data');
-    if (!graphDataElement) {
-        console.error('Graph data not found');
-        return;
-    }
+// Ensure D3 is loaded and prevent multiple initializations
+if (typeof d3 !== 'undefined' && !window.graphInitialized) {
+    window.graphInitialized = true;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get graph data from hidden script tag
+        const graphDataElement = document.getElementById('graph-data');
+        if (!graphDataElement) {
+            console.error('Graph data not found');
+            return;
+        }
     
     let triplets = [];
     try {
@@ -150,9 +157,17 @@ function initializeGraph(nodes, edges) {
     const container = document.getElementById('graph-canvas');
     const loading = document.getElementById('graph-loading');
     
+    // Check if elements exist
+    if (!container) {
+        console.error('Graph canvas element not found');
+        return;
+    }
+    
     // Show canvas, hide loading
     container.classList.remove('hidden');
-    loading.style.display = 'none';
+    if (loading) {
+        loading.style.display = 'none';
+    }
     
     const width = container.offsetWidth;
     const height = container.offsetHeight;
@@ -251,18 +266,25 @@ function initializeGraph(nodes, edges) {
     });
     
     // Control handlers
-    document.getElementById('reset-view').addEventListener('click', () => {
-        svg.transition().duration(750).call(
-            zoom.transform,
-            d3.zoomIdentity.translate(width / 2, height / 2).scale(1)
-        );
-    });
+    const resetButton = document.getElementById('reset-view');
+    const toggleButton = document.getElementById('toggle-labels');
     
-    let labelsVisible = true;
-    document.getElementById('toggle-labels').addEventListener('click', () => {
-        labelsVisible = !labelsVisible;
-        labels.style('opacity', labelsVisible ? 1 : 0);
-    });
+    if (resetButton) {
+        resetButton.addEventListener('click', () => {
+            svg.transition().duration(750).call(
+                zoom.transform,
+                d3.zoomIdentity.translate(width / 2, height / 2).scale(1)
+            );
+        });
+    }
+    
+    if (toggleButton) {
+        let labelsVisible = true;
+        toggleButton.addEventListener('click', () => {
+            labelsVisible = !labelsVisible;
+            labels.style('opacity', labelsVisible ? 1 : 0);
+        });
+    }
     
     // Drag functions
     function dragstarted(event, d) {
@@ -297,10 +319,8 @@ function initializeGraph(nodes, edges) {
         
         return colorMap[labels[0]] || '#6b7280';
     }
+    });
 }
 </script>
-
-<!-- Load D3.js if not already loaded -->
-<script src="https://d3js.org/d3.v7.min.js"></script>
 {{ end }}
 {{ end }}
