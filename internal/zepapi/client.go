@@ -141,6 +141,41 @@ type Episode struct {
 	Processed   bool       `json:"processed,omitempty"`
 }
 
+// Graph data structures - Episodes are used as edges in Zep's graph implementation
+type GraphNode struct {
+	UUID       string                 `json:"uuid"`
+	Name       string                 `json:"name"`
+	Summary    string                 `json:"summary,omitempty"`
+	Labels     []string               `json:"labels,omitempty"`
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	CreatedAt  string                 `json:"created_at"`
+	UpdatedAt  string                 `json:"updated_at"`
+}
+
+// GraphEpisode represents the relationship/edge between nodes in Zep's graph
+type GraphEpisode struct {
+	UUID             string    `json:"uuid"`
+	SourceNodeUUID   string    `json:"source_node_uuid"`
+	TargetNodeUUID   string    `json:"target_node_uuid"`
+	Type             string    `json:"type"`
+	Name             string    `json:"name"`
+	Fact             string    `json:"fact,omitempty"`
+	Content          string    `json:"content,omitempty"`
+	Summary          string    `json:"summary,omitempty"`
+	CreatedAt        string    `json:"created_at"`
+	UpdatedAt        string    `json:"updated_at"`
+	ValidAt          string    `json:"valid_at,omitempty"`
+	ExpiredAt        string    `json:"expired_at,omitempty"`
+	InvalidAt        string    `json:"invalid_at,omitempty"`
+}
+
+// RawTriplet represents a graph triplet with episode as the connecting relationship
+type RawTriplet struct {
+	SourceNode GraphNode    `json:"sourceNode"`
+	Episode    GraphEpisode `json:"episode"`
+	TargetNode GraphNode    `json:"targetNode"`
+}
+
 type SessionsResponse struct {
 	Sessions []Session `json:"sessions"`
 	Total    int       `json:"total"`
@@ -373,6 +408,148 @@ func (c *Client) GetUser(userID string) (*User, error) {
 	user.SessionCount = 0
 
 	return &user, nil
+}
+
+// Helper function to safely get string value from pointer
+func getStringValue(ptr *string) string {
+	if ptr == nil {
+		return ""
+	}
+	return *ptr
+}
+
+// GetUserGraphTriplets fetches graph triplets for a specific user by getting user episodes and their mentions
+func (c *Client) GetUserGraphTriplets(userID string) ([]RawTriplet, error) {
+	// Step 1: Get user episodes first
+	episodes, err := c.GetUserEpisodes(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user episodes: %w", err)
+	}
+
+	log.Printf("🔍 Found %d episodes for user %s", len(episodes), userID)
+
+	var triplets []RawTriplet
+	nodeMap := make(map[string]GraphNode) // Track unique nodes
+	
+	// Step 2: For each episode, get its mentions (nodes and edges)
+	for _, episode := range episodes {
+		mentions, err := c.GetEpisodeMentions(episode.UUID)
+		if err != nil {
+			log.Printf("⚠️ Failed to get mentions for episode %s: %v", episode.UUID, err)
+			continue
+		}
+
+		// Step 3: Store all nodes from this episode
+		for _, node := range mentions.Nodes {
+			nodeMap[node.UUID] = GraphNode{
+				UUID:       node.UUID,
+				Name:       node.Name,
+				Summary:    node.Summary,
+				Labels:     node.Labels,
+				Attributes: node.Attributes,
+				CreatedAt:  node.CreatedAt,
+				UpdatedAt:  node.UpdatedAt,
+			}
+		}
+
+		// Step 4: Build triplets from edges
+		for _, edge := range mentions.Edges {
+			sourceNode, sourceExists := nodeMap[edge.SourceNodeUUID]
+			targetNode, targetExists := nodeMap[edge.TargetNodeUUID]
+			
+			if !sourceExists || !targetExists {
+				log.Printf("⚠️ Missing nodes for edge %s (source: %v, target: %v)", edge.UUID, sourceExists, targetExists)
+				continue
+			}
+
+			triplet := RawTriplet{
+				SourceNode: sourceNode,
+				Episode: GraphEpisode{
+					UUID:           edge.UUID, // Use edge UUID as episode reference
+					SourceNodeUUID: edge.SourceNodeUUID,
+					TargetNodeUUID: edge.TargetNodeUUID,
+					Type:           "relationship",
+					Name:           edge.Name,
+					Fact:           edge.Fact,
+					Content:        episode.Content, // Episode content provides context
+					Summary:        episode.SourceDescription,
+					CreatedAt:      edge.CreatedAt,
+					UpdatedAt:      edge.UpdatedAt,
+					ValidAt:        getStringValue(edge.ValidAt),
+					ExpiredAt:      getStringValue(edge.ExpiredAt),
+					InvalidAt:      getStringValue(edge.InvalidAt),
+				},
+				TargetNode: targetNode,
+			}
+			
+			triplets = append(triplets, triplet)
+		}
+	}
+
+	log.Printf("✅ Built %d graph triplets for user %s from %d episodes", len(triplets), userID, len(episodes))
+	return triplets, nil
+}
+
+// GetEpisodeMentions fetches nodes and edges mentioned in a specific episode
+func (c *Client) GetEpisodeMentions(episodeUUID string) (*EpisodeMentions, error) {
+	resp, err := c.get("/api/v2/graph/episodes/" + episodeUUID + "/mentions")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("episode mentions API error %d: %s", resp.StatusCode, string(body))
+	}
+
+	var mentions EpisodeMentions
+	if err := json.Unmarshal(body, &mentions); err != nil {
+		log.Printf("❌ Failed to unmarshal episode mentions: %v", err)
+		return nil, err
+	}
+
+	log.Printf("✅ Got %d nodes and %d edges for episode %s", len(mentions.Nodes), len(mentions.Edges), episodeUUID)
+	return &mentions, nil
+}
+
+// EpisodeMentions represents nodes and edges mentioned in an episode
+type EpisodeMentions struct {
+	Nodes []*EntityNode `json:"nodes,omitempty"`
+	Edges []*EntityEdge `json:"edges,omitempty"`
+}
+
+// EntityNode represents a node in the graph
+type EntityNode struct {
+	UUID       string                 `json:"uuid"`
+	Name       string                 `json:"name"`
+	Summary    string                 `json:"summary"`
+	Labels     []string               `json:"labels,omitempty"`
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	Score      *float64               `json:"score,omitempty"`
+	CreatedAt  string                 `json:"created_at"`
+	UpdatedAt  string                 `json:"updated_at"`
+}
+
+// EntityEdge represents an edge in the graph
+type EntityEdge struct {
+	UUID           string                 `json:"uuid"`
+	SourceNodeUUID string                 `json:"source_node_uuid"`
+	TargetNodeUUID string                 `json:"target_node_uuid"`
+	Name           string                 `json:"name"`
+	Fact           string                 `json:"fact"`
+	Attributes     map[string]interface{} `json:"attributes,omitempty"`
+	Episodes       []string               `json:"episodes,omitempty"`
+	Score          *float64               `json:"score,omitempty"`
+	CreatedAt      string                 `json:"created_at"`
+	UpdatedAt      string                 `json:"updated_at"`
+	ValidAt        *string                `json:"valid_at,omitempty"`
+	ExpiredAt      *string                `json:"expired_at,omitempty"`
+	InvalidAt      *string                `json:"invalid_at,omitempty"`
 }
 
 // GetUserEpisodes fetches episodes for a specific user from the graph API

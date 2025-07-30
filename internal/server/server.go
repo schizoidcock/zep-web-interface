@@ -118,6 +118,7 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			r.Delete("/users/{userId}", h.DeleteUser)
 			r.Get("/users/{userId}/sessions", h.UserSessions)
 			r.Get("/users/{userId}/episodes", h.UserEpisodes)
+			r.Get("/users/{userId}/graph", h.UserGraph)
 			r.Get("/settings", h.Settings)
 		})
 
@@ -148,6 +149,7 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			r.Delete("/users/{userId}", h.DeleteUser)
 			r.Get("/users/{userId}/sessions", h.UserSessions)
 			r.Get("/users/{userId}/episodes", h.UserEpisodes)
+			r.Get("/users/{userId}/graph", h.UserGraph)
 			r.Get("/settings", h.Settings)
 		})
 

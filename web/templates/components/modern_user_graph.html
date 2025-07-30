@@ -1,0 +1,306 @@
+{{ define "UserGraphContent" }}
+<div class="space-y-6">
+    <div class="bg-card text-card-foreground rounded-lg border">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-semibold">Knowledge Graph</h2>
+                    <p class="text-muted-foreground">Interactive visualization of user's knowledge graph</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-muted-foreground">User ID:</span>
+                    <span class="text-sm font-mono bg-muted px-2 py-1 rounded">{{ .UserID }}</span>
+                </div>
+            </div>
+
+            {{ if .Data.Triplets }}
+            <!-- Graph Visualization Container -->
+            <div id="graph-container" class="w-full h-[600px] border border-border rounded-lg bg-background overflow-hidden relative">
+                <div class="absolute top-4 left-4 z-10">
+                    <div class="bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
+                        <div class="text-sm font-medium mb-2">Graph Stats</div>
+                        <div class="space-y-1 text-xs text-muted-foreground">
+                            <div>Triplets: {{ len .Data.Triplets }}</div>
+                            <div>Nodes: <span id="node-count">0</span></div>
+                            <div>Relations: {{ len .Data.Triplets }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="graph-loading" class="absolute inset-0 flex items-center justify-center">
+                    <div class="flex flex-col items-center space-y-3">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        <div class="text-sm text-muted-foreground">Loading graph visualization...</div>
+                    </div>
+                </div>
+                
+                <!-- Graph Canvas -->
+                <div id="graph-canvas" class="w-full h-full hidden"></div>
+            </div>
+
+            <!-- Graph Data (Hidden, for JavaScript) -->
+            <script type="application/json" id="graph-data">
+                {{ .Data.Triplets | json }}
+            </script>
+
+            <!-- Controls -->
+            <div class="mt-4 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <button id="reset-view" class="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">
+                        Reset View
+                    </button>
+                    <button id="toggle-labels" class="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">
+                        Toggle Labels
+                    </button>
+                </div>
+                <div class="text-xs text-muted-foreground">
+                    Click nodes and edges to view details
+                </div>
+            </div>
+            {{ else }}
+            <!-- Empty State -->
+            <div class="text-center py-24">
+                <div class="flex flex-col items-center space-y-4">
+                    <svg class="w-16 h-16 text-muted-foreground opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                    </svg>
+                    <div class="space-y-2">
+                        <h3 class="text-lg font-medium">No Graph Data</h3>
+                        <p class="text-muted-foreground max-w-md">
+                            This user doesn't have any graph data yet. Graph data is built automatically as users interact with the system.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</div>
+
+{{ if .Data.Triplets }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get graph data from hidden script tag
+    const graphDataElement = document.getElementById('graph-data');
+    if (!graphDataElement) {
+        console.error('Graph data not found');
+        return;
+    }
+    
+    let triplets = [];
+    try {
+        triplets = JSON.parse(graphDataElement.textContent);
+    } catch (e) {
+        console.error('Failed to parse graph data:', e);
+        return;
+    }
+    
+    console.log('Loading graph with', triplets.length, 'triplets');
+    
+    // Convert triplets to nodes and edges for D3.js
+    const nodes = new Map();
+    const edges = [];
+    
+    triplets.forEach(triplet => {
+        // Add source node
+        if (!nodes.has(triplet.sourceNode.uuid)) {
+            nodes.set(triplet.sourceNode.uuid, {
+                id: triplet.sourceNode.uuid,
+                name: triplet.sourceNode.name || 'Unnamed',
+                labels: triplet.sourceNode.labels || [],
+                summary: triplet.sourceNode.summary || '',
+                type: 'node'
+            });
+        }
+        
+        // Add target node
+        if (!nodes.has(triplet.targetNode.uuid)) {
+            nodes.set(triplet.targetNode.uuid, {
+                id: triplet.targetNode.uuid,
+                name: triplet.targetNode.name || 'Unnamed',
+                labels: triplet.targetNode.labels || [],
+                summary: triplet.targetNode.summary || '',
+                type: 'node'
+            });
+        }
+        
+        // Add episode as edge
+        edges.push({
+            id: triplet.episode.uuid,
+            source: triplet.sourceNode.uuid,
+            target: triplet.targetNode.uuid,
+            name: triplet.episode.name || 'Related to',
+            fact: triplet.episode.fact || '',
+            content: triplet.episode.content || '',
+            type: 'episode'
+        });
+    });
+    
+    const nodeArray = Array.from(nodes.values());
+    
+    // Update node count
+    document.getElementById('node-count').textContent = nodeArray.length;
+    
+    // Initialize D3 visualization
+    initializeGraph(nodeArray, edges);
+});
+
+function initializeGraph(nodes, edges) {
+    const container = document.getElementById('graph-canvas');
+    const loading = document.getElementById('graph-loading');
+    
+    // Show canvas, hide loading
+    container.classList.remove('hidden');
+    loading.style.display = 'none';
+    
+    const width = container.offsetWidth;
+    const height = container.offsetHeight;
+    
+    // Clear any existing content
+    container.innerHTML = '';
+    
+    // Create SVG
+    const svg = d3.select(container)
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    
+    // Create zoom behavior
+    const zoom = d3.zoom()
+        .scaleExtent([0.1, 4])
+        .on('zoom', (event) => {
+            g.attr('transform', event.transform);
+        });
+    
+    svg.call(zoom);
+    
+    const g = svg.append('g');
+    
+    // Create force simulation
+    const simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(edges).id(d => d.id).distance(100))
+        .force('charge', d3.forceManyBody().strength(-300))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(30));
+    
+    // Create links
+    const link = g.append('g')
+        .attr('class', 'links')
+        .selectAll('line')
+        .data(edges)
+        .enter()
+        .append('line')
+        .attr('stroke', '#999')
+        .attr('stroke-opacity', 0.6)
+        .attr('stroke-width', 2);
+    
+    // Create nodes
+    const node = g.append('g')
+        .attr('class', 'nodes')
+        .selectAll('circle')
+        .data(nodes)
+        .enter()
+        .append('circle')
+        .attr('r', 12)
+        .attr('fill', d => getNodeColor(d.labels))
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 2)
+        .style('cursor', 'pointer')
+        .call(d3.drag()
+            .on('start', dragstarted)
+            .on('drag', dragged)
+            .on('end', dragended));
+    
+    // Add labels
+    const labels = g.append('g')
+        .attr('class', 'labels')
+        .selectAll('text')
+        .data(nodes)
+        .enter()
+        .append('text')
+        .text(d => d.name)
+        .attr('font-size', '10px')
+        .attr('dy', -15)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'currentColor')
+        .style('pointer-events', 'none');
+    
+    // Add tooltips
+    node.append('title')
+        .text(d => `${d.name}\nLabels: ${d.labels.join(', ')}\nSummary: ${d.summary}`);
+    
+    link.append('title')
+        .text(d => `${d.name}\nFact: ${d.fact}\nContent: ${d.content}`);
+    
+    // Update positions on tick
+    simulation.on('tick', () => {
+        link
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y);
+        
+        node
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y);
+        
+        labels
+            .attr('x', d => d.x)
+            .attr('y', d => d.y);
+    });
+    
+    // Control handlers
+    document.getElementById('reset-view').addEventListener('click', () => {
+        svg.transition().duration(750).call(
+            zoom.transform,
+            d3.zoomIdentity.translate(width / 2, height / 2).scale(1)
+        );
+    });
+    
+    let labelsVisible = true;
+    document.getElementById('toggle-labels').addEventListener('click', () => {
+        labelsVisible = !labelsVisible;
+        labels.style('opacity', labelsVisible ? 1 : 0);
+    });
+    
+    // Drag functions
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+    
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+    
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+    
+    // Color function for nodes based on labels
+    function getNodeColor(labels) {
+        if (!labels || labels.length === 0) return '#6b7280';
+        
+        const colorMap = {
+            'Person': '#ef4444',
+            'Organization': '#3b82f6',
+            'Location': '#10b981',
+            'Event': '#f59e0b',
+            'Concept': '#8b5cf6',
+            'Entity': '#6b7280'
+        };
+        
+        return colorMap[labels[0]] || '#6b7280';
+    }
+}
+</script>
+
+<!-- Load D3.js if not already loaded -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+{{ end }}
+{{ end }}

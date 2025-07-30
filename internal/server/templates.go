@@ -62,6 +62,17 @@ func loadTemplatesWithConfig(proxyPath string) (*template.Template, error) {
 		}
 		return template.JS(string(jsonBytes))
 	}
+	funcMap["json"] = func(v interface{}) template.JS {
+		// Alias for ToJSON for consistency
+		if v == nil {
+			return template.JS("[]")
+		}
+		jsonBytes, err := json.Marshal(v)
+		if err != nil {
+			return template.JS("[]")
+		}
+		return template.JS(string(jsonBytes))
+	}
 	funcMap["Percent"] = func(part, total float64) float64 {
 		// Calculate percentage - placeholder
 		if total == 0 {

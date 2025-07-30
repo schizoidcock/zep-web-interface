@@ -637,6 +637,59 @@ func (h *Handlers) UserEpisodes(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// UserGraph handles the user graph visualization page
+func (h *Handlers) UserGraph(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userId")
+	
+	// Fetch user graph triplets from the graph API
+	triplets, err := h.apiClient.GetUserGraphTriplets(userID)
+	if err != nil {
+		// If graph data fails, continue with empty triplets (graph page still viewable)
+		triplets = []zepapi.RawTriplet{}
+		log.Printf("⚠️ Failed to fetch graph triplets for user %s: %v", userID, err)
+	}
+
+	// Create page data with breadcrumbs
+	data := map[string]interface{}{
+		"Title":    "User Graph",
+		"SubTitle": "Knowledge graph visualization for user " + userID,
+		"Page":     "user_graph",
+		"Path":     r.URL.Path,
+		"BreadCrumbs": []BreadCrumb{
+			{
+				Title: "Users",
+				Path:  h.basePath + "/users",
+			},
+			{
+				Title: "User Details", 
+				Path:  h.basePath + "/users/" + userID,
+			},
+			{
+				Title: "Graph",
+				Path:  r.URL.Path,
+			},
+		},
+		"Data": map[string]interface{}{
+			"Triplets": triplets,
+		},
+		"MenuItems": GetMenuItems(h.basePath),
+		"UserID":    userID,
+	}
+	
+	// Check if this is an HTMX request, if so render only the content
+	if r.Header.Get("HX-Request") == "true" {
+		if err := h.templates.ExecuteTemplate(w, "UserGraphContent", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := h.templates.ExecuteTemplate(w, "Layout", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
 // UpdateUser handles user detail form submissions
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
