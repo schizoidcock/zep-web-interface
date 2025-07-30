@@ -1298,9 +1298,6 @@ window.showGraphModal = function(userId) {
   // Show modal first
   modal.classList.remove('hidden');
   
-  // Apply theme styling immediately
-  applyGraphModalTheme();
-  
   // Add modal appear animation with scaling (same as delete modal)
   modalContainer.style.opacity = '0';
   modalContainer.style.transform = 'scale(0.95)';
@@ -1311,6 +1308,155 @@ window.showGraphModal = function(userId) {
     modalContainer.style.opacity = '1';
     modalContainer.style.transform = 'scale(1)';
   }, 10);
+  
+  // Get modal elements for theme styling (same as delete modal approach)
+  const modalHeader = document.getElementById('graph-modal-header');
+  const modalFooter = document.getElementById('graph-modal-footer');
+  const modalBody = document.getElementById('graph-modal-body');
+  
+  // Enhanced theme detection (same as delete modal)
+  const htmlElement = document.documentElement;
+  const bodyElement = document.body;
+  
+  const hasDarkClass = htmlElement.classList.contains('dark') || bodyElement.classList.contains('dark');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
+  const bodyBgColor = window.getComputedStyle(bodyElement).backgroundColor;
+  const htmlBgColor = window.getComputedStyle(htmlElement).backgroundColor;
+  
+  const isDarkBackground = (color) => {
+    if (!color || color === 'transparent') return false;
+    const rgb = color.match(/\d+/g);
+    if (!rgb) return false;
+    const [r, g, b] = rgb.map(Number);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.3;
+  };
+  
+  const isLightBackground = (color) => {
+    if (!color || color === 'transparent') return true;
+    const rgb = color.match(/\d+/g);
+    if (!rgb) return true;
+    const [r, g, b] = rgb.map(Number);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.7;
+  };
+  
+  const bodyIsDark = isDarkBackground(bodyBgColor);
+  const htmlIsDark = isDarkBackground(htmlBgColor);
+  const bodyIsLight = isLightBackground(bodyBgColor);
+  const htmlIsLight = isLightBackground(htmlBgColor);
+  
+  let isDark;
+  if (bodyIsLight || htmlIsLight) {
+    isDark = false;
+  } else if (bodyIsDark || htmlIsDark) {
+    isDark = true;
+  } else {
+    isDark = hasDarkClass;
+  }
+  
+  // Apply theme styling inline (same approach as delete modal)
+  if (isDark) {
+    // Dark mode styling - using slate-900 like delete modal
+    modalContainer.style.setProperty('background-color', '#0f172a', 'important'); // slate-900
+    modalContainer.style.setProperty('border', '1px solid #374151', 'important'); // gray-700
+    modalContainer.style.setProperty('border-radius', '12px', 'important');
+    modalContainer.style.setProperty('color', '#ffffff', 'important');
+    modalHeader.style.setProperty('border-bottom', '1px solid #374151', 'important');
+    modalHeader.style.setProperty('background-color', '#0f172a', 'important');
+    modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
+    modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
+    modalFooter.style.setProperty('border-top', '1px solid #374151', 'important');
+    modalFooter.style.setProperty('background-color', '#0f172a', 'important');
+    modalFooter.style.setProperty('border-bottom-left-radius', '12px', 'important');
+    modalFooter.style.setProperty('border-bottom-right-radius', '12px', 'important');
+    modalBody.style.setProperty('background-color', '#0f172a', 'important');
+    
+    // Force ALL text elements to white in dark mode
+    const allTextElements = modal.querySelectorAll('*');
+    allTextElements.forEach(element => {
+      if (element.textContent && element.textContent.trim()) {
+        element.style.setProperty('color', '#ffffff', 'important');
+      }
+    });
+    
+    // Style buttons for dark mode
+    const refreshButton = modal.querySelector('button[onclick="refreshGraph()"]');
+    if (refreshButton) {
+      refreshButton.style.setProperty('background-color', '#374151', 'important');
+      refreshButton.style.setProperty('color', '#ffffff', 'important');
+      refreshButton.style.setProperty('border', '1px solid #4b5563', 'important');
+      refreshButton.style.setProperty('border-radius', '6px', 'important');
+      refreshButton.style.setProperty('padding', '8px 16px', 'important');
+    }
+    
+    const closeButton = modal.querySelector('button[onclick="hideGraphModal()"]');
+    if (closeButton) {
+      closeButton.style.setProperty('background-color', '#374151', 'important');
+      closeButton.style.setProperty('color', '#ffffff', 'important');
+      closeButton.style.setProperty('border', '1px solid #4b5563', 'important');
+      closeButton.style.setProperty('border-radius', '6px', 'important');
+      closeButton.style.setProperty('padding', '8px 16px', 'important');
+    }
+    
+    // Style empty state for dark mode
+    const tryRefreshText = modal.querySelector('#graph-modal-empty .bg-white');
+    if (tryRefreshText) {
+      tryRefreshText.style.setProperty('background-color', '#1f2937', 'important');
+      tryRefreshText.style.setProperty('border', '1px solid #374151', 'important');
+    }
+    
+  } else {
+    // Light mode styling
+    modalContainer.style.setProperty('background-color', '#ffffff', 'important');
+    modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
+    modalContainer.style.setProperty('border-radius', '12px', 'important');
+    modalContainer.style.setProperty('color', '#000000', 'important');
+    modalHeader.style.setProperty('border-bottom', '1px solid #d1d5db', 'important');
+    modalHeader.style.setProperty('background-color', '#ffffff', 'important');
+    modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
+    modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
+    modalFooter.style.setProperty('border-top', '1px solid #d1d5db', 'important');
+    modalFooter.style.setProperty('background-color', '#ffffff', 'important');
+    modalFooter.style.setProperty('border-bottom-left-radius', '12px', 'important');
+    modalFooter.style.setProperty('border-bottom-right-radius', '12px', 'important');
+    modalBody.style.setProperty('background-color', '#ffffff', 'important');
+    
+    // Force ALL text elements to black in light mode
+    const allTextElements = modal.querySelectorAll('*');
+    allTextElements.forEach(element => {
+      if (element.textContent && element.textContent.trim()) {
+        element.style.setProperty('color', '#000000', 'important');
+      }
+    });
+    
+    // Style buttons for light mode  
+    const refreshButton = modal.querySelector('button[onclick="refreshGraph()"]');
+    if (refreshButton) {
+      refreshButton.style.setProperty('background-color', '#ffffff', 'important');
+      refreshButton.style.setProperty('color', '#000000', 'important');
+      refreshButton.style.setProperty('border', '1px solid #d1d5db', 'important');
+      refreshButton.style.setProperty('border-radius', '6px', 'important');
+      refreshButton.style.setProperty('padding', '8px 16px', 'important');
+    }
+    
+    const closeButton = modal.querySelector('button[onclick="hideGraphModal()"]');
+    if (closeButton) {
+      closeButton.style.setProperty('background-color', '#ffffff', 'important');
+      closeButton.style.setProperty('color', '#000000', 'important');
+      closeButton.style.setProperty('border', '1px solid #d1d5db', 'important');
+      closeButton.style.setProperty('border-radius', '6px', 'important');
+      closeButton.style.setProperty('padding', '8px 16px', 'important');
+    }
+    
+    // Style empty state for light mode
+    const tryRefreshText = modal.querySelector('#graph-modal-empty .bg-white');
+    if (tryRefreshText) {
+      tryRefreshText.style.setProperty('background-color', '#ffffff', 'important');
+      tryRefreshText.style.setProperty('border', '1px solid #d1d5db', 'important');
+    }
+  }
   
   // Show loading state
   loading.classList.remove('hidden');
@@ -1393,37 +1539,28 @@ window.loadGraphData = function(userId) {
           loading.classList.add('hidden');
           content.classList.remove('hidden');
           
-          // Re-apply theme styling after content is shown
-          applyGraphModalTheme();
-          
           // Initialize graph visualization
           initializeModalGraph(triplets);
         } else {
           // Show empty state
           loading.classList.add('hidden');
           empty.classList.remove('hidden');
-          
-          // Re-apply theme styling for empty state
-          applyGraphModalTheme();
         }
       } catch (e) {
         console.error('Failed to parse graph data:', e);
         loading.classList.add('hidden');
         empty.classList.remove('hidden');
-        applyGraphModalTheme();
       }
     } else {
       // No graph data found, show empty state
       loading.classList.add('hidden');
       empty.classList.remove('hidden');
-      applyGraphModalTheme();
     }
   })
   .catch(error => {
     console.error('Failed to load graph data:', error);
     loading.classList.add('hidden');
     empty.classList.remove('hidden');
-    applyGraphModalTheme();
   });
 }
 
@@ -1631,156 +1768,6 @@ window.initializeModalGraph = function(triplets) {
   }
 }
 
-window.applyGraphModalTheme = function() {
-  const modalContainer = document.getElementById('graph-modal-container');
-  const modalHeader = document.getElementById('graph-modal-header');
-  const modalFooter = document.getElementById('graph-modal-footer');
-  const modalBody = document.getElementById('graph-modal-body');
-  const canvas = document.getElementById('graph-modal-canvas');
-  
-  // Detect theme
-  const isDark = detectTheme();
-  
-  if (isDark) {
-    // Dark mode styling - Very dark background like in screenshot
-    modalContainer.style.setProperty('background-color', '#1a1a1a', 'important');
-    modalContainer.style.setProperty('border', '1px solid #374151', 'important');
-    modalContainer.style.setProperty('border-radius', '12px', 'important');
-    modalContainer.style.setProperty('color', '#ffffff', 'important');
-    modalHeader.style.setProperty('background-color', '#1a1a1a', 'important');
-    modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
-    modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
-    modalBody.style.setProperty('background-color', '#1a1a1a', 'important');
-    modalFooter.style.setProperty('background-color', 'transparent', 'important');
-    
-    // Update canvas background for dark theme
-    if (canvas) {
-      canvas.style.setProperty('background-color', '#0f172a', 'important'); // Darker background for graph
-      canvas.style.setProperty('border-radius', '8px', 'important');
-      // Add subtle grid pattern like in screenshot
-      canvas.style.setProperty('background-image', 'radial-gradient(circle, #374151 1px, transparent 1px)', 'important');
-      canvas.style.setProperty('background-size', '20px 20px', 'important');
-    }
-    
-    // Update header text colors for dark theme
-    const title = modalHeader.querySelector('h3');
-    const subtitle = modalHeader.querySelector('p');
-    const closeBtn = modalHeader.querySelector('button');
-    if (title) title.style.setProperty('color', '#ffffff', 'important');
-    if (subtitle) subtitle.style.setProperty('color', '#9ca3af', 'important');
-    if (closeBtn) {
-      closeBtn.style.setProperty('color', '#9ca3af', 'important');
-      // Remove existing listeners before adding new ones
-      closeBtn.onmouseenter = () => closeBtn.style.setProperty('color', '#ffffff', 'important');
-      closeBtn.onmouseleave = () => closeBtn.style.setProperty('color', '#9ca3af', 'important');
-    }
-    
-    // Update empty state colors for dark theme
-    const emptyTitle = document.getElementById('empty-title');
-    const emptySubtitle = document.getElementById('empty-subtitle');
-    const emptyHint = document.getElementById('empty-hint');
-    const emptyIcon = document.querySelector('#graph-modal-empty svg');
-    if (emptyTitle) emptyTitle.style.setProperty('color', '#ffffff', 'important');
-    if (emptySubtitle) emptySubtitle.style.setProperty('color', '#9ca3af', 'important');
-    if (emptyHint) emptyHint.style.setProperty('color', '#6b7280', 'important');
-    if (emptyIcon) emptyIcon.style.setProperty('color', '#6b7280', 'important');
-    
-    // Update footer button colors for dark theme
-    const refreshBtn = document.getElementById('graph-refresh-btn');
-    const footerCloseBtn = document.getElementById('graph-close-btn');
-    if (refreshBtn) {
-      refreshBtn.style.setProperty('background-color', '#374151', 'important');
-      refreshBtn.style.setProperty('border-color', '#4b5563', 'important');
-      refreshBtn.style.setProperty('color', '#ffffff', 'important');
-    }
-    if (footerCloseBtn) {
-      footerCloseBtn.style.setProperty('background-color', '#374151', 'important');
-      footerCloseBtn.style.setProperty('border-color', '#4b5563', 'important');
-      footerCloseBtn.style.setProperty('color', '#ffffff', 'important');
-    }
-    
-    // Update empty hint container for dark theme
-    const emptyHintContainer = document.querySelector('#empty-hint .inline-flex');
-    const emptyHintIcon = document.querySelector('#empty-hint .inline-flex svg');
-    if (emptyHintContainer) {
-      emptyHintContainer.style.setProperty('background-color', '#374151', 'important');
-      emptyHintContainer.style.setProperty('border-color', '#4b5563', 'important');
-      emptyHintContainer.style.setProperty('color', '#ffffff', 'important');
-    }
-    if (emptyHintIcon) {
-      emptyHintIcon.style.setProperty('color', '#ffffff', 'important');
-    }
-    
-  } else {
-    // Light mode styling - Light background like in screenshot  
-    modalContainer.style.setProperty('background-color', '#f8f9fa', 'important');
-    modalContainer.style.setProperty('border', '1px solid #d1d5db', 'important');
-    modalContainer.style.setProperty('border-radius', '12px', 'important');
-    modalContainer.style.setProperty('color', '#000000', 'important');
-    modalHeader.style.setProperty('background-color', '#f8f9fa', 'important');
-    modalHeader.style.setProperty('border-top-left-radius', '12px', 'important');
-    modalHeader.style.setProperty('border-top-right-radius', '12px', 'important');
-    modalBody.style.setProperty('background-color', '#f8f9fa', 'important');
-    modalFooter.style.setProperty('background-color', 'transparent', 'important');
-    
-    // Update canvas background for light theme
-    if (canvas) {
-      canvas.style.setProperty('background-color', '#ffffff', 'important'); // White background for graph
-      canvas.style.setProperty('border-radius', '8px', 'important');
-      // Add subtle grid pattern like in screenshot
-      canvas.style.setProperty('background-image', 'radial-gradient(circle, #d1d5db 1px, transparent 1px)', 'important');
-      canvas.style.setProperty('background-size', '20px 20px', 'important');
-    }
-    
-    // Update header text colors for light theme
-    const title = modalHeader.querySelector('h3');
-    const subtitle = modalHeader.querySelector('p');
-    const closeBtn = modalHeader.querySelector('button');
-    if (title) title.style.setProperty('color', '#000000', 'important');
-    if (subtitle) subtitle.style.setProperty('color', '#6b7280', 'important');
-    if (closeBtn) {
-      closeBtn.style.setProperty('color', '#6b7280', 'important');
-      closeBtn.onmouseenter = () => closeBtn.style.setProperty('color', '#000000', 'important');
-      closeBtn.onmouseleave = () => closeBtn.style.setProperty('color', '#6b7280', 'important');
-    }
-    
-    // Update empty state colors for light theme
-    const emptyTitle = document.getElementById('empty-title');
-    const emptySubtitle = document.getElementById('empty-subtitle');
-    const emptyHint = document.getElementById('empty-hint');
-    const emptyIcon = document.querySelector('#graph-modal-empty svg');
-    if (emptyTitle) emptyTitle.style.setProperty('color', '#000000', 'important');
-    if (emptySubtitle) emptySubtitle.style.setProperty('color', '#6b7280', 'important');
-    if (emptyHint) emptyHint.style.setProperty('color', '#9ca3af', 'important');
-    if (emptyIcon) emptyIcon.style.setProperty('color', '#9ca3af', 'important');
-    
-    // Update footer button colors for light theme
-    const refreshBtn = document.getElementById('graph-refresh-btn');
-    const footerCloseBtn = document.getElementById('graph-close-btn');
-    if (refreshBtn) {
-      refreshBtn.style.setProperty('background-color', '#ffffff', 'important');
-      refreshBtn.style.setProperty('border-color', '#d1d5db', 'important');
-      refreshBtn.style.setProperty('color', '#000000', 'important');
-    }
-    if (footerCloseBtn) {
-      footerCloseBtn.style.setProperty('background-color', '#ffffff', 'important');
-      footerCloseBtn.style.setProperty('border-color', '#d1d5db', 'important');
-      footerCloseBtn.style.setProperty('color', '#000000', 'important');
-    }
-    
-    // Update empty hint container for light theme
-    const emptyHintContainer = document.querySelector('#empty-hint .inline-flex');
-    const emptyHintIcon = document.querySelector('#empty-hint .inline-flex svg');
-    if (emptyHintContainer) {
-      emptyHintContainer.style.setProperty('background-color', '#ffffff', 'important');
-      emptyHintContainer.style.setProperty('border-color', '#d1d5db', 'important');
-      emptyHintContainer.style.setProperty('color', '#000000', 'important');
-    }
-    if (emptyHintIcon) {
-      emptyHintIcon.style.setProperty('color', '#000000', 'important');
-    }
-  }
-}
 
 // Close graph modal when clicking outside
 document.addEventListener('click', function(event) {
@@ -1806,8 +1793,12 @@ document.addEventListener('keydown', function(event) {
 window.addEventListener('on-hs-appearance-change', function(event) {
   const modal = document.getElementById('graph-modal');
   if (modal && !modal.classList.contains('hidden')) {
-    // Re-apply theme styling when theme changes
-    applyGraphModalTheme();
+    // Close and reopen modal to apply new theme
+    const userId = window.currentGraphUserId;
+    if (userId) {
+      hideGraphModal();
+      setTimeout(() => showGraphModal(userId), 100);
+    }
   }
 });
 </script>
