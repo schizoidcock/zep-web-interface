@@ -1486,6 +1486,18 @@ window.initializeModalGraph = function(triplets) {
     .attr('width', width)
     .attr('height', height);
   
+  // Apply theme styling to SVG
+  const isDark = detectTheme();
+  if (isDark) {
+    svg.style('background-color', '#0f172a')
+       .style('background-image', 'radial-gradient(circle, #374151 1px, transparent 1px)')
+       .style('background-size', '20px 20px');
+  } else {
+    svg.style('background-color', '#ffffff')
+       .style('background-image', 'radial-gradient(circle, #d1d5db 1px, transparent 1px)')
+       .style('background-size', '20px 20px');
+  }
+  
   // Create zoom behavior
   const zoom = d3.zoom()
     .scaleExtent([0.1, 4])
@@ -1643,10 +1655,10 @@ window.applyGraphModalTheme = function() {
     
     // Update canvas background for dark theme
     if (canvas) {
-      canvas.style.setProperty('background-color', '#1a1a1a', 'important');
+      canvas.style.setProperty('background-color', '#0f172a', 'important'); // Darker background for graph
       canvas.style.setProperty('border-radius', '8px', 'important');
       // Add subtle grid pattern like in screenshot
-      canvas.style.setProperty('background-image', 'radial-gradient(circle, #333 1px, transparent 1px)', 'important');
+      canvas.style.setProperty('background-image', 'radial-gradient(circle, #374151 1px, transparent 1px)', 'important');
       canvas.style.setProperty('background-size', '20px 20px', 'important');
     }
     
@@ -1713,10 +1725,10 @@ window.applyGraphModalTheme = function() {
     
     // Update canvas background for light theme
     if (canvas) {
-      canvas.style.setProperty('background-color', '#f8f9fa', 'important');
+      canvas.style.setProperty('background-color', '#ffffff', 'important'); // White background for graph
       canvas.style.setProperty('border-radius', '8px', 'important');
       // Add subtle grid pattern like in screenshot
-      canvas.style.setProperty('background-image', 'radial-gradient(circle, #e5e7eb 1px, transparent 1px)', 'important');
+      canvas.style.setProperty('background-image', 'radial-gradient(circle, #d1d5db 1px, transparent 1px)', 'important');
       canvas.style.setProperty('background-size', '20px 20px', 'important');
     }
     
