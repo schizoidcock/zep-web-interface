@@ -177,8 +177,8 @@
         <!-- Modal Header -->
         <div class="flex items-center justify-between p-6" id="session-modal-header">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Delete Session</h3>
-          <button type="button" onclick="hideDeleteSessionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button type="button" onclick="hideDeleteSessionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
@@ -248,21 +248,32 @@ function showDeleteSessionModal() {
   
   // Add more prominent fade effect to the delete button when opening modal
   const deleteButton = document.getElementById('delete-session-button');
-  deleteButton.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-  deleteButton.style.opacity = '0.6';
-  deleteButton.style.transform = 'scale(0.95)';
-  deleteButton.style.filter = 'blur(0.5px)';
+  if (deleteButton) {
+    console.log('🎯 Applying session delete button effects');
+    deleteButton.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+    deleteButton.style.opacity = '0.4';
+    deleteButton.style.transform = 'scale(0.92)';
+    deleteButton.style.filter = 'blur(1px) brightness(0.8)';
+    deleteButton.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.3)';
+  } else {
+    console.error('❌ Session delete button not found!');
+  }
   
-  // Add modal appear animation
+  // Show modal first
   modal.classList.remove('hidden');
-  modal.style.opacity = '0';
-  modal.style.transform = 'scale(0.95)';
-  modal.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+  
+  // Get modal container (not the backdrop)
+  const modalContainer = modal.querySelector('#session-modal-container');
+  
+  // Add modal appear animation to container only
+  modalContainer.style.opacity = '0';
+  modalContainer.style.transform = 'scale(0.95)';
+  modalContainer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
   
   // Trigger appear animation
   setTimeout(() => {
-    modal.style.opacity = '1';
-    modal.style.transform = 'scale(1)';
+    modalContainer.style.opacity = '1';
+    modalContainer.style.transform = 'scale(1)';
   }, 10);
   
   // Get modal elements
@@ -498,22 +509,27 @@ function cancelSessionButtonLeaveDark() {
 
 function hideDeleteSessionModal() {
   const modal = document.getElementById('delete-session-confirmation-modal');
-  // Add fade out effect with more dramatic transition
-  modal.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-  modal.style.opacity = '0';
-  modal.style.transform = 'scale(0.95)';
+  const modalContainer = modal.querySelector('#session-modal-container');
+  
+  // Add fade out effect to container only
+  modalContainer.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+  modalContainer.style.opacity = '0';
+  modalContainer.style.transform = 'scale(0.95)';
   
   // Reset delete button with smooth transition back to normal
   const deleteButton = document.getElementById('delete-session-button');
-  deleteButton.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-  deleteButton.style.opacity = '1';
-  deleteButton.style.transform = 'scale(1)';
-  deleteButton.style.filter = 'blur(0px)';
+  if (deleteButton) {
+    deleteButton.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+    deleteButton.style.opacity = '1';
+    deleteButton.style.transform = 'scale(1)';
+    deleteButton.style.filter = 'blur(0px) brightness(1)';
+    deleteButton.style.boxShadow = 'none';
+  }
   
   setTimeout(() => {
     modal.classList.add('hidden');
-    modal.style.opacity = '1'; // Reset for next time
-    modal.style.transform = 'scale(1)'; // Reset transform
+    modalContainer.style.opacity = '1'; // Reset for next time
+    modalContainer.style.transform = 'scale(1)'; // Reset transform
   }, 400);
   
   // Reset modal state
