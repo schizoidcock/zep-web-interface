@@ -990,13 +990,13 @@ function showSuccessNotification(message) {
     notification.classList.remove('translate-x-full');
   }, 10);
   
-  // Auto-remove after 4 seconds
+  // Auto-remove after 5 seconds
   setTimeout(() => {
     notification.classList.add('translate-x-full');
     setTimeout(() => {
       notification.remove();
     }, 300);
-  }, 4000);
+  }, 5000);
 }
 
 function showErrorNotification(message) {
