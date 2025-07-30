@@ -259,13 +259,18 @@ if (!document.getElementById('user-modal-pulse-style')) {
 
 // Initialize immediately when DOM is ready, before HTMX processes
 document.addEventListener('DOMContentLoaded', function() {
-  // Wait a bit for HTMX to settle if needed
-  setTimeout(initializeSaveButton, 50);
+  // Only initialize if we're on a page with the user update form
+  if (document.getElementById('user-update-form')) {
+    setTimeout(initializeSaveButton, 50);
+  }
 });
 
 // Also initialize after HTMX loads
 document.addEventListener('htmx:load', function() {
-  initializeSaveButton();
+  // Only initialize if we're on a page with the user update form
+  if (document.getElementById('user-update-form')) {
+    initializeSaveButton();
+  }
 });
 
 function initializeSaveButton() {
@@ -278,16 +283,10 @@ function initializeSaveButton() {
   const lastNameInput = document.getElementById('last_name');
   const emailInput = document.getElementById('email');
   
-  // Verify all elements exist
+  // Verify all elements exist - if not, silently return (normal for other pages)
   if (!form || !saveButton || !buttonText || !firstNameInput || !lastNameInput || !emailInput) {
-    console.error('❌ Missing required DOM elements:', {
-      form: !!form,
-      saveButton: !!saveButton,
-      buttonText: !!buttonText,
-      firstNameInput: !!firstNameInput,
-      lastNameInput: !!lastNameInput,
-      emailInput: !!emailInput
-    });
+    // Only log in debug mode to avoid console errors on pages without user forms
+    console.debug('User form elements not found - this is normal for non-user-details pages');
     return;
   }
   
@@ -571,7 +570,7 @@ document.addEventListener('htmx:afterRequest', function(event) {
   const saveButton = document.getElementById('save-button');
   if (saveButton && event.target.id === 'user-update-form') {
     console.log('🔄 HTMX afterRequest - reinitializing button logic');
-    // Reinitialize button logic after HTMX request
+    // Reinitialize button logic after HTMX request only if form exists
     setTimeout(initializeSaveButton, 10);
   }
 });
