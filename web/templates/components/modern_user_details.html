@@ -1020,9 +1020,9 @@ window.createAndShowNotification = function(notificationData) {
   // Get theme detection
   const isDark = detectTheme();
   
-  // Base styling with ultra-high z-index to ensure visibility
-  notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 transform translate-x-full transition-all duration-300 ease-out min-w-80 max-w-96`;
-  notification.style.cssText = 'z-index: 999999; pointer-events: auto; position: fixed !important;';
+  // Base styling with ultra-high z-index to ensure visibility and entrance effect
+  notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 transform translate-x-full scale-75 opacity-0 transition-all duration-500 ease-out min-w-80 max-w-96 hover:scale-105`;
+  notification.style.cssText = 'z-index: 999999; pointer-events: auto; position: fixed !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 20px rgba(59, 130, 246, 0.15);';
   
   // Determine colors based on notification type
   const isSuccess = notificationData.type === 'success';
@@ -1040,19 +1040,28 @@ window.createAndShowNotification = function(notificationData) {
   }
   
   notification.innerHTML = `
-    <div class="flex items-start space-x-3">
+    <div class="flex items-center space-x-3">
       <div class="flex-shrink-0">
-        <div class="w-6 h-6 rounded-full ${iconColor} flex items-center justify-center">
-          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-6 h-6 rounded-full ${iconColor} flex items-center justify-center animate-pulse">
+          <svg class="w-4 h-4 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${iconPath}"></path>
           </svg>
         </div>
       </div>
       <div class="flex-1 min-w-0">
-        <div class="text-sm font-semibold">${isSuccess ? 'Success' : 'Error'}</div>
-        <div class="text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1">${notificationData.message}</div>
+        <div class="text-sm font-semibold">${isSuccess ? '✅ Success' : '❌ Error'} - ${notificationData.message}</div>
       </div>
-      <button onclick="this.parentElement.parentElement.remove(); sessionStorage.removeItem('zep_pending_notification');" class="flex-shrink-0 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'} transition-colors">
+      <button onclick="
+        const notification = this.parentElement.parentElement;
+        notification.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        notification.style.transform = 'translateX(100%) scale(0.8) rotate(5deg)';
+        notification.style.opacity = '0';
+        notification.style.filter = 'blur(2px)';
+        setTimeout(() => {
+          notification.remove();
+          sessionStorage.removeItem('zep_pending_notification');
+        }, 600);
+      " class="flex-shrink-0 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'} transition-all duration-200 hover:scale-110 hover:rotate-90">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
@@ -1068,21 +1077,36 @@ window.createAndShowNotification = function(notificationData) {
   // Force style recalculation to ensure proper positioning
   notification.offsetHeight;
   
-  // Trigger slide-in animation
+  // Dramatic entrance animation with bounce effect
   setTimeout(() => {
-    notification.classList.remove('translate-x-full');
-  }, 10);
+    notification.classList.remove('translate-x-full', 'scale-75', 'opacity-0');
+    notification.classList.add('translate-x-0', 'scale-100', 'opacity-100');
+    
+    // Add a subtle bounce effect after slide-in
+    setTimeout(() => {
+      notification.style.transform = 'translateX(0) scale(1.05)';
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0) scale(1)';
+      }, 150);
+    }, 300);
+  }, 50);
   
-  // Auto-remove after specified duration
+  // Auto-remove after specified duration with dramatic exit animation
   const autoRemoveTimeout = setTimeout(() => {
     console.log(`🔔 Ultra-persistent ${notificationData.type} notification auto-removing now`);
-    notification.classList.add('translate-x-full');
+    
+    // Dramatic exit animation: fade out, scale down, and slide away
+    notification.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+    notification.style.transform = 'translateX(100%) scale(0.8) rotate(5deg)';
+    notification.style.opacity = '0';
+    notification.style.filter = 'blur(2px)';
+    
     setTimeout(() => {
       if (notification.parentNode) {
         notification.remove();
         sessionStorage.removeItem('zep_pending_notification');
       }
-    }, 300);
+    }, 600);
   }, notificationData.duration);
   
   // Store timeout ID for potential cancellation
