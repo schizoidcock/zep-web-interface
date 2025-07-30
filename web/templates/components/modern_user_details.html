@@ -1656,8 +1656,9 @@ window.applyGraphModalTheme = function() {
     if (subtitle) subtitle.style.setProperty('color', '#9ca3af', 'important');
     if (closeBtn) {
       closeBtn.style.setProperty('color', '#9ca3af', 'important');
-      closeBtn.addEventListener('mouseenter', () => closeBtn.style.setProperty('color', '#ffffff', 'important'));
-      closeBtn.addEventListener('mouseleave', () => closeBtn.style.setProperty('color', '#9ca3af', 'important'));
+      // Remove existing listeners before adding new ones
+      closeBtn.onmouseenter = () => closeBtn.style.setProperty('color', '#ffffff', 'important');
+      closeBtn.onmouseleave = () => closeBtn.style.setProperty('color', '#9ca3af', 'important');
     }
     
     // Update empty state colors for dark theme
@@ -1675,13 +1676,13 @@ window.applyGraphModalTheme = function() {
     const footerCloseBtn = modalFooter.querySelector('button[onclick="hideGraphModal()"]');
     if (refreshBtn) {
       refreshBtn.style.setProperty('color', '#9ca3af', 'important');
-      refreshBtn.addEventListener('mouseenter', () => refreshBtn.style.setProperty('color', '#ffffff', 'important'));
-      refreshBtn.addEventListener('mouseleave', () => refreshBtn.style.setProperty('color', '#9ca3af', 'important'));
+      refreshBtn.onmouseenter = () => refreshBtn.style.setProperty('color', '#ffffff', 'important');
+      refreshBtn.onmouseleave = () => refreshBtn.style.setProperty('color', '#9ca3af', 'important');
     }
     if (footerCloseBtn) {
       footerCloseBtn.style.setProperty('color', '#9ca3af', 'important');
-      footerCloseBtn.addEventListener('mouseenter', () => footerCloseBtn.style.setProperty('color', '#ffffff', 'important'));
-      footerCloseBtn.addEventListener('mouseleave', () => footerCloseBtn.style.setProperty('color', '#9ca3af', 'important'));
+      footerCloseBtn.onmouseenter = () => footerCloseBtn.style.setProperty('color', '#ffffff', 'important');
+      footerCloseBtn.onmouseleave = () => footerCloseBtn.style.setProperty('color', '#9ca3af', 'important');
     }
     
   } else {
@@ -1713,8 +1714,8 @@ window.applyGraphModalTheme = function() {
     if (subtitle) subtitle.style.setProperty('color', '#6b7280', 'important');
     if (closeBtn) {
       closeBtn.style.setProperty('color', '#6b7280', 'important');
-      closeBtn.addEventListener('mouseenter', () => closeBtn.style.setProperty('color', '#000000', 'important'));
-      closeBtn.addEventListener('mouseleave', () => closeBtn.style.setProperty('color', '#6b7280', 'important'));
+      closeBtn.onmouseenter = () => closeBtn.style.setProperty('color', '#000000', 'important');
+      closeBtn.onmouseleave = () => closeBtn.style.setProperty('color', '#6b7280', 'important');
     }
     
     // Update empty state colors for light theme
@@ -1732,13 +1733,13 @@ window.applyGraphModalTheme = function() {
     const footerCloseBtn = modalFooter.querySelector('button[onclick="hideGraphModal()"]');
     if (refreshBtn) {
       refreshBtn.style.setProperty('color', '#6b7280', 'important');
-      refreshBtn.addEventListener('mouseenter', () => refreshBtn.style.setProperty('color', '#000000', 'important'));
-      refreshBtn.addEventListener('mouseleave', () => refreshBtn.style.setProperty('color', '#6b7280', 'important'));
+      refreshBtn.onmouseenter = () => refreshBtn.style.setProperty('color', '#000000', 'important');
+      refreshBtn.onmouseleave = () => refreshBtn.style.setProperty('color', '#6b7280', 'important');
     }
     if (footerCloseBtn) {
       footerCloseBtn.style.setProperty('color', '#6b7280', 'important');
-      footerCloseBtn.addEventListener('mouseenter', () => footerCloseBtn.style.setProperty('color', '#000000', 'important'));
-      footerCloseBtn.addEventListener('mouseleave', () => footerCloseBtn.style.setProperty('color', '#6b7280', 'important'));
+      footerCloseBtn.onmouseenter = () => footerCloseBtn.style.setProperty('color', '#000000', 'important');
+      footerCloseBtn.onmouseleave = () => footerCloseBtn.style.setProperty('color', '#6b7280', 'important');
     }
   }
 }
@@ -1760,6 +1761,15 @@ document.addEventListener('keydown', function(event) {
     if (modal && !modal.classList.contains('hidden')) {
       hideGraphModal();
     }
+  }
+});
+
+// Listen for theme changes and update graph modal if it's open
+window.addEventListener('on-hs-appearance-change', function(event) {
+  const modal = document.getElementById('graph-modal');
+  if (modal && !modal.classList.contains('hidden')) {
+    // Re-apply theme styling when theme changes
+    applyGraphModalTheme();
   }
 });
 </script>
