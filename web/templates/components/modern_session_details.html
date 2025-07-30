@@ -66,12 +66,6 @@
             <span class="text-muted-foreground">-</span>
           {{end}}
         </div>
-      </div>
-      
-      <div>
-        <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Created</label>
-        <p class="mt-2 text-sm text-muted-foreground">
-          {{ .Data.Session.CreatedAt.Format "Jan 2, 2006 3:04 PM" }}
         </p>
       </div>
     </div>
@@ -166,12 +160,6 @@
                 class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs" 
                 type="button"
                 onclick="showDeleteSessionModal()">
-          <span class="htmx-indicator hidden">
-            <svg class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </span>
           <span id="delete-session-button-text">Delete Session</span>
         </button>
       </div>
@@ -222,19 +210,13 @@
         <div class="flex items-center justify-end p-6" id="session-modal-footer" style="gap: 10px;">
           <button type="button" 
                   onclick="hideDeleteSessionModal()"
-                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-3 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-3 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground w-20">
             Cancel
           </button>
           <button type="button" 
                   id="confirm-delete-session-button"
                   onclick="confirmDeleteSession()"
-                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs">
-            <span class="htmx-indicator hidden">
-              <svg class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            </span>
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-3 text-xs w-32">
             <span id="confirm-delete-session-text">Yes, Delete Session</span>
           </button>
         </div>
@@ -247,6 +229,12 @@
 // Session Delete Modal Functions
 function showDeleteSessionModal() {
   const modal = document.getElementById('delete-session-confirmation-modal');
+  
+  // Add fade effect to the delete button when opening modal
+  const deleteButton = document.getElementById('delete-session-button');
+  deleteButton.style.transition = 'opacity 0.3s ease-out';
+  deleteButton.style.opacity = '0.7';
+  
   modal.classList.remove('hidden');
   
   // Get modal elements
@@ -462,35 +450,43 @@ function cancelSessionButtonLeaveDark() {
 
 function hideDeleteSessionModal() {
   const modal = document.getElementById('delete-session-confirmation-modal');
-  modal.classList.add('hidden');
+  // Add fade out effect
+  modal.style.transition = 'opacity 0.3s ease-out';
+  modal.style.opacity = '0';
+  
+  // Reset delete button opacity when modal closes
+  const deleteButton = document.getElementById('delete-session-button');
+  deleteButton.style.opacity = '1';
+  
+  setTimeout(() => {
+    modal.classList.add('hidden');
+    modal.style.opacity = '1'; // Reset for next time
+  }, 300);
   
   // Reset modal state
   const confirmButton = document.getElementById('confirm-delete-session-button');
   const confirmText = document.getElementById('confirm-delete-session-text');
-  const confirmSpinner = confirmButton.querySelector('.htmx-indicator');
   
   confirmButton.disabled = false;
   confirmText.textContent = 'Yes, Delete Session';
-  confirmSpinner.classList.add('hidden');
 }
 
 function confirmDeleteSession() {
   const confirmButton = document.getElementById('confirm-delete-session-button');
   const confirmText = document.getElementById('confirm-delete-session-text');
-  const confirmSpinner = confirmButton.querySelector('.htmx-indicator');
   const deleteButton = document.getElementById('delete-session-button');
   const deleteButtonText = document.getElementById('delete-session-button-text');
-  const deleteButtonSpinner = deleteButton.querySelector('.htmx-indicator');
   
-  // Show loading state in modal
-  confirmButton.disabled = true;
-  confirmText.textContent = 'Deleting...';
-  confirmSpinner.classList.remove('hidden');
+  // Immediately close modal with fade effect
+  hideDeleteSessionModal();
   
-  // Show loading state in main button
+  // Add fade effect to main delete button
+  deleteButton.style.transition = 'opacity 0.3s ease-out';
+  deleteButton.style.opacity = '0.5';
   deleteButton.disabled = true;
+  
+  // Show loading state in main button only (no spinner, just text)
   deleteButtonText.textContent = 'Deleting...';
-  deleteButtonSpinner.classList.remove('hidden');
   
   // Create and configure HTMX request
   const xhr = new XMLHttpRequest();
@@ -498,42 +494,210 @@ function confirmDeleteSession() {
   xhr.setRequestHeader('HX-Request', 'true');
   xhr.setRequestHeader('HX-Target', '#page-content');
   
-  xhr.onload = function() {
-    if (xhr.status >= 200 && xhr.status < 300) {
-      // Success - update page content and redirect
-      document.getElementById('page-content').innerHTML = xhr.responseText;
-      
-      // Auto-redirect to sessions list after successful deletion
-      setTimeout(() => {
-        window.location.href = '{{ adminPath "/sessions/" }}';
-      }, 100);
-    } else {
-      // Error handling
-      hideDeleteSessionModal();
-      
-      // Reset button states
-      deleteButton.disabled = false;
-      deleteButtonText.textContent = 'Delete Session';
-      deleteButtonSpinner.classList.add('hidden');
-      
-      // Show error notification (you can customize this)
-      alert('Failed to delete session. Please try again.');
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status === 200) {
+        // Success - show bottom-right notification
+        showSuccessNotification('Session deleted successfully');
+        
+        // Reset button state and redirect
+        deleteButton.style.opacity = '1';
+        deleteButton.disabled = false;
+        deleteButtonText.textContent = 'Delete Session';
+        
+        // Redirect to sessions list after short delay
+        setTimeout(() => {
+          window.location.href = '{{ adminPath "/sessions" }}';
+        }, 1000);
+        
+      } else {
+        // Error - reset states and show error
+        deleteButton.style.opacity = '1';
+        deleteButton.disabled = false;
+        deleteButtonText.textContent = 'Delete Session';
+        
+        // Show error notification
+        showErrorNotification('Failed to delete session. Please try again.');
+      }
     }
   };
   
   xhr.onerror = function() {
-    // Network error
-    hideDeleteSessionModal();
-    
-    // Reset button states
+    // Network error - reset states and show error
+    deleteButton.style.opacity = '1';
     deleteButton.disabled = false;
     deleteButtonText.textContent = 'Delete Session';
-    deleteButtonSpinner.classList.add('hidden');
     
-    alert('Network error. Please check your connection and try again.');
+    // Show error notification
+    showErrorNotification('Network error. Please check your connection and try again.');
   };
   
   xhr.send();
+}
+
+// Close modal when clicking outside of it
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('delete-session-confirmation-modal');
+  const modalContent = modal.querySelector('.relative');
+  
+  if (event.target === modal && !modalContent.contains(event.target)) {
+    hideDeleteSessionModal();
+  }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    const modal = document.getElementById('delete-session-confirmation-modal');
+    if (!modal.classList.contains('hidden')) {
+      hideDeleteSessionModal();
+    }
+  }
+});
+
+// Notification system for bottom-right professional notifications
+function showSuccessNotification(message) {
+  const notification = document.createElement('div');
+  
+  // Get theme detection
+  const isDark = detectTheme();
+  
+  // Base styling with professional box design
+  notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 z-50 transform translate-x-full transition-all duration-300 ease-out min-w-80 max-w-96`;
+  
+  // Apply theme-specific styling
+  if (isDark) {
+    notification.classList.add('bg-gray-900', 'border-green-500', 'text-white');
+  } else {
+    notification.classList.add('bg-white', 'border-green-500', 'text-gray-900');
+  }
+  
+  notification.innerHTML = `
+    <div class="flex items-start space-x-3">
+      <div class="flex-shrink-0">
+        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold">Success</div>
+        <div class="text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1">${message}</div>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'} transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Trigger slide-in animation
+  setTimeout(() => {
+    notification.classList.remove('translate-x-full');
+  }, 10);
+  
+  // Auto-remove after 4 seconds
+  setTimeout(() => {
+    notification.classList.add('translate-x-full');
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 4000);
+}
+
+function showErrorNotification(message) {
+  const notification = document.createElement('div');
+  
+  // Get theme detection
+  const isDark = detectTheme();
+  
+  // Base styling with professional box design
+  notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 z-50 transform translate-x-full transition-all duration-300 ease-out min-w-80 max-w-96`;
+  
+  // Apply theme-specific styling
+  if (isDark) {
+    notification.classList.add('bg-gray-900', 'border-red-500', 'text-white');
+  } else {
+    notification.classList.add('bg-white', 'border-red-500', 'text-gray-900');
+  }
+  
+  notification.innerHTML = `
+    <div class="flex items-start space-x-3">
+      <div class="flex-shrink-0">
+        <div class="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </div>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold">Error</div>
+        <div class="text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1">${message}</div>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'} transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Trigger slide-in animation
+  setTimeout(() => {
+    notification.classList.remove('translate-x-full');
+  }, 10);
+  
+  // Auto-remove after 6 seconds (longer for error messages)
+  setTimeout(() => {
+    notification.classList.add('translate-x-full');
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 6000);
+}
+
+// Theme detection function for notifications
+function detectTheme() {
+  const htmlElement = document.documentElement;
+  const bodyElement = document.body;
+  
+  // Check for dark mode indicators
+  const hasDarkClass = htmlElement.classList.contains('dark') || bodyElement.classList.contains('dark');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
+  // Check actual computed styles of the page to detect current theme
+  const bodyBgColor = window.getComputedStyle(bodyElement).backgroundColor;
+  const htmlBgColor = window.getComputedStyle(htmlElement).backgroundColor;
+  
+  // Parse RGB values to determine if background is dark
+  const isDarkBackground = (color) => {
+    if (!color || color === 'transparent') return false;
+    const rgb = color.match(/\d+/g);
+    if (!rgb) return false;
+    const [r, g, b] = rgb.map(Number);
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5; // Dark if luminance is less than 50%
+  };
+  
+  // Determine if we're in dark mode with multiple checks
+  const bodyIsDark = isDarkBackground(bodyBgColor);
+  const htmlIsDark = isDarkBackground(htmlBgColor);
+  
+  // Enhanced logic: prioritize actual background color detection
+  if (bodyIsDark || htmlIsDark) {
+    return true; // Dark mode detected
+  } else if (hasDarkClass) {
+    return true; // Dark class detected
+  } else {
+    return false; // Default to light mode
+  }
 }
 </script>
 {{ end }}

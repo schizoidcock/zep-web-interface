@@ -481,7 +481,25 @@ function initializeSaveButton() {
       initialValues.email = emailInput.value.trim();
       
       console.log('Updated initial values after save:', initialValues);
+      
+      // Show success notification for successful save
+      showSuccessNotification('User changes saved successfully');
+    } else {
+      // Show error notification for failed save
+      const errorMessage = event.detail.xhr.responseText || 'Failed to save changes. Please try again.';
+      showErrorNotification(errorMessage);
     }
+    
+    updateButtonState();
+  });
+  
+  // Handle HTMX errors
+  form.addEventListener('htmx:responseError', function(event) {
+    loadingSpinner.classList.add('hidden');
+    buttonText.textContent = 'Save Changes';
+    
+    // Show error notification for network/server errors
+    showErrorNotification('Network error. Please check your connection and try again.');
     
     updateButtonState();
   });
@@ -511,6 +529,12 @@ document.addEventListener('htmx:afterRequest', function(event) {
 // Delete Modal Functions
 function showDeleteModal() {
   const modal = document.getElementById('delete-confirmation-modal');
+  
+  // Add fade effect to the delete button when opening modal
+  const deleteButton = document.getElementById('delete-user-button');
+  deleteButton.style.transition = 'opacity 0.3s ease-out';
+  deleteButton.style.opacity = '0.7';
+  
   modal.classList.remove('hidden');
   
   // Get modal elements
@@ -729,6 +753,10 @@ function hideDeleteModal() {
   // Add fade out effect
   modal.style.transition = 'opacity 0.3s ease-out';
   modal.style.opacity = '0';
+  
+  // Reset delete button opacity when modal closes
+  const deleteButton = document.getElementById('delete-user-button');
+  deleteButton.style.opacity = '1';
   
   setTimeout(() => {
     modal.classList.add('hidden');
