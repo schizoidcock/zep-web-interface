@@ -210,13 +210,13 @@
         <div class="flex items-center justify-end p-6" id="session-modal-footer" style="gap: 10px;">
           <button type="button" 
                   onclick="hideDeleteSessionModal()"
-                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-4 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground min-w-[80px]">
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" style="width: 90px; padding: 0 12px;">
             Cancel
           </button>
           <button type="button" 
                   id="confirm-delete-session-button"
                   onclick="confirmDeleteSession()"
-                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-4 text-xs min-w-[140px]">
+                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md text-xs" style="width: 150px; padding: 0 12px;">
             <span id="confirm-delete-session-text">Yes, Delete Session</span>
           </button>
         </div>
@@ -226,6 +226,22 @@
 </div>
 
 <script>
+// Add CSS animations for pulse effect
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(0.92);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(0.94);
+    }
+  }
+`;
+document.head.appendChild(style);
+
 // Session Delete Modal Functions
 function showDeleteSessionModal() {
   const modal = document.getElementById('delete-session-confirmation-modal');
@@ -337,12 +353,20 @@ function showDeleteSessionModal() {
       cancelButton.style.setProperty('color', '#ffffff', 'important');
       cancelButton.style.setProperty('border', '1px solid #4b5563', 'important');
       cancelButton.style.setProperty('border-radius', '6px', 'important');
-      cancelButton.style.setProperty('padding', '8px 12px', 'important');
+      cancelButton.style.setProperty('width', '90px', 'important');
+      cancelButton.style.setProperty('padding', '0 12px', 'important');
       
       cancelButton.removeEventListener('mouseenter', cancelSessionButtonHoverDark);
       cancelButton.removeEventListener('mouseleave', cancelSessionButtonLeaveDark);
       cancelButton.addEventListener('mouseenter', cancelSessionButtonHoverDark);
       cancelButton.addEventListener('mouseleave', cancelSessionButtonLeaveDark);
+    }
+    
+    // Style delete button for dark mode consistency
+    const deleteButton = modal.querySelector('#confirm-delete-session-button');
+    if (deleteButton) {
+      deleteButton.style.setProperty('width', '150px', 'important');
+      deleteButton.style.setProperty('padding', '0 12px', 'important');
     }
     
     // Style warning box for dark mode
@@ -393,12 +417,20 @@ function showDeleteSessionModal() {
       cancelButton.style.setProperty('color', '#000000', 'important');
       cancelButton.style.setProperty('border', '1px solid #d1d5db', 'important');
       cancelButton.style.setProperty('border-radius', '6px', 'important');
-      cancelButton.style.setProperty('padding', '8px 12px', 'important');
+      cancelButton.style.setProperty('width', '90px', 'important');
+      cancelButton.style.setProperty('padding', '0 12px', 'important');
       
       cancelButton.removeEventListener('mouseenter', cancelSessionButtonHover);
       cancelButton.removeEventListener('mouseleave', cancelSessionButtonLeave);
       cancelButton.addEventListener('mouseenter', cancelSessionButtonHover);
       cancelButton.addEventListener('mouseleave', cancelSessionButtonLeave);
+    }
+    
+    // Style delete button for light mode consistency
+    const deleteButton = modal.querySelector('#confirm-delete-session-button');
+    if (deleteButton) {
+      deleteButton.style.setProperty('width', '150px', 'important');
+      deleteButton.style.setProperty('padding', '0 12px', 'important');
     }
     
     // Style warning box for light mode

@@ -214,13 +214,13 @@
           <div class="flex items-center justify-end p-6" id="modal-footer" style="gap: 10px;">
             <button type="button" 
                     onclick="hideDeleteModal()"
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md px-4 text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground min-w-[80px]">
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 rounded-md text-xs border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" style="width: 90px; padding: 0 12px;">
               Cancel
             </button>
             <button type="button" 
                     id="confirm-delete-button"
                     onclick="confirmDelete()"
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md px-4 text-xs min-w-[120px]">
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-8 rounded-md text-xs" style="width: 130px; padding: 0 12px;">
               <span id="confirm-delete-text">Yes, Delete User</span>
             </button>
           </div>
@@ -231,6 +231,22 @@
 </div>
 
 <script>
+// Add CSS animations for pulse effect
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(0.92);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(0.94);
+    }
+  }
+`;
+document.head.appendChild(style);
+
 // Initialize immediately when DOM is ready, before HTMX processes
 document.addEventListener('DOMContentLoaded', function() {
   // Wait a bit for HTMX to settle if needed
@@ -637,12 +653,20 @@ function showDeleteModal() {
       cancelButton.style.setProperty('color', '#ffffff', 'important');
       cancelButton.style.setProperty('border', '1px solid #4b5563', 'important');
       cancelButton.style.setProperty('border-radius', '6px', 'important');
-      cancelButton.style.setProperty('padding', '8px 12px', 'important');
+      cancelButton.style.setProperty('width', '90px', 'important');
+      cancelButton.style.setProperty('padding', '0 12px', 'important');
       
       cancelButton.removeEventListener('mouseenter', cancelButtonHoverDark);
       cancelButton.removeEventListener('mouseleave', cancelButtonLeaveDark);
       cancelButton.addEventListener('mouseenter', cancelButtonHoverDark);
       cancelButton.addEventListener('mouseleave', cancelButtonLeaveDark);
+    }
+    
+    // Style delete button for dark mode consistency
+    const deleteButton = modal.querySelector('#confirm-delete-button');
+    if (deleteButton) {
+      deleteButton.style.setProperty('width', '130px', 'important');
+      deleteButton.style.setProperty('padding', '0 12px', 'important');
     }
     
     // Style warning box for dark mode
@@ -693,12 +717,20 @@ function showDeleteModal() {
       cancelButton.style.setProperty('color', '#000000', 'important');
       cancelButton.style.setProperty('border', '1px solid #d1d5db', 'important');
       cancelButton.style.setProperty('border-radius', '6px', 'important');
-      cancelButton.style.setProperty('padding', '8px 12px', 'important');
+      cancelButton.style.setProperty('width', '90px', 'important');
+      cancelButton.style.setProperty('padding', '0 12px', 'important');
       
       cancelButton.removeEventListener('mouseenter', cancelButtonHover);
       cancelButton.removeEventListener('mouseleave', cancelButtonLeave);
       cancelButton.addEventListener('mouseenter', cancelButtonHover);
       cancelButton.addEventListener('mouseleave', cancelButtonLeave);
+    }
+    
+    // Style delete button for light mode consistency
+    const deleteButton = modal.querySelector('#confirm-delete-button');
+    if (deleteButton) {
+      deleteButton.style.setProperty('width', '130px', 'important');
+      deleteButton.style.setProperty('padding', '0 12px', 'important');
     }
     
     // Style warning box for light mode
