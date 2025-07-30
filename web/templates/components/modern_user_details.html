@@ -969,121 +969,90 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
-// Persistent notification system that survives HTMX content replacement
+// Ultra-persistent notification system that survives ANY page changes
 window.showSuccessNotificationPersistent = function(message) {
-  console.log('🔔 Creating persistent success notification for:', message);
+  console.log('🔔 Creating ultra-persistent success notification for:', message);
   
-  // Create notification container outside of HTMX target areas
-  let notificationContainer = document.getElementById('persistent-notifications');
-  if (!notificationContainer) {
-    notificationContainer = document.createElement('div');
-    notificationContainer.id = 'persistent-notifications';
-    notificationContainer.style.cssText = 'position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;';
-    document.body.appendChild(notificationContainer);
-  }
+  // Store notification in sessionStorage to survive ANY DOM changes
+  const notificationData = {
+    type: 'success',
+    message: message,
+    timestamp: Date.now(),
+    duration: 7000
+  };
   
-  const notification = document.createElement('div');
+  sessionStorage.setItem('zep_pending_notification', JSON.stringify(notificationData));
+  console.log('💾 Stored notification in sessionStorage:', notificationData);
   
-  // Get theme detection
-  const isDark = detectTheme();
-  
-  // Base styling with professional box design - position bottom-right with pointer events
-  notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 transform translate-x-full transition-all duration-300 ease-out min-w-80 max-w-96`;
-  notification.style.cssText = 'z-index: 10000; pointer-events: auto;';
-  
-  // Apply theme-specific styling
-  if (isDark) {
-    notification.classList.add('bg-gray-900', 'border-green-500', 'text-white');
-  } else {
-    notification.classList.add('bg-white', 'border-green-500', 'text-gray-900');
-  }
-  
-  notification.innerHTML = `
-    <div class="flex items-start space-x-3">
-      <div class="flex-shrink-0">
-        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-        </div>
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="text-sm font-semibold">Success</div>
-        <div class="text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1">${message}</div>
-      </div>
-      <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'} transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-  `;
-  
-  console.log('🔔 Persistent success notification created, will auto-remove in 7 seconds');
-  notificationContainer.appendChild(notification);
-  
-  // Trigger slide-in animation
-  setTimeout(() => {
-    notification.classList.remove('translate-x-full');
-  }, 10);
-  
-  // Auto-remove after 7 seconds (longer for better visibility)
-  const autoRemoveTimeout = setTimeout(() => {
-    console.log('🔔 Persistent success notification auto-removing now');
-    notification.classList.add('translate-x-full');
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.remove();
-      }
-    }, 300);
-  }, 7000);
-  
-  // Store timeout ID for potential cancellation
-  notification.autoRemoveTimeout = autoRemoveTimeout;
+  // Show notification immediately
+  createAndShowNotification(notificationData);
 }
 
 window.showErrorNotificationPersistent = function(message) {
-  console.log('🔔 Creating persistent error notification for:', message);
+  console.log('🔔 Creating ultra-persistent error notification for:', message);
   
-  // Create notification container outside of HTMX target areas
-  let notificationContainer = document.getElementById('persistent-notifications');
-  if (!notificationContainer) {
-    notificationContainer = document.createElement('div');
-    notificationContainer.id = 'persistent-notifications';
-    notificationContainer.style.cssText = 'position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;';
-    document.body.appendChild(notificationContainer);
-  }
+  // Store notification in sessionStorage to survive ANY DOM changes
+  const notificationData = {
+    type: 'error',
+    message: message,
+    timestamp: Date.now(),
+    duration: 8000
+  };
+  
+  sessionStorage.setItem('zep_pending_notification', JSON.stringify(notificationData));
+  console.log('💾 Stored error notification in sessionStorage:', notificationData);
+  
+  // Show notification immediately
+  createAndShowNotification(notificationData);
+}
+
+// Core notification creation function
+window.createAndShowNotification = function(notificationData) {
+  console.log('🎨 Creating visual notification:', notificationData);
+  
+  // Remove any existing notifications first
+  const existingNotifications = document.querySelectorAll('[data-zep-notification]');
+  existingNotifications.forEach(n => n.remove());
   
   const notification = document.createElement('div');
+  notification.setAttribute('data-zep-notification', 'true');
   
   // Get theme detection
   const isDark = detectTheme();
   
-  // Base styling with professional box design - position bottom-right with pointer events
+  // Base styling with ultra-high z-index to ensure visibility
   notification.className = `fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-xl border-2 transform translate-x-full transition-all duration-300 ease-out min-w-80 max-w-96`;
-  notification.style.cssText = 'z-index: 10000; pointer-events: auto;';
+  notification.style.cssText = 'z-index: 999999; pointer-events: auto; position: fixed !important;';
+  
+  // Determine colors based on notification type
+  const isSuccess = notificationData.type === 'success';
+  const borderColor = isSuccess ? 'border-green-500' : 'border-red-500';
+  const iconColor = isSuccess ? 'bg-green-500' : 'bg-red-500';
+  const iconPath = isSuccess 
+    ? 'M5 13l4 4L19 7' 
+    : 'M6 18L18 6M6 6l12 12';
   
   // Apply theme-specific styling
   if (isDark) {
-    notification.classList.add('bg-gray-900', 'border-red-500', 'text-white');
+    notification.classList.add('bg-gray-900', borderColor, 'text-white');
   } else {
-    notification.classList.add('bg-white', 'border-red-500', 'text-gray-900');
+    notification.classList.add('bg-white', borderColor, 'text-gray-900');
   }
   
   notification.innerHTML = `
     <div class="flex items-start space-x-3">
       <div class="flex-shrink-0">
-        <div class="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+        <div class="w-6 h-6 rounded-full ${iconColor} flex items-center justify-center">
           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${iconPath}"></path>
           </svg>
         </div>
       </div>
       <div class="flex-1 min-w-0">
-        <div class="text-sm font-semibold">Error</div>
-        <div class="text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1">${message}</div>
+        <div class="text-sm font-semibold">${isSuccess ? 'Success' : 'Error'}</div>
+        <div class="text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1">${notificationData.message}</div>
       </div>
-      <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'} transition-colors">
+      <button onclick="this.parentElement.parentElement.remove(); sessionStorage.removeItem('zep_pending_notification');" class="flex-shrink-0 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'} transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
@@ -1091,24 +1060,30 @@ window.showErrorNotificationPersistent = function(message) {
     </div>
   `;
   
-  console.log('🔔 Persistent error notification created, will auto-remove in 8 seconds');
-  notificationContainer.appendChild(notification);
+  console.log(`🔔 Ultra-persistent ${notificationData.type} notification created, will auto-remove in ${notificationData.duration}ms`);
+  
+  // Append directly to document.body with highest priority
+  document.body.appendChild(notification);
+  
+  // Force style recalculation to ensure proper positioning
+  notification.offsetHeight;
   
   // Trigger slide-in animation
   setTimeout(() => {
     notification.classList.remove('translate-x-full');
   }, 10);
   
-  // Auto-remove after 8 seconds (longer for error messages)
+  // Auto-remove after specified duration
   const autoRemoveTimeout = setTimeout(() => {
-    console.log('🔔 Persistent error notification auto-removing now');
+    console.log(`🔔 Ultra-persistent ${notificationData.type} notification auto-removing now`);
     notification.classList.add('translate-x-full');
     setTimeout(() => {
       if (notification.parentNode) {
         notification.remove();
+        sessionStorage.removeItem('zep_pending_notification');
       }
     }, 300);
-  }, 8000);
+  }, notificationData.duration);
   
   // Store timeout ID for potential cancellation
   notification.autoRemoveTimeout = autoRemoveTimeout;
@@ -1123,22 +1098,42 @@ window.showErrorNotification = function(message) {
   return showErrorNotificationPersistent(message);
 }
 
-// HTMX event handler to restore notifications after content replacement
-document.addEventListener('htmx:afterSettle', function(event) {
-  // Check if we have a pending notification to restore
-  if (window.pendingNotification && (Date.now() - window.pendingNotification.timestamp) < 8000) {
-    console.log('🔄 HTMX afterSettle - restoring pending notification:', window.pendingNotification);
-    
-    if (window.pendingNotification.type === 'success') {
-      showSuccessNotificationPersistent(window.pendingNotification.message);
-    } else if (window.pendingNotification.type === 'error') {
-      showErrorNotificationPersistent(window.pendingNotification.message);
-    }
-    
-    // Clear the pending notification
-    window.pendingNotification = null;
-  }
+// HTMX and page load handler to restore notifications from sessionStorage
+document.addEventListener('DOMContentLoaded', function() {
+  checkAndRestoreNotification();
 });
+
+document.addEventListener('htmx:afterSettle', function(event) {
+  checkAndRestoreNotification();
+});
+
+// Function to check sessionStorage and restore notifications
+window.checkAndRestoreNotification = function() {
+  const storedNotification = sessionStorage.getItem('zep_pending_notification');
+  if (storedNotification) {
+    try {
+      const notificationData = JSON.parse(storedNotification);
+      const elapsed = Date.now() - notificationData.timestamp;
+      
+      // Only restore if notification hasn't expired
+      if (elapsed < notificationData.duration) {
+        console.log('🔄 Restoring notification from sessionStorage:', notificationData);
+        console.log(`⏱️ Time elapsed: ${elapsed}ms, Duration: ${notificationData.duration}ms`);
+        
+        // Update the duration to remaining time
+        notificationData.duration = notificationData.duration - elapsed;
+        
+        createAndShowNotification(notificationData);
+      } else {
+        console.log('⏰ Stored notification has expired, removing from sessionStorage');
+        sessionStorage.removeItem('zep_pending_notification');
+      }
+    } catch (e) {
+      console.error('❌ Error parsing stored notification:', e);
+      sessionStorage.removeItem('zep_pending_notification');
+    }
+  }
+}
 
 // Theme detection function for notifications
 window.detectTheme = function() {
