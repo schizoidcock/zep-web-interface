@@ -224,22 +224,65 @@ func (c *Client) GetSessions() ([]Session, error) {
 	var paginatedResp struct {
 		Sessions []Session `json:"sessions"`
 		Total    int       `json:"total_count"`
+		TotalCount int     `json:"total_count"`
+		RowCount   int     `json:"row_count"`
 	}
 	
 	if err := json.Unmarshal(body, &paginatedResp); err == nil {
-		log.Printf("✅ Parsed %d sessions from paginated response", len(paginatedResp.Sessions))
-		return paginatedResp.Sessions, nil
+		if len(paginatedResp.Sessions) > 0 {
+			log.Printf("✅ Parsed %d sessions from paginated response", len(paginatedResp.Sessions))
+			return paginatedResp.Sessions, nil
+		}
+	}
+
+	// Try to decode as object with nested sessions array
+	var responseObj map[string]interface{}
+	if err := json.Unmarshal(body, &responseObj); err == nil {
+		if sessions, ok := responseObj["sessions"].([]interface{}); ok {
+			parsedSessions := make([]Session, 0, len(sessions))
+			for _, session := range sessions {
+				if sessionMap, ok := session.(map[string]interface{}); ok {
+					sess := Session{
+						SessionID: getStringFromInterface(sessionMap["session_id"]),
+						UserID:    getStringFromInterface(sessionMap["user_id"]),
+					}
+					
+					// Parse timestamps
+					if createdAtStr := getStringFromInterface(sessionMap["created_at"]); createdAtStr != "" {
+						if createdAt, err := time.Parse(time.RFC3339, createdAtStr); err == nil {
+							sess.CreatedAt = createdAt
+						}
+					}
+					if updatedAtStr := getStringFromInterface(sessionMap["updated_at"]); updatedAtStr != "" {
+						if updatedAt, err := time.Parse(time.RFC3339, updatedAtStr); err == nil {
+							sess.UpdatedAt = updatedAt
+						}
+					}
+					
+					// Handle message count
+					if msgCount, ok := sessionMap["message_count"].(float64); ok {
+						sess.MessageCount = int(msgCount)
+					}
+					
+					parsedSessions = append(parsedSessions, sess)
+				}
+			}
+			
+			log.Printf("✅ Parsed %d sessions from object response", len(parsedSessions))
+			return parsedSessions, nil
+		}
 	}
 
 	// Fallback to direct array
 	var sessions []Session
-	if err := json.Unmarshal(body, &sessions); err != nil {
-		log.Printf("❌ Failed to unmarshal sessions: %v", err)
-		return nil, err
+	if err := json.Unmarshal(body, &sessions); err == nil {
+		log.Printf("✅ Parsed %d sessions from direct array", len(sessions))
+		return sessions, nil
 	}
-
-	log.Printf("✅ Parsed %d sessions from direct array", len(sessions))
-	return sessions, nil
+	
+	// If all parsing attempts fail, return empty slice instead of error
+	log.Printf("⚠️ No sessions found or unknown format, returning empty slice")
+	return []Session{}, nil
 }
 
 func (c *Client) GetSession(sessionID string) (*Session, error) {
@@ -296,26 +339,77 @@ func (c *Client) GetMessageList(sessionID string, page, pageSize int) ([]Message
 		return nil, 0, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
 	}
 
-	// Try to decode as paginated response first
+	// Try to decode as paginated response first (multiple possible formats)
 	var paginatedResp struct {
 		Messages []Message `json:"messages"`
 		Total    int       `json:"total"`
+		TotalCount int     `json:"total_count"`
 	}
 	
-	if err := json.Unmarshal(body, &paginatedResp); err == nil && len(paginatedResp.Messages) > 0 {
-		log.Printf("✅ Parsed %d messages from paginated response", len(paginatedResp.Messages))
-		return paginatedResp.Messages, paginatedResp.Total, nil
+	if err := json.Unmarshal(body, &paginatedResp); err == nil {
+		if len(paginatedResp.Messages) > 0 {
+			total := paginatedResp.Total
+			if total == 0 {
+				total = paginatedResp.TotalCount
+			}
+			log.Printf("✅ Parsed %d messages from paginated response", len(paginatedResp.Messages))
+			return paginatedResp.Messages, total, nil
+		}
 	}
 
-	// If paginated response fails, try direct array
+	// Try to decode as object with nested messages array
+	var responseObj map[string]interface{}
+	if err := json.Unmarshal(body, &responseObj); err == nil {
+		// Check for messages key
+		if msgs, ok := responseObj["messages"].([]interface{}); ok {
+			messages := make([]Message, 0, len(msgs))
+			for _, msg := range msgs {
+				if msgMap, ok := msg.(map[string]interface{}); ok {
+					message := Message{
+						UUID:      getStringFromInterface(msgMap["uuid"]),
+						Role:      getStringFromInterface(msgMap["role"]),
+						Content:   getStringFromInterface(msgMap["content"]),
+						Metadata:  getMapFromInterface(msgMap["metadata"]),
+					}
+					
+					// Parse timestamps
+					if createdAtStr := getStringFromInterface(msgMap["created_at"]); createdAtStr != "" {
+						if createdAt, err := time.Parse(time.RFC3339, createdAtStr); err == nil {
+							message.CreatedAt = createdAt
+						}
+					}
+					
+					// Handle token count
+					if tokenCount, ok := msgMap["token_count"].(float64); ok {
+						message.TokenCount = int(tokenCount)
+					}
+					
+					messages = append(messages, message)
+				}
+			}
+			
+			total := len(messages)
+			if totalCount, ok := responseObj["total_count"].(float64); ok {
+				total = int(totalCount)
+			} else if totalCount, ok := responseObj["total"].(float64); ok {
+				total = int(totalCount)
+			}
+			
+			log.Printf("✅ Parsed %d messages from object response", len(messages))
+			return messages, total, nil
+		}
+	}
+
+	// Try direct array as fallback
 	var messages []Message
-	if err := json.Unmarshal(body, &messages); err != nil {
-		log.Printf("❌ Failed to unmarshal messages: %v", err)
-		return nil, 0, err
+	if err := json.Unmarshal(body, &messages); err == nil {
+		log.Printf("✅ Parsed %d messages from direct array", len(messages))
+		return messages, len(messages), nil
 	}
 	
-	log.Printf("✅ Parsed %d messages from direct array", len(messages))
-	return messages, len(messages), nil
+	// If all parsing attempts fail, return empty slice instead of error
+	log.Printf("⚠️ No messages found or unknown format, returning empty slice")
+	return []Message{}, 0, nil
 }
 
 func (c *Client) GetUsers() ([]User, error) {
@@ -338,19 +432,73 @@ func (c *Client) GetUsers() ([]User, error) {
 		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
 	}
 
-	// Parse as ordered response
+	// Try to parse as ordered response first
 	var orderedResp struct {
 		Users     []User `json:"users"`
 		RowCount  int    `json:"row_count"`
 		TotalCount int   `json:"total_count"`
+		Total     int    `json:"total"`
 	}
-	if err := json.Unmarshal(body, &orderedResp); err != nil {
-		log.Printf("❌ Failed to unmarshal users: %v", err)
-		return nil, err
+	if err := json.Unmarshal(body, &orderedResp); err == nil {
+		if len(orderedResp.Users) > 0 {
+			log.Printf("✅ Parsed %d users from ordered response", len(orderedResp.Users))
+			return orderedResp.Users, nil
+		}
 	}
 
-	log.Printf("✅ Parsed %d users from ordered response", len(orderedResp.Users))
-	return orderedResp.Users, nil
+	// Try to decode as object with nested users array
+	var responseObj map[string]interface{}
+	if err := json.Unmarshal(body, &responseObj); err == nil {
+		if users, ok := responseObj["users"].([]interface{}); ok {
+			parsedUsers := make([]User, 0, len(users))
+			for _, user := range users {
+				if userMap, ok := user.(map[string]interface{}); ok {
+					usr := User{
+						UUID:    getStringFromInterface(userMap["uuid"]),
+						UserID:  getStringFromInterface(userMap["user_id"]),
+						Email:   getStringFromInterface(userMap["email"]),
+						FirstName: getStringFromInterface(userMap["first_name"]),
+						LastName:  getStringFromInterface(userMap["last_name"]),
+						ProjectUUID: getStringFromInterface(userMap["project_uuid"]),
+						Metadata: getMapFromInterface(userMap["metadata"]),
+					}
+					
+					// Parse timestamps
+					if createdAtStr := getStringFromInterface(userMap["created_at"]); createdAtStr != "" {
+						if createdAt, err := time.Parse(time.RFC3339, createdAtStr); err == nil {
+							usr.CreatedAt = createdAt
+						}
+					}
+					if updatedAtStr := getStringFromInterface(userMap["updated_at"]); updatedAtStr != "" {
+						if updatedAt, err := time.Parse(time.RFC3339, updatedAtStr); err == nil {
+							usr.UpdatedAt = updatedAt
+						}
+					}
+					
+					// Handle session count
+					if sessionCount, ok := userMap["session_count"].(float64); ok {
+						usr.SessionCount = int(sessionCount)
+					}
+					
+					parsedUsers = append(parsedUsers, usr)
+				}
+			}
+			
+			log.Printf("✅ Parsed %d users from object response", len(parsedUsers))
+			return parsedUsers, nil
+		}
+	}
+
+	// Fallback to direct array
+	var users []User
+	if err := json.Unmarshal(body, &users); err == nil {
+		log.Printf("✅ Parsed %d users from direct array", len(users))
+		return users, nil
+	}
+	
+	// If all parsing attempts fail, return empty slice instead of error
+	log.Printf("⚠️ No users found or unknown format, returning empty slice")
+	return []User{}, nil
 }
 
 // GetUsersWithSessionCounts fetches users with their session counts in a single optimized call
@@ -479,6 +627,28 @@ func getStringValue(ptr *string) string {
 		return ""
 	}
 	return *ptr
+}
+
+// Helper function to safely get string from interface value
+func getStringFromInterface(val interface{}) string {
+	if val == nil {
+		return ""
+	}
+	if str, ok := val.(string); ok {
+		return str
+	}
+	return fmt.Sprintf("%v", val)
+}
+
+// Helper function to safely get map from interface value
+func getMapFromInterface(val interface{}) map[string]interface{} {
+	if val == nil {
+		return nil
+	}
+	if m, ok := val.(map[string]interface{}); ok {
+		return m
+	}
+	return nil
 }
 
 // GetUserGraphTriplets fetches graph triplets for a specific user with optimized concurrent processing
