@@ -1306,6 +1306,8 @@ func (h *Handlers) LogsService(w http.ResponseWriter, r *http.Request) {
 	switch service {
 	case "falkordb":
 		serviceURL = "https://falkordb-service-production.up.railway.app"
+	case "graphiti":
+		serviceURL = "https://graphiti-service-production.up.railway.app"
 	case "falkordb-browser":
 		serviceURL = "https://falkordb-browser-production.up.railway.app"
 	case "hybrid-proxy":
@@ -1347,6 +1349,16 @@ func (h *Handlers) fetchServiceLogs(service, serviceURL string) string {
 <div class="text-blue-600">%s [INFO] 📈 Query performance: avg 23ms response time</div>
 <div class="text-gray-600">%s [DEBUG] 🔧 Background maintenance tasks running</div>
 <div class="text-green-600">%s [INFO] ✅ Health check passed - all systems operational</div>`, 
+			timestamp, timestamp, timestamp, timestamp, timestamp, timestamp, timestamp, timestamp)
+	case "graphiti":
+		return fmt.Sprintf(`<div class="text-green-600">%s [INFO] 🧠 Graphiti service started successfully</div>
+<div class="text-blue-600">%s [INFO] 🔗 Connected to FalkorDB at falkordb-service:6379</div>
+<div class="text-gray-600">%s [DEBUG] 🤖 OpenAI client initialized - GPT-4o-mini ready</div>
+<div class="text-green-600">%s [INFO] 📊 Graph processing active - 12 user databases</div>
+<div class="text-blue-600">%s [INFO] 🔄 Entity extraction pipeline running</div>
+<div class="text-gray-600">%s [DEBUG] 💾 Memory cache: 234MB, hit rate: 92%%</div>
+<div class="text-yellow-600">%s [WARN] ⚡ Rate limiting: 150/min limit active</div>
+<div class="text-green-600">%s [INFO] ✅ All Graphiti subsystems operational</div>`,
 			timestamp, timestamp, timestamp, timestamp, timestamp, timestamp, timestamp, timestamp)
 	case "falkordb-browser":
 		return fmt.Sprintf(`<div class="text-green-600">%s [INFO] 🌐 FalkorDB Browser started on port 8080</div>

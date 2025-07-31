@@ -1030,11 +1030,11 @@ func (c *Client) DeleteUserGraphData(userID string) error {
 	// Try different graph service URLs with reduced timeouts
 	graphServiceURLs := []string{
 		// Railway internal network patterns (most likely to work)
-		"http://zep-falkordb-service.railway.internal:8003",
-		"http://zep-falkordb-service:8003",
+		"http://graphiti-service.railway.internal:8000",
+		"http://graphiti-service:8000",
 		// Local development patterns
-		"http://localhost:8003",
-		"http://127.0.0.1:8003",
+		"http://localhost:8000",
+		"http://127.0.0.1:8000",
 	}
 	
 	// Use shorter timeout for faster failure detection
