@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/getzep/zep-web-interface/internal/cache"
-	"github.com/getzep/zep-web-interface/internal/zepapi"
+	"github.com/schizoidcock/zep-web-interface/internal/cache"
+	"github.com/schizoidcock/zep-web-interface/internal/zepapi"
 )
 
 // AsyncData represents data loading status for async endpoints

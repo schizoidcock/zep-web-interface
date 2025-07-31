@@ -158,14 +158,21 @@
 <script>
 let autoRefreshInterval;
 let serviceHealthInterval;
+let serviceUrls = {};
 
-const serviceUrls = {
-  'falkordb': 'https://falkordb-service-production.up.railway.app',
-  'graphiti': 'https://graphiti-service-production.up.railway.app',
-  'falkordb-browser': 'https://falkordb-browser-production.up.railway.app',
-  'hybrid-proxy': 'https://hybrid-proxy-production.up.railway.app',
-  'zep-server': 'https://zep-server-production.up.railway.app'
-};
+// Fetch service URLs from backend
+async function loadServiceUrls() {
+  try {
+    const response = await fetch('/admin/service-urls');
+    if (response.ok) {
+      serviceUrls = await response.json();
+    } else {
+      console.error('Failed to load service URLs');
+    }
+  } catch (error) {
+    console.error('Error loading service URLs:', error);
+  }
+}
 
 async function checkServiceHealth(serviceName, url) {
   try {
@@ -215,12 +222,15 @@ function setupAutoRefresh() {
 }
 
 // Setup auto-refresh and health checking on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  // Load service URLs first
+  await loadServiceUrls();
+  
   const checkbox = document.getElementById('auto-refresh');
   checkbox.addEventListener('change', setupAutoRefresh);
   setupAutoRefresh();
   
-  // Initial health check
+  // Initial health check after URLs are loaded
   checkAllServiceHealth();
 });
 

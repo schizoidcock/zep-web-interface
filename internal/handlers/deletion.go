@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/getzep/zep-web-interface/internal/zepapi"
+	"github.com/schizoidcock/zep-web-interface/internal/zepapi"
 )
 
 // DeletionStatus tracks the status of user deletion operations

@@ -18,6 +18,13 @@ type Config struct {
 	CORSOrigins  []string
 	TrustProxy   bool
 	ProxyPath    string
+	
+	// Service URLs for monitoring and logs
+	FalkorDBServiceURL     string
+	GraphitiServiceURL     string
+	FalkorDBBrowserURL     string
+	HybridProxyURL         string
+	ZepServerURL           string
 }
 
 func Load() *Config {
@@ -31,6 +38,13 @@ func Load() *Config {
 		CORSOrigins:  getEnvSlice("CORS_ORIGINS", []string{"*"}),
 		TrustProxy:   getEnvBool("TRUST_PROXY", true),
 		ProxyPath:    getEnv("PROXY_PATH", ""),
+		
+		// Service URLs - required environment variables
+		FalkorDBServiceURL:     getEnv("FALKORDB_SERVICE_URL", ""),
+		GraphitiServiceURL:     getEnv("GRAPHITI_SERVICE_URL", ""),
+		FalkorDBBrowserURL:     getEnv("FALKORDB_BROWSER_URL", ""),
+		HybridProxyURL:         getEnv("HYBRID_PROXY_URL", ""),
+		ZepServerURL:           getEnv("ZEP_SERVER_URL", ""),
 	}
 	
 	// Debug logging for API key (show first/last 8 chars for security)

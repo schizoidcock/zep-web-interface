@@ -12,8 +12,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/getzep/zep-web-interface/internal/cache"
-	"github.com/getzep/zep-web-interface/internal/zepapi"
+	"github.com/schizoidcock/zep-web-interface/internal/cache"
+	"github.com/schizoidcock/zep-web-interface/internal/config"
+	"github.com/schizoidcock/zep-web-interface/internal/zepapi"
 )
 
 type Handlers struct {
@@ -21,6 +22,7 @@ type Handlers struct {
 	templates *template.Template
 	basePath  string
 	cache     *cache.Cache
+	config    *config.Config
 }
 
 // Data structures matching Zep v0.27 template expectations
@@ -112,7 +114,7 @@ var UserTableColumns = []Column{
 	},
 }
 
-func New(apiClient *zepapi.Client, templates *template.Template, basePath string) *Handlers {
+func New(apiClient *zepapi.Client, templates *template.Template, basePath string, cfg *config.Config) *Handlers {
 	if basePath == "" {
 		basePath = "/admin"
 	}
@@ -121,6 +123,7 @@ func New(apiClient *zepapi.Client, templates *template.Template, basePath string
 		templates: templates,
 		basePath:  basePath,
 		cache:     cache.NewCache(),
+		config:    cfg,
 	}
 }
 
@@ -1301,19 +1304,19 @@ func (h *Handlers) Logs(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) LogsService(w http.ResponseWriter, r *http.Request) {
 	service := chi.URLParam(r, "service")
 	
-	// Determine service URLs based on Railway service names
+	// Determine service URLs from environment variables
 	var serviceURL string
 	switch service {
 	case "falkordb":
-		serviceURL = "https://falkordb-service-production.up.railway.app"
+		serviceURL = h.config.FalkorDBServiceURL
 	case "graphiti":
-		serviceURL = "https://graphiti-service-production.up.railway.app"
+		serviceURL = h.config.GraphitiServiceURL
 	case "falkordb-browser":
-		serviceURL = "https://falkordb-browser-production.up.railway.app"
+		serviceURL = h.config.FalkorDBBrowserURL
 	case "hybrid-proxy":
-		serviceURL = "https://hybrid-proxy-production.up.railway.app"
+		serviceURL = h.config.HybridProxyURL
 	case "zep-server":
-		serviceURL = "https://zep-server-production.up.railway.app"
+		serviceURL = h.config.ZepServerURL
 	default:
 		http.Error(w, "Unknown service", http.StatusBadRequest)
 		return
@@ -1467,4 +1470,18 @@ func (h *Handlers) formatLogsAsHTML(logs string) string {
 	}
 	
 	return strings.Join(htmlLines, "\n")
+}
+
+// ServiceURLs provides service URLs as JSON for frontend use
+func (h *Handlers) ServiceURLs(w http.ResponseWriter, r *http.Request) {
+	serviceURLs := map[string]string{
+		"falkordb":        h.config.FalkorDBServiceURL,
+		"graphiti":        h.config.GraphitiServiceURL,
+		"falkordb-browser": h.config.FalkorDBBrowserURL,
+		"hybrid-proxy":    h.config.HybridProxyURL,
+		"zep-server":      h.config.ZepServerURL,
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(serviceURLs)
 }

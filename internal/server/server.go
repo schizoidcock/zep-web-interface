@@ -10,9 +10,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	"github.com/getzep/zep-web-interface/internal/config"
-	"github.com/getzep/zep-web-interface/internal/handlers"
-	"github.com/getzep/zep-web-interface/internal/zepapi"
+	"github.com/schizoidcock/zep-web-interface/internal/config"
+	"github.com/schizoidcock/zep-web-interface/internal/handlers"
+	"github.com/schizoidcock/zep-web-interface/internal/zepapi"
 )
 
 func New(cfg *config.Config) (*http.Server, error) {
@@ -30,7 +30,7 @@ func New(cfg *config.Config) (*http.Server, error) {
 	if basePath == "" {
 		basePath = "/admin"
 	}
-	h := handlers.New(apiClient, templates, basePath)
+	h := handlers.New(apiClient, templates, basePath, cfg)
 
 	// Setup router
 	r := chi.NewRouter()
@@ -122,6 +122,7 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			r.Get("/logs", h.Logs)
 			r.Get("/logs/{service}", h.LogsService)
 			r.Get("/settings", h.Settings)
+			r.Get("/service-urls", h.ServiceURLs)
 		})
 
 		// API routes under proxy path
@@ -157,6 +158,7 @@ func setupRoutes(r chi.Router, h *handlers.Handlers, cfg *config.Config) {
 			r.Get("/logs", h.Logs)
 			r.Get("/logs/{service}", h.LogsService)
 			r.Get("/settings", h.Settings)
+			r.Get("/service-urls", h.ServiceURLs)
 		})
 
 		// API routes at root level

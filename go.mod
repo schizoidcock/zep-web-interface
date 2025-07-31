@@ -1,4 +1,4 @@
-module github.com/getzep/zep-web-interface
+module github.com/schizoidcock/zep-web-interface
 
 go 1.21
 

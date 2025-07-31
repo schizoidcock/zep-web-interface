@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/getzep/zep-web-interface/internal/config"
-	"github.com/getzep/zep-web-interface/internal/server"
+	"github.com/schizoidcock/zep-web-interface/internal/config"
+	"github.com/schizoidcock/zep-web-interface/internal/server"
 )
 
 func main() {
