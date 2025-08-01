@@ -300,8 +300,8 @@ func (c *Client) GetSession(sessionID string) (*Session, error) {
 }
 
 func (c *Client) DeleteSession(sessionID string) error {
-	// Use the official Zep API endpoint for session memory deletion
-	resp, err := c.delete("/api/v2/sessions/" + sessionID + "/memory")
+	// Use the official Zep API endpoint for session deletion (deletes session and associated messages)
+	resp, err := c.delete("/api/v2/sessions/" + sessionID)
 	if err != nil {
 		return err
 	}
