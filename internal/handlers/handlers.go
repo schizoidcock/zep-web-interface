@@ -353,14 +353,31 @@ func (h *Handlers) DeleteSession(w http.ResponseWriter, r *http.Request) {
 	
 	err := h.apiClient.DeleteSession(sessionID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// Return JSON error response for HTMX requests
+		if r.Header.Get("HX-Request") == "true" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error":   "Session deletion failed",
+				"message": err.Error(),
+				"confirmed": false,
+			})
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 	
-	// For HTMX requests, redirect back to sessions list
+	// For HTMX requests, return JSON confirmation with redirect header
 	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("HX-Redirect", h.basePath+"/sessions")
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "Session deleted successfully",
+			"confirmed": true,
+			"session_id": sessionID,
+		})
 	} else {
 		// For regular requests, redirect to sessions list
 		http.Redirect(w, r, h.basePath+"/sessions", http.StatusFound)
@@ -750,33 +767,53 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
 	
-	log.Printf("🗑️ Starting optimized user deletion for: %s", userID)
+	log.Printf("🗑️ Starting user deletion for: %s", userID)
 	
-	// Start deletion in background for immediate UI response
-	go func() {
-		log.Printf("🚀 Background deletion started for user: %s", userID)
-		err := h.apiClient.DeleteUserWithCleanup(userID)
-		if err != nil {
-			log.Printf("❌ Background user deletion failed for %s: %v", userID, err)
-		} else {
-			log.Printf("✅ Background user deletion completed for: %s", userID)
-		}
+	// Perform actual deletion and wait for completion
+	err := h.apiClient.DeleteUserWithCleanup(userID)
+	if err != nil {
+		log.Printf("❌ User deletion failed for %s: %v", userID, err)
 		
-		// Clear any cached user data
-		h.cache.Delete(fmt.Sprintf("user:%s", userID))
-		h.cache.Delete(fmt.Sprintf("episodes:%s", userID))
-		h.cache.Delete(fmt.Sprintf("graph:%s", userID))
-	}()
+		// Return JSON error response for HTMX requests
+		if r.Header.Get("HX-Request") == "true" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error":   "User deletion failed",
+				"message": err.Error(),
+				"confirmed": false,
+			})
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
 	
-	// Immediately respond to user interface (optimistic deletion)
-	log.Printf("✅ User deletion initiated for: %s (processing in background)", userID)
+	log.Printf("✅ User deletion completed for: %s", userID)
 	
-	// For HTMX requests, redirect back to users list immediately
+	// Clear any cached user data
+	h.cache.Delete(fmt.Sprintf("user:%s", userID))
+	h.cache.Delete(fmt.Sprintf("episodes:%s", userID))
+	h.cache.Delete(fmt.Sprintf("graph:%s", userID))
+	
+	// For HTMX requests, return JSON confirmation with redirect header
 	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("HX-Redirect", h.basePath+"/users")
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "User deleted successfully",
+			"confirmed": true,
+			"user_id": userID,
+			"deleted_resources": map[string]interface{}{
+				"user":     userID,
+				"sessions": "all user sessions deleted",
+				"memories": "all session memories deleted",
+				"messages": "all session messages deleted",
+			},
+		})
 	} else {
-		// For regular requests, redirect to users list immediately
+		// For regular requests, redirect to users list
 		http.Redirect(w, r, h.basePath+"/users", http.StatusFound)
 	}
 }
