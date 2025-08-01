@@ -14,8 +14,9 @@ import (
 )
 
 func main() {
-	// Configure logging to use stdout instead of stderr
+	// Configure logging to use stdout instead of stderr and remove timestamps (Railway provides them)
 	log.SetOutput(os.Stdout)
+	log.SetFlags(0) // Remove timestamps and file info since Railway dashboard provides timestamps
 	
 	// Load configuration
 	cfg := config.Load()
