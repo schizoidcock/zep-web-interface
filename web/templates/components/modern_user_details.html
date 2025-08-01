@@ -986,12 +986,17 @@ window.confirmDelete = function() {
     if (deleteRequest.readyState === XMLHttpRequest.DONE) {
       if (deleteRequest.status === 200) {
         // Parse response to verify deletion was confirmed by server
+        console.log('User deletion response status:', deleteRequest.status);
+        console.log('User deletion response text:', deleteRequest.responseText);
+        
         let response;
         try {
           response = JSON.parse(deleteRequest.responseText);
+          console.log('Parsed user deletion response:', response);
         } catch (e) {
           // If response can't be parsed, treat as error
           console.error('Failed to parse user deletion response:', e);
+          console.error('Raw response text:', deleteRequest.responseText);
           showErrorNotificationPersistent('Failed to confirm user deletion. Please try again.');
           
           // Reset button state on error

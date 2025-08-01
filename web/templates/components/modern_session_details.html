@@ -580,12 +580,17 @@ window.confirmDeleteSession = function() {
     if (xhr.readyState === XMLHttpRequest.DONE) {
       if (xhr.status === 200) {
         // Parse response to verify deletion was confirmed by server
+        console.log('Session deletion response status:', xhr.status);
+        console.log('Session deletion response text:', xhr.responseText);
+        
         let response;
         try {
           response = JSON.parse(xhr.responseText);
+          console.log('Parsed session deletion response:', response);
         } catch (e) {
           // If response can't be parsed, treat as error
-          console.error('Failed to parse deletion response:', e);
+          console.error('Failed to parse session deletion response:', e);
+          console.error('Raw response text:', xhr.responseText);
           showErrorNotificationPersistent('Failed to confirm session deletion. Please try again.');
           
           // Reset button state on error
