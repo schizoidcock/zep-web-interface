@@ -37,7 +37,13 @@ func Load() *Config {
 	if zepHost != "" {
 		// Add http:// prefix if not present
 		if !strings.HasPrefix(zepHost, "http://") && !strings.HasPrefix(zepHost, "https://") {
-			zepAPIURL = fmt.Sprintf("http://%s:%s", zepHost, zepPort)
+			if zepPort != "" {
+				// Only add port if explicitly provided
+				zepAPIURL = fmt.Sprintf("http://%s:%s", zepHost, zepPort)
+			} else {
+				// No port specified, use just the hostname
+				zepAPIURL = fmt.Sprintf("http://%s", zepHost)
+			}
 		} else {
 			// If protocol is already present, just use the host as-is
 			zepAPIURL = zepHost
