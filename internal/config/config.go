@@ -28,10 +28,26 @@ type Config struct {
 }
 
 func Load() *Config {
+	// Build ZEP API URL from components
+	zepHost := getEnv("ZEP_API_URL", "")
+	zepPort := getEnv("ZEP_SERVER_PORT", "")
+	
+	// Construct full URL with http:// prefix if needed
+	var zepAPIURL string
+	if zepHost != "" {
+		// Add http:// prefix if not present
+		if !strings.HasPrefix(zepHost, "http://") && !strings.HasPrefix(zepHost, "https://") {
+			zepAPIURL = fmt.Sprintf("http://%s:%s", zepHost, zepPort)
+		} else {
+			// If protocol is already present, just use the host as-is
+			zepAPIURL = zepHost
+		}
+	}
+	
 	cfg := &Config{
 		Host:         getEnv("HOST", "0.0.0.0"),
 		Port:         getEnvInt("PORT", 8080),
-		ZepAPIURL:    getEnv("ZEP_API_URL", ""),
+		ZepAPIURL:    zepAPIURL,
 		ZepAPIKey:    getEnv("ZEP_API_KEY", ""),
 		ProxyURL:     getEnv("PROXY_URL", ""),
 		TLSEnabled:   getEnvBool("TLS_ENABLED", false),
