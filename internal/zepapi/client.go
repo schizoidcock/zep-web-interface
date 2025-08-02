@@ -922,26 +922,16 @@ func (c *Client) DeleteUserWithCleanup(userID string) error {
 		c.deleteSessionsConcurrently(sessions)
 	}
 	
-	// Step 3: Start graph cleanup in background (non-blocking)
-	go func() {
-		log.Printf("🧠 Starting background graph cleanup for user: %s", userID)
-		err := c.DeleteUserGraphData(userID)
-		if err != nil {
-			log.Printf("⚠️ Background graph cleanup failed for %s: %v", userID, err)
-		} else {
-			log.Printf("✅ Background graph cleanup completed for %s", userID)
-		}
-	}()
-	
-	// Step 4: Delete the user from Zep server (most critical step)
-	log.Printf("👤 Deleting user from Zep server: %s", userID)
+	// Step 3: Delete the user from Zep server (includes graph cleanup)
+	// The zep-server now handles graphiti-service communication directly
+	log.Printf("👤 Deleting user from Zep server (includes graph data cleanup): %s", userID)
 	err = c.DeleteUser(userID)
 	if err != nil {
 		log.Printf("❌ Failed to delete user %s from Zep server: %v", userID, err)
 		return fmt.Errorf("failed to delete user from Zep server: %w", err)
 	}
 	
-	log.Printf("✅ User deletion completed for: %s (graph cleanup continues in background)", userID)
+	log.Printf("✅ User deletion completed for: %s (including graph data cleanup)", userID)
 	return nil
 }
 
@@ -1023,81 +1013,6 @@ func (c *Client) deleteSessionsConcurrently(sessions []Session) {
 	
 	wg.Wait()
 	log.Printf("✅ Concurrent session deletion completed")
-}
-
-// DeleteUserGraphData attempts to cleanup graph data for a user with optimized timeouts
-func (c *Client) DeleteUserGraphData(userID string) error {
-	// Try different graph service URLs with reduced timeouts
-	graphServiceURLs := []string{
-		// Railway internal network patterns (most likely to work)
-		"http://graphiti-service.railway.internal:8000",
-		"http://graphiti-service:8000",
-		// Local development patterns
-		"http://localhost:8000",
-		"http://127.0.0.1:8000",
-	}
-	
-	// Use shorter timeout for faster failure detection
-	client := &http.Client{Timeout: 5 * time.Second}
-	
-	for _, baseURL := range graphServiceURLs {
-		// Try group deletion with timeout context
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		
-		groupDeleteURL := fmt.Sprintf("%s/group/%s", baseURL, userID)
-		req, err := http.NewRequestWithContext(ctx, "DELETE", groupDeleteURL, nil)
-		if err != nil {
-			continue
-		}
-		req.Header.Set("Content-Type", "application/json")
-		
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Printf("🔍 Graph service %s not reachable: %v", baseURL, err)
-			continue // Try next URL quickly
-		}
-		defer resp.Body.Close()
-		
-		// Check if group deletion succeeded
-		if resp.StatusCode == 200 || resp.StatusCode == 404 {
-			log.Printf("✅ Successfully cleared graph data for user %s via %s", userID, baseURL)
-			
-			// Step 2: Delete the entire database (optional, background)
-			go func(dbURL string) {
-				databaseDeleteURL := fmt.Sprintf("%s/database/%s", dbURL, userID)
-				dbCtx, dbCancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer dbCancel()
-				
-				dbReq, err := http.NewRequestWithContext(dbCtx, "DELETE", databaseDeleteURL, nil)
-				if err != nil {
-					log.Printf("⚠️ Failed to create database deletion request: %v", err)
-					return
-				}
-				dbReq.Header.Set("Content-Type", "application/json")
-				
-				dbResp, err := client.Do(dbReq)
-				if err != nil {
-					log.Printf("⚠️ Database deletion failed: %v", err)
-					return
-				}
-				defer dbResp.Body.Close()
-				
-				if dbResp.StatusCode == 200 || dbResp.StatusCode == 404 {
-					log.Printf("✅ Database deletion completed for user %s", userID)
-				} else {
-					log.Printf("⚠️ Database deletion returned %d for user %s", dbResp.StatusCode, userID)
-				}
-			}(baseURL)
-			
-			return nil // Success - don't try other URLs
-		}
-		
-		// Log failed attempt but continue quickly
-		log.Printf("🔍 Graph service %s returned %d, trying next", baseURL, resp.StatusCode)
-	}
-	
-	return fmt.Errorf("no graph service responded successfully (tried %d URLs)", len(graphServiceURLs))
 }
 
 // CreateUser creates a new user
